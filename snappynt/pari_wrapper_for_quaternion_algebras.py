@@ -8,26 +8,30 @@ in sage using tools from NumberField, but it does so without actually creating a
 quaternion algebra. Using a wrapper for PARI allows us to use all of PARI's functions
 for quaternion algebras inside sage.
 """
-import cypari2 #This is necessary for some type testing.
+import cypari2  # This is necessary for some type testing.
 from sage.libs.pari.convert_sage import gen_to_sage
-from sage.all import * #Can I do this somewhere else?
+from sage.all import *  # Can I do this somewhere else?
+
 
 def is_probably_pari_nf(nf):
     """
     This tests somewhat crudely inside sage whether the object looks
     like the ouput of a PARI nfinit. Note that this doesn't work for bnfinit etc.
     """
-    if not isinstance(nf, cypari2.gen.Gen): #All pari objects in sage have this python type.
+    if not isinstance(
+        nf, cypari2.gen.Gen
+    ):  # All pari objects in sage have this python type.
         return False
-    if len(nf) != 9: #Maybe come back and try to catch TypeErrors for this one.
+    if len(nf) != 9:  # Maybe come back and try to catch TypeErrors for this one.
         return False
-    if nf.type() != 't_VEC':
+    if nf.type() != "t_VEC":
         return False
-    if nf[0].type() != 't_POL':
+    if nf[0].type() != "t_POL":
         return False
     return True
 
-def convert_parinf_to_sage(nf, variable='z'):
+
+def convert_parinf_to_sage(nf, variable="z"):
     """
     Converts the output of a pari_nf() call on a sage number field back to a sage number field.
     It sounds dumb when I say it like that, but it allows us to have functions that can easily accept both sage
@@ -36,20 +40,26 @@ def convert_parinf_to_sage(nf, variable='z'):
     Note that pari_poly will always be monic. So if the original sage number field had a nonmonic generator,
     the output of this function will have a different minimal polynomial.
     """
-    x = var('x')
+    x = var("x")
     if not is_probably_pari_nf(nf):
-        raise TypeError('This does not appear to be the output of a pari_nf() call')
-    pari_poly = gen_to_sage(nf[0], {'y' : x}) #This assumes the default 'y' variable for pari_nf().
-    sage_number_field = NumberField(pari_poly, variable) #Doesn't actually define the variable outside this function.
+        raise TypeError("This does not appear to be the output of a pari_nf() call")
+    pari_poly = gen_to_sage(
+        nf[0], {"y": x}
+    )  # This assumes the default 'y' variable for pari_nf().
+    sage_number_field = NumberField(
+        pari_poly, variable
+    )  # Doesn't actually define the variable outside this function.
     return sage_number_field
-    
+
+
 class PARIQuaternionAlgebraOverNumberField:
     """
     This class wraps a PARI quaternion algebra over a number field.
     The idea is to make a sage accessible object so that conversions to and from PARI
     are taken care of.
     """
-    def __init__(self, number_field, a, b, variable='z'):
+
+    def __init__(self, number_field, a, b, variable="z"):
         """
         As of Jul-15-2020, this isn't as robust as I would like to be, but the current goal
         is to get it working with SnapPy. Eventually I would like it to be a completely general
@@ -76,11 +86,19 @@ class PARIQuaternionAlgebraOverNumberField:
 
         We don't systematically keep track of the embeddings of the number field.
         """
-        if isinstance(number_field, sage.rings.number_field.number_field.NumberField_absolute):
+        if isinstance(
+            number_field, sage.rings.number_field.number_field.NumberField_absolute
+        ):
             self.sage_number_field = number_field
-            self.pari_number_field = self.number_field.pari_nf() #This makes PARI variable "y". We can change this if necessary.
-        elif isinstance(number_field, sage.rings.number_field.number_field.NumberField_relative): #Relative number fields are converted to absolute ones. 
-            self.sage_number_field = number_field.absolute_field(names=variable) #E.g. if variable='z' (the default). This makes a sage number field with the variable z.
+            self.pari_number_field = (
+                self.number_field.pari_nf()
+            )  # This makes PARI variable "y". We can change this if necessary.
+        elif isinstance(
+            number_field, sage.rings.number_field.number_field.NumberField_relative
+        ):  # Relative number fields are converted to absolute ones.
+            self.sage_number_field = number_field.absolute_field(
+                names=variable
+            )  # E.g. if variable='z' (the default). This makes a sage number field with the variable z.
             self.pari_number_field = self.sage_number_field.pari_nf()
         elif is_probably_pari_nf(number_field):
             self.pari_number_field = number_field
@@ -88,5 +106,6 @@ class PARIQuaternionAlgebraOverNumberField:
         if a in self.sage_number_field and b in self.sage_number_field:
             self.a = a
         else:
-            raise TypeError('The Hilbert symbol entries are not recognized by Sage as belonging to the number field.')
-        
+            raise TypeError(
+                "The Hilbert symbol entries are not recognized by Sage as belonging to the number field."
+            )

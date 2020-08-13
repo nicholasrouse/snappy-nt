@@ -10,7 +10,7 @@ for quaternion algebras inside sage.
 """
 import cypari2  # This is necessary for some type testing.
 from sage.libs.pari.convert_sage import gen_to_sage
-from sage.all import *  # Can I do this somewhere else?
+from sage.all import (NumberField, )  # Can I do this somewhere else?
 
 
 def is_probably_pari_nf(nf):
@@ -67,7 +67,7 @@ class PARIQuaternionAlgebraOverNumberField:
 
         One potential obstacle is that PARI's number fields always have monic defining polynomial.
         The problem is that we need to make sure we express the Hilbert symbol entries in terms
-        of PARI's generator since it actually does all the computations.
+        of PARI's generator since it actually does all the computations. We use the module 
 
         This initalizes a quaternion algebra described by the Hilbert symbol (a,b)
         over the number field number_field.
@@ -85,6 +85,7 @@ class PARIQuaternionAlgebraOverNumberField:
         On the other hand, I'm not sure how expensive the function calls to pari_nf() are.
 
         We don't systematically keep track of the embeddings of the number field.
+        Aug-12 2020
         """
         if isinstance(
             number_field, sage.rings.number_field.number_field.NumberField_absolute
@@ -105,6 +106,7 @@ class PARIQuaternionAlgebraOverNumberField:
             self.sage_number_field = convert_parinf_to_sage(number_field)
         if a in self.sage_number_field and b in self.sage_number_field:
             self.a = a
+            self.b = b
         else:
             raise TypeError(
                 "The Hilbert symbol entries are not recognized by Sage as belonging to the number field."

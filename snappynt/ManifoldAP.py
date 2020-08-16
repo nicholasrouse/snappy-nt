@@ -50,14 +50,14 @@ class ManifoldAP(snappy.Manifold):
         verbosity=False,
     ):
         """
-        This is the exact field, returned as a sage NumberField.
-        The exact generators for the field are not returned by this method
-        to allow for easier interface with sage. They are however computed and
-        stored as a class attribute for later use.
-        The method has a semicomplicated interface to allow for 
-        multiple attempts to find the field.
-        If only one attempt is required (e.g. because the requisite precision and degree are known),
-        the method compute_trace_field_fixed_prec is probably better and will store the result if successful.
+        This is the exact field, returned as a sage NumberField. The exact generators for the
+        field are not returned by this method to allow for easier interface with sage. They are
+        however computed and stored as a class attribute for later use. The method has a
+        semicomplicated interface to allow for multiple attempts to find the field. If only one
+        attempt is required (e.g. because the requisite precision and degree are known), the
+        method compute_trace_field_fixed_prec is probably better and will store the result if
+        successful.
+         
         Aug-1-2020
         """
         if self.trace_field:

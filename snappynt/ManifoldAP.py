@@ -1,7 +1,27 @@
+"""
+This is the module that contains the class for arbitrary precision Manifolds. As of
+Aug-23 2020, the only objects that are actually computed to arbitrary precision are
+reps into SL_2(CC) and the arithmetic invariants (e.g. trace fields and quaternion
+algebras).
+
+Things to consider:
+    1. Building some kind of database that can be loaded to avoid repeating expensive
+    computations. I haven't decided how exactly to build and access such a database
+    yet.
+
+    2. Perhaps importing functions that actually compute the various invariants from
+    numerical input. I.e. make another module and put all the ugly implementation for
+    computations there.
+
+"""
+
+
 import snappy, denominatorsforsnappy
-from sage.all import factor, NumberField, QuaterionAlgebra
+from sage.all import factor, NumberField, QuaternionAlgebra
 import math
 import functools
+import irreducible_subgroups
+import misc_functions
 
 
 class ManifoldAP(snappy.Manifold):
@@ -44,7 +64,7 @@ class ManifoldAP(snappy.Manifold):
         return False
 
     def defining_function(self, prec):
-        return snappy.snap.polished_holonomy(bits_prec=prec)
+        return snappy.snap.polished_holonomy(self,bits_prec=prec)
 
     def compute_trace_field_fixed_prec(
         self, prec=default_starting_prec, degree=default_starting_degree
@@ -53,6 +73,9 @@ class ManifoldAP(snappy.Manifold):
         exact_field_data = approx_trace_field.find_field(
             prec=prec, degree=degree, optimize=True
         )
+        # This will override previous calculations with same prec and degree.
+        # It's unclear if we want this behavior.
+        self.trace_field_prec_record[(prec, degree)] = bool(exact_field_data)
         if exact_field_data is not None:
             self.trace_field = exact_field_data[0]
             self.trace_field_numerical_root = exact_field_data[1] 
@@ -79,7 +102,9 @@ class ManifoldAP(snappy.Manifold):
         method compute_trace_field_fixed_prec is probably better and will store the result if
         successful.
 
-        It's possible I should code a decorator for the variable precision pattern.
+        I think perhaps I should put all the code for computing this in another module
+        and just import for this one. I do need to decide on an interface for this one
+        though.
          
         Aug-1-2020
         """
@@ -100,7 +125,7 @@ class ManifoldAP(snappy.Manifold):
                 exact_field = ManifoldAP.compute_trace_field_fixed_prec(
                     self, prec=prec, degree=degree
                 )
-                self.trace_field_prec_record[(prec, degree)] = bool(exact_field)
+                
                 if prec == max_prec and degree == max_degree:
                     return None
                 if prec + prec_increment <= max_prec:
@@ -113,7 +138,44 @@ class ManifoldAP(snappy.Manifold):
                     degree = max_degree
             return self.trace_field
     
+    def approximate_trace(self, word):
+        """
+        Given a word in the generators for the fundamental group, returns an
+        ApproximateAlgebraicNumber which is the trace of that element in SL_2(CC). This
+        perhaps shouldn't really be a method of the manifold but rather of the group,
+        but we can perhaps change this later.
+        """
+        def trace_defining_func(prec):
+            approximate_group = self.defining_function(prec=prec)
+            approximate_matrix = approximate_group(word)
+            return approximate_matrix.trace()
+        return snappy.snap.find_field.ApproximateAlgebraicNumber(trace_defining_func)
+
+    def compute_approximate_hilbert_symbol(self):
+        """
+        Somewhat cumbersomly computes a Hilbert symbol as a 
+        ListOfApproximateAlgebraicNumbers.
+        """
+        (word1,word2) = irreducible_subgroups.find_hilbert_symbol_words(self.defining_function(prec=ManifoldAP.default_starting_prec))
+        first_entry = self.approximate_trace(word1)**2-snappy.snap.find_field.ApproximateAlgebraicNumber(4)
+        commutator_word = misc_functions.commutator_of_words(word1, word2)
+        second_entry = self.approximate_trace(commutator_word) - snappy.snap.find_field.ApproximateAlgebraicNumber(2)
+        return (first_entry, second_entry)
+
+
+
     def compute_quaternion_algebra_fixed_prec(self, prec=default_starting_prec, degree=default_starting_degree):
+        """
+        If the trace field isn't known, whatever precision and degree are passed here
+        are used to try to compute it. If it fails to do so, the entire function fails,
+        and will return None.
+        """
         if not self.trace_field:
             self.compute_trace_field_fixed_prec(prec=prec, degree=degree)
+        if not self.trace_field: return None
+        primitive_element = self.trace_field_numerical_root # An AAN
+        approx_first_entry, approx_second_entry = self.compute_approximate_hilbert_symbol()
+        first_entry = primitive_element.express(approx_first_entry, prec=prec)
+        second_entry = primitive_element.express(approx_second_entry, prec=prec)
+        return QuaternionAlgebra(self.trace_field, first_entry, second_entry)
         

@@ -1,7 +1,26 @@
+"""
+This is the module that contains the class for arbitrary precision Manifolds. As of
+Aug-23 2020, the only objects that are actually computed to arbitrary precision are
+reps into SL_2(CC) and the arithmetic invariants (e.g. trace fields and quaternion
+algebras).
+
+Things to consider:
+    1. Building some kind of database that can be loaded to avoid repeating expensive
+    computations. I haven't decided how exactly to build and access such a database
+    yet.
+
+    2. Perhaps importing functions that actually compute the various invariants from
+    numerical input. I.e. make another module and put all the ugly implementation for
+    computations there.
+
+"""
+
+
 import snappy, denominatorsforsnappy
 from sage.all import factor, NumberField, QuaterionAlgebra
 import math
 import functools
+
 
 
 class ManifoldAP(snappy.Manifold):
@@ -53,6 +72,9 @@ class ManifoldAP(snappy.Manifold):
         exact_field_data = approx_trace_field.find_field(
             prec=prec, degree=degree, optimize=True
         )
+            # This will override previous calculations with same prec and degree.
+            # It's unclear if we want this behavior.
+            self.trace_field_prec_record[(prec, degree)] = bool(exact_field)
         if exact_field_data is not None:
             self.trace_field = exact_field_data[0]
             self.trace_field_numerical_root = exact_field_data[1] 
@@ -79,7 +101,9 @@ class ManifoldAP(snappy.Manifold):
         method compute_trace_field_fixed_prec is probably better and will store the result if
         successful.
 
-        It's possible I should code a decorator for the variable precision pattern.
+        I think perhaps I should put all the code for computing this in another module
+        and just import for this one. I do need to decide on an interface for this one
+        though.
          
         Aug-1-2020
         """
@@ -100,7 +124,7 @@ class ManifoldAP(snappy.Manifold):
                 exact_field = ManifoldAP.compute_trace_field_fixed_prec(
                     self, prec=prec, degree=degree
                 )
-                self.trace_field_prec_record[(prec, degree)] = bool(exact_field)
+                
                 if prec == max_prec and degree == max_degree:
                     return None
                 if prec + prec_increment <= max_prec:
@@ -114,6 +138,14 @@ class ManifoldAP(snappy.Manifold):
             return self.trace_field
     
     def compute_quaternion_algebra_fixed_prec(self, prec=default_starting_prec, degree=default_starting_degree):
+        """
+        If the trace field isn't known, whatever precision and degree are passed here
+        are used to try to compute it. If it fails to do so, the entire function fails,
+        and will return None.
+        """
         if not self.trace_field:
             self.compute_trace_field_fixed_prec(prec=prec, degree=degree)
+        if not self.trace_field: return None
+        
+        
         

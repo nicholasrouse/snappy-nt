@@ -81,7 +81,7 @@ def generate_reducible_subgroup(g, h, epsilon_coefficient=10):
 
 
 
-def enumerate_words(rank):
+def enumerate_words(rank, power=1):
     """
     This just enumerates words from a free group in ``Tietze notation". E.g. for two
     generators a and b, [1,2,1] is the element aba; [2,-1,-2] is ba^(-1)b^(-1). The
@@ -89,6 +89,11 @@ def enumerate_words(rank):
     This can probably be rewritten recursively to avoid writing an explicit
     algorithm for computing the next element from the previous. The upshot is that this
     should play nicely with most groups given as quotients of free groups in sage.
+
+    The power argument allows for enumeration of powers of words. E.g. if rank=2 and
+    power=2, then the generator will yield [1,1], [2,2], [-1,-1], [-2,-2]. This option
+    is used to find group elements used in the construction of invariant trace fields
+    and quaternion algebras.
     """
 
     def next_integer(integer):
@@ -117,18 +122,18 @@ def enumerate_words(rank):
         return False
 
     previous_element = [1]
-    yield previous_element
+    yield previous_element*power
     while True:
         if previous_element == [-rank] * len(previous_element):
             previous_element = [1] * (len(previous_element) + 1)
-            yield previous_element
+            yield previous_element*power
         else:
             previous_element = next_element(previous_element)
             if not has_simplification(previous_element):
-                yield previous_element
+                yield previous_element*power
 
 
-def enumerate_group_elements(group, as_word=False, verbosity=False):
+def enumerate_group_elements(group, as_word=False, power=1, verbosity=False):
     """
     This is not especially robust at the moment. It basically only works with groups
     coming from polished_holonomy in SnapPy. In particul.ar it makes use of a __call__
@@ -155,7 +160,7 @@ def enumerate_group_elements(group, as_word=False, verbosity=False):
         elif integer < 0:
             return inverses[-integer - 1]
 
-    tietze_words_generator = enumerate_words(rank)
+    tietze_words_generator = enumerate_words(rank, power=power)
     while True:
         tietze_word = next(tietze_words_generator)
         list_word = [tietze_conversion(integer) for integer in tietze_word]
@@ -166,7 +171,7 @@ def enumerate_group_elements(group, as_word=False, verbosity=False):
         else: yield group(word)
 
 
-def find_hilbert_symbol_words(group):
+def find_hilbert_symbol_words(group, power=1):
     """
     Given a group, enumerates pairs of words until two, g and h, are found such that
     g and [g,h] (the commutator) are not parabolic. The function is so named because

@@ -79,6 +79,18 @@ def generate_reducible_subgroup(g, h, epsilon_coefficient=10):
     else:
         return False
 
+def get_trace_as_AAN(group, word):
+    """
+    This gets the trace of a group element given as a word as an 
+    ApproximatAlgebraicNumber. The group does need to be passed in as ab ``arbitrary
+    precision group", i.e. one whose elements can be calculated to arbitrary
+    precision. The group's __call__ also needs to word for word like 'abA'.
+    This is a pretty restrictive interface, and it's possible this should be refactored
+    or somehow go somewhere else, but group can be the defining function for a
+    ManifoldAP object, and the word can just be a word as a string.
+
+    Actually I should just change this somehow.
+    """
 
 
 def enumerate_words(rank, power=1):

@@ -21,6 +21,7 @@ import irreducible_subgroups
 import misc_functions
 
 
+
 class ManifoldAP(snappy.Manifold):
     # Probably make these changeable via a class method at some point.
     # Not sure if this a great pattern to have these as class level attributes.

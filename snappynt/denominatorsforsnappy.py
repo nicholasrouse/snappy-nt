@@ -1,3 +1,9 @@
+"""
+Ideally this module will get incorporated into other at some point. It was written
+before ManifoldAP was, so we worked systematically with SnapPy's Manifold objects
+rather than a custom subclass.
+"""
+
 # For some reason I thought this was wrong at some point.
 # Perhaps because I thought the generators corresponded to matrix entries.
 # According to SnapPy source code and doc strings, trace_field_gens()

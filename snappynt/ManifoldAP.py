@@ -47,6 +47,7 @@ class ManifoldAP(snappy.Manifold):
         self.invariant_trace_field_prec_record = dict()
         self.quaternion_algebra = None
         self.invariant_quaternion_algebra = None
+        self.denominators = None # It will be the empty list if there are no denominators.
 
     def has_two_torsion_in_homology(self):
         """
@@ -254,7 +255,9 @@ class ManifoldAP(snappy.Manifold):
         """
         If the trace field isn't known, whatever precision and degree are passed here
         are used to try to compute it. If it fails to do so, the entire function fails,
-        and will return None.
+        and will return None. This will try to recompute the quaternion algebra even if
+        it is already known, but it won't try to recompute the trace field if it is
+        known.
 
         Possible refactor: Just have one method for computing quaternion algebras from
         ApproximateAlgebraicNumbers. In that case, probably easiest to make another
@@ -322,7 +325,8 @@ class ManifoldAP(snappy.Manifold):
     ):
         """
         Similar to other methods, this will try to compute the algebra even if it is
-        already known.
+        already known. It will use a known trace field without recomputing though (see
+        the docstring for the compute_quaternion_algebra_fixed_prec).
 
         We should also maybe try to come up with a unified way to varying the precision
         and degree since this is close to copy and paste of the trace field method.
@@ -393,3 +397,24 @@ class ManifoldAP(snappy.Manifold):
             else:
                 degree = max_degree
         return self.invariant_quaternion_algebra
+    
+    def compute_denominators_fixed_precision(self, prec=default_starting_prec, degree=default_starting_degree):
+        """
+        Similar kind of interface to others such a compute_trace_field_fixed_precision
+        in that one specifies some precision and degree and the function tries to
+        find the denominators for only those parameters.
+
+        This function, as a side-effect, computes the noninvariant trace field of the
+        manifold. I think this should be desired more or less because as far as I know,
+        there is basically no way to compute the denomiantors without computing
+        generators for the trace field, which is an expensive operation, so one should
+        really try to save the generators if possible.
+
+        It's also worth pointing out that the denominators are returned as a tuple of
+        ideals of a number field. This is different from the behavior in the
+        denominatorforsnappy module that just returns the residue characteristics. We
+        could add this as an optional argument at some point though.
+
+        This function also tries to compute the denominators even if they're already
+        known. However, it will use known information about the trace 
+        """

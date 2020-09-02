@@ -16,3 +16,16 @@ def commutator_of_words(word1, word2):
     word2_inverse = word2[::-1].swapcase()
     word = word1+word2+word1_inverse+word2_inverse
     return word
+
+def ramified_real_places(quaternion_algebra):
+    """
+    Takes in a quaternion algebra over a number field and returns a list of ramified
+    places as maps. Obviously this could basically be a somewhat long one-liner, but
+    I think it's a bit nicer this way.
+    """
+    a,b = quaternion_algebra.invariants()
+    field = quaternion_algebra.base_ring()
+    # Could use real_embeddings() as well.
+    real_places = field.real_places()
+    ramified_places = [place for place in real_places if place(a) < 0 and place(b) < 0]
+    return ramified_places

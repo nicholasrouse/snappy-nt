@@ -21,7 +21,6 @@ import irreducible_subgroups
 import misc_functions
 
 
-
 class ManifoldAP(snappy.Manifold):
     # Probably make these changeable via a class method at some point.
     # Not sure if this a great pattern to have these as class level attributes.
@@ -48,7 +47,8 @@ class ManifoldAP(snappy.Manifold):
         self.invariant_trace_field_prec_record = dict()
         self.quaternion_algebra = None
         self.invariant_quaternion_algebra = None
-        self.denominators = None # It will be the empty list if there are no denominators.
+        # denominators will be the empty set if there are no denominators.
+        self.denominators = None
 
     def has_two_torsion_in_homology(self):
         """
@@ -85,7 +85,9 @@ class ManifoldAP(snappy.Manifold):
             self.trace_field_generators = exact_field_data[2]
         return self.trace_field
 
-    def compute_invariant_trace_field_fixed_prec(self, prec=default_starting_prec, degree=default_starting_degree):
+    def compute_invariant_trace_field_fixed_prec(
+        self, prec=default_starting_prec, degree=default_starting_degree
+    ):
         """
         This doesn't do anything with homology just yet. Should probably refactor this
         somehow to make invariant and noninvariant trace fields computed through some
@@ -101,7 +103,7 @@ class ManifoldAP(snappy.Manifold):
             self.invariant_trace_field = exact_field_data[0]
             self.invariant_trace_field_numerical_root = exact_field_data[1]  # An AAN
             self.invariant_trace_field_generators = exact_field_data[2]
-        return self.invariant_trace_field 
+        return self.invariant_trace_field
 
     def compute_trace_field(
         self,
@@ -162,7 +164,7 @@ class ManifoldAP(snappy.Manifold):
             else:
                 degree = max_degree
         return self.trace_field
-    
+
     def compute_invariant_trace_field(
         self,
         starting_prec=default_starting_prec,
@@ -203,7 +205,7 @@ class ManifoldAP(snappy.Manifold):
             else:
                 degree = max_degree
         return self.invariant_trace_field
- 
+
     def approximate_trace(self, word):
         """
         Given a word in the generators for the fundamental group, returns an
@@ -283,7 +285,7 @@ class ManifoldAP(snappy.Manifold):
                 self.trace_field, first_entry, second_entry
             )
         return self.quaternion_algebra
-    
+
     def compute_invariant_quaternion_algebra_fixed_prec(
         self, prec=default_starting_prec, degree=default_starting_degree
     ):
@@ -295,8 +297,8 @@ class ManifoldAP(snappy.Manifold):
         """
         if not self.invariant_trace_field:
             self.compute_invariant_trace_field_fixed_prec(prec=prec, degree=degree)
-        if not self.invariant_trace_field:
-            return None
+            if not self.invariant_trace_field:
+                return None
         primitive_element = self.invariant_trace_field_numerical_root  # An AAN
         (
             approx_first_entry,
@@ -311,7 +313,6 @@ class ManifoldAP(snappy.Manifold):
                 self.invariant_trace_field, first_entry, second_entry
             )
         return self.invariant_quaternion_algebra
-
 
     def compute_quaternion_algebra(
         self,
@@ -361,16 +362,16 @@ class ManifoldAP(snappy.Manifold):
         return self.quaternion_algebra
 
     def compute_invariant_quaternion_algebra(
-            self,
-            starting_prec=default_starting_prec,
-            starting_degree=default_starting_degree,
-            prec_increment=default_prec_increment,
-            degree_increment=default_degree_increment,
-            max_prec=default_max_prec,
-            max_degree=default_max_degree,
-            verbosity=False,
-            use_last_known_failed=False,
-        ):
+        self,
+        starting_prec=default_starting_prec,
+        starting_degree=default_starting_degree,
+        prec_increment=default_prec_increment,
+        degree_increment=default_degree_increment,
+        max_prec=default_max_prec,
+        max_degree=default_max_degree,
+        verbosity=False,
+        use_last_known_failed=False,
+    ):
         """
         See docstrings on compute_quaternion_algebra for more information. This one
         works pretty similarly.
@@ -398,24 +399,83 @@ class ManifoldAP(snappy.Manifold):
             else:
                 degree = max_degree
         return self.invariant_quaternion_algebra
-    
-    def compute_denominators_fixed_precision(self, prec=default_starting_prec, degree=default_starting_degree):
+
+    def compute_denominators_fixed_prec(
+        self, prec=default_starting_prec, degree=default_starting_degree
+    ):
         """
-        Similar kind of interface to others such a compute_trace_field_fixed_precision
+        Similar kind of interface to others such a compute_trace_field_fixed_prec
         in that one specifies some precision and degree and the function tries to
         find the denominators for only those parameters.
 
         This function, as a side-effect, computes the noninvariant trace field of the
-        manifold. I think this should be desired more or less because as far as I know,
-        there is basically no way to compute the denomiantors without computing
+        manifold. I think this should be desired more or less because, as far as I
+        know, there is basically no way to compute the denomiantors without computing
         generators for the trace field, which is an expensive operation, so one should
         really try to save the generators if possible.
 
-        It's also worth pointing out that the denominators are returned as a tuple of
+        It's also worth pointing out that the denominators are returned as a set of
         ideals of a number field. This is different from the behavior in the
         denominatorforsnappy module that just returns the residue characteristics. We
         could add this as an optional argument at some point though.
 
+        It's possible this shouldn't even really be a method since it depends on
+        computing the generators for the trace field. There are no actual hard LLL 
+        computations to do here.
+
         This function also tries to compute the denominators even if they're already
-        known. However, it will use known information about the trace 
+        known. However, it will use known information about the trace field generators.
+        In fact, it needs to know the trace field generators to work.
         """
+
+        if not self.trace_field_generators:
+            self.compute_trace_field_fixed_prec(prec=prec, degree=degree)
+            if not self.trace_field_generators: return None
+        denominator_ideals = {element.denominator_ideal() for element in self.trace_field_generators}
+        prime_ideals = set()
+        for ideal in denominator_ideals:
+            factorization = ideal.factor()
+            for element in factorization:
+                prime_ideals.add(element[0])
+        self.denomiantors = prime_ideals
+        return prime_ideals
+    
+    def compute_denominators(
+        self,
+        starting_prec=default_starting_prec,
+        starting_degree=default_starting_degree,
+        prec_increment=default_prec_increment,
+        degree_increment=default_degree_increment,
+        max_prec=default_max_prec,
+        max_degree=default_max_degree,
+        verbosity=False,
+        use_last_known_failed=False,
+    ):
+        """
+        As with other methods in this module, this will recompute the denominators even
+        if they're known.
+        """
+        prec = starting_prec
+        degree = starting_degree
+        while self.denominators == None:
+            if verbosity:
+                print(
+                    str(self) + ":",
+                    f"Trying with precision={prec} and degree={degree}",
+                )
+            ManifoldAP.compute_denominators_fixed_prec(
+                self, prec=prec, degree=degree
+            )
+
+            if prec == max_prec and degree == max_degree:
+                return None
+            if prec + prec_increment <= max_prec:
+                prec = prec + prec_increment
+            else:
+                prec = max_prec
+            if degree + degree_increment <= max_degree:
+                degree = degree + degree_increment
+            else:
+                degree = max_degree
+        return self.denominators
+    

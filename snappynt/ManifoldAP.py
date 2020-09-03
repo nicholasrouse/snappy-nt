@@ -49,6 +49,7 @@ class ManifoldAP(snappy.Manifold):
         self.invariant_quaternion_algebra = None
         # denominators will be the empty set if there are no denominators.
         self.denominators = None
+        self.denominator_residue_characteristics = None
 
     def has_two_torsion_in_homology(self):
         """
@@ -414,14 +415,18 @@ class ManifoldAP(snappy.Manifold):
         generators for the trace field, which is an expensive operation, so one should
         really try to save the generators if possible.
 
+        This function incidentally computes the residue characteristics of the
+        denominators for easy access later.
+
         It's also worth pointing out that the denominators are returned as a set of
         ideals of a number field. This is different from the behavior in the
-        denominatorforsnappy module that just returns the residue characteristics. We
+        denominatorsforsnappy module that just returns the residue characteristics. We
         could add this as an optional argument at some point though.
 
         It's possible this shouldn't even really be a method since it depends on
         computing the generators for the trace field. There are no actual hard LLL 
-        computations to do here.
+        computations to do here. That is, perhaps it should just refuse to run if
+        the trace field generators are not known.
 
         This function also tries to compute the denominators even if they're already
         known. However, it will use known information about the trace field generators.
@@ -438,6 +443,8 @@ class ManifoldAP(snappy.Manifold):
             for element in factorization:
                 prime_ideals.add(element[0])
         self.denomiantors = prime_ideals
+        norms = {ideal.absolute_norm() for ideal in prime_ideals}
+        self.denominator_residue_characteristics = denominatorsforsnappy.find_prime_factors_in_a_set(norms)
         return prime_ideals
     
     def compute_denominators(
@@ -453,7 +460,7 @@ class ManifoldAP(snappy.Manifold):
     ):
         """
         As with other methods in this module, this will recompute the denominators even
-        if they're known.
+        if they're known. This should incidentally compute the residue characteristics.
         """
         prec = starting_prec
         degree = starting_degree
@@ -478,4 +485,17 @@ class ManifoldAP(snappy.Manifold):
             else:
                 degree = max_degree
         return self.denominators
-    
+
+    def is_arithmetic(self):
+        """
+        This checks whether the manifold (really the Kleinian group) is arithmetic.
+        It doesn't itself explicitly compute the necessary invariants if they aren't
+        already known.
+
+        For why this works, see MR Theorem 8.3.2 pp.261-262.
+
+        This could be a one-liner, but I think it's clearer this way.
+        """
+        number_of_complex_places, number_of_real_places = self.invariant_trace_field.signature()
+        number_of_ramified_real_places = len(misc_functions.ramified_real_places(self.invariant_quaternion_algebra))
+        return (number_of_ramified_real_places == number_of_real_places and number_of_complex_places == 1 and self.denomiantors == set())

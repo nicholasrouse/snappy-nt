@@ -32,12 +32,18 @@ class ManifoldAP(snappy.Manifold):
     default_prec_increment = 5000
     default_degree_increment = 5
 
-    def __init__(self, spec=None):
+    def __init__(self, spec=None, delay_computations=False):
         """
         It's worth noting that we store a lot of attributes here. The reason is that a
         lot of them are somewhat expensive to compute. We could alternatively use
         sage's caching capability, but having all these class attributes should make
         them easier to store and reconstruct later.
+
+        Unless delay_computations=True, we try to compute the main arithmetic
+        arithmetic invariants with a precision that should only take at most a few
+        seconds to succeed or fail. In case one needs to create a lot of these objects
+        and the computations will actually meaningfully slow down whatever is being
+        done, one may pass in delay_computations=True.
         """
         snappy.Manifold.__init__(self, spec)
         # We store the fields as a sage NumberField objects with a *monic* generating polynomial.
@@ -60,7 +66,7 @@ class ManifoldAP(snappy.Manifold):
         # denominators will be the empty set if there are no denominators.
         self.denominators = None
         self.denominator_residue_characteristics = None
-        self.compute_arithmetic_invariants()
+        if not delay_computations: self.compute_arithmetic_invariants()
 
     def has_two_torsion_in_homology(self):
         """
@@ -336,20 +342,20 @@ class ManifoldAP(snappy.Manifold):
             self.invariant_quaternion_algebra = QuaternionAlgebra(
                 self.invariant_trace_field, first_entry, second_entry
             )
-            if self.invariant_quaternion_algebra:
-                discriminant_list = list(
-                    self.invariant_quaternion_algebra.discriminant().factor()
-                )
-                self.invariant_quaternion_algebra_ramified_places = [
-                    ideal for (ideal, multiplicity) in discriminant_list
-                ]
-                self.invariant_quaternion_algebra_ramified_places_residue_characteristics = list(
-                    {
-                        place.absolute_norm()
-                        for place in self.invariant_quaternion_algebra_ramified_places
-                    }
-                )
-                self.invariant_quaternion_algebra_ramified_places_residue_characteristics.sort()
+        if self.invariant_quaternion_algebra:
+            discriminant_list = list(
+                self.invariant_quaternion_algebra.discriminant().factor()
+            )
+            self.invariant_quaternion_algebra_ramified_places = [
+                ideal for (ideal, multiplicity) in discriminant_list
+            ]
+            self.invariant_quaternion_algebra_ramified_places_residue_characteristics = list(
+                {
+                    place.absolute_norm()
+                    for place in self.invariant_quaternion_algebra_ramified_places
+                }
+            )
+            self.invariant_quaternion_algebra_ramified_places_residue_characteristics.sort()
         return self.invariant_quaternion_algebra
 
     def compute_quaternion_algebra(
@@ -448,7 +454,7 @@ class ManifoldAP(snappy.Manifold):
 
         This function, as a side-effect, computes the noninvariant trace field of the
         manifold. I think this should be desired more or less because, as far as I
-        know, there is basically no way to compute the denomiantors without computing
+        know, there is basically no way to compute the denominators without computing
         generators for the trace field, which is an expensive operation, so one should
         really try to save the generators if possible.
 
@@ -482,7 +488,7 @@ class ManifoldAP(snappy.Manifold):
             factorization = ideal.factor()
             for element in factorization:
                 prime_ideals.add(element[0])
-        self.denomiantors = prime_ideals
+        self.denominators = prime_ideals
         norms = {ideal.absolute_norm() for ideal in prime_ideals}
         self.denominator_residue_characteristics = denominatorsforsnappy.find_prime_factors_in_a_set(
             norms
@@ -546,7 +552,7 @@ class ManifoldAP(snappy.Manifold):
         return (
             number_of_ramified_real_places == number_of_real_places
             and number_of_complex_places == 1
-            and self.denomiantors == set()
+            and self.denominators == set()
         )
 
     def compute_arithmetic_invariants(
@@ -604,7 +610,52 @@ class ManifoldAP(snappy.Manifold):
 
     def p_arith(self):
         """
-        This is so named because of a snap command of the same name. It tries to
-        compute the arithmetic invariants but only at the default precision if they're
-        not known some other way. It then prints nicely the main invariants.
+        This is so named for the common use case of typing p arith in snap to get the
+        arithmetic invariants.
+
+        This function is probably a good argument for subclassing a lot of our objects
+        and defining __str__ methods in those classes.
         """
+        print('Orbifold name:', self)
+        if self.trace_field:
+            print('Trace field:', self.trace_field)
+            print('\t Signature:', self.trace_field.signature())
+            print('\t Discriminant:', self.trace_field.discriminant())
+
+            if self.quaternion_algebra:
+                print('Quaternion Algebra:', self.quaternion_algebra)
+                print('\t Finite Ramification:', self.quaternion_algebra_ramified_places)
+                print('\t Finite Ramification Residue Characteristic:', self.quaternion_algebra_ramified_places_residue_characteristics)
+                number_of_ramified_real_places = len(misc_functions.ramified_real_places(self.quaternion_algebra))
+                places_grammatical = 'place' if number_of_ramified_real_places == 1 else 'places'
+                print('\t Real Ramification:', number_of_ramified_real_places, places_grammatical)
+            else:
+                print('Quaternion algebra not found.')
+        else:
+            print('Trace field not found.')
+        if self.invariant_trace_field:
+            print('Invariant Trace field:', self.invariant_trace_field)
+            print('\t Signature:', self.invariant_trace_field.signature())
+            print('\t Discriminant:', self.invariant_trace_field.discriminant())
+            if self.invariant_quaternion_algebra:
+                print('Invariant Quaternion Algebra:', self.invariant_quaternion_algebra)
+                print('\t Finite Ramification:', self.invariant_quaternion_algebra_ramified_places)
+                print('\t Finite Ramification Residue Characteristic:', self.invariant_quaternion_algebra_ramified_places_residue_characteristics)
+                number_of_ramified_real_places = len(misc_functions.ramified_real_places(self.invariant_quaternion_algebra))
+                places_grammatical = 'place' if number_of_ramified_real_places == 1 else 'places'
+                print('\t Real Ramification:', number_of_ramified_real_places, places_grammatical)
+            else:
+                print('Invariant quaternion algebra not found.')
+        else:
+            print('Invariant trace field not found.')
+        if self.denominators is None:
+            print('Denominators not found (trace field probably not computed)')
+        else:
+            print('Integer traces:', not bool(self.denominators))
+            if len(self.denominators) >= 1:
+                print('\t Denominator ideals:', self.denominators)
+                print('\t Denominator Residue Characteristics:', self.denominator_residue_characteristics)
+        if self.trace_field and self.invariant_quaternion_algebra:
+            print('Arithmetic:', bool(self.is_arithmetic()))
+
+        

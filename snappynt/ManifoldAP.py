@@ -657,5 +657,40 @@ class ManifoldAP(snappy.Manifold):
                 print('\t Denominator Residue Characteristics:', self.denominator_residue_characteristics)
         if self.trace_field and self.invariant_quaternion_algebra:
             print('Arithmetic:', bool(self.is_arithmetic()))
+    
+    def delete_arithmetic_invariants(self):
+        """
+        This method sets all the invariants back to their starting values (usually
+        None). I don't love having a method like this, but when we Dehn fill we need
+        to forget all this data since other methods try to use known information about
+        the various invariants to compute other ones. I'll try to find a better way to
+        do this in a later version.
 
-        
+        Last updated: Sept-9 2020
+        """
+        self.trace_field = None
+        self.trace_field_numerical_root = None
+        self.trace_field_generators = None
+        self.trace_field_prec_record = dict()
+        self.invariant_trace_field = None
+        self.invariant_trace_field_numerical_root = None
+        self.invariant_trace_field_generators = None
+        self.invariant_trace_field_prec_record = dict()
+        self.quaternion_algebra = None
+        self.quaternion_algebra_ramified_places = None
+        self.quaternion_algebra_ramified_places_residue_characteristics = None
+        self.invariant_quaternion_algebra = None
+        self.invariant_quaternion_algebra_ramified_places = None
+        self.invariant_quaternion_algebra_ramified_places_residue_characteristics = None
+        self.denominators = None
+        self.denominator_residue_characteristics = None
+    
+    def dehn_fill(self, filling_data, which_cusp=None):
+        """
+        This performs dehn surgery "in place," i.e. it doesn't return a new manifold
+        but rather changes self. This, of course, necessitates recomputing all the
+        arithmetic invariants.
+        """
+        snappy.Manifold.dehn_fill(self, filling_data, which_cusp=None)
+        self.delete_arithmetic_invariants()
+        self.compute_arithmetic_invariants()

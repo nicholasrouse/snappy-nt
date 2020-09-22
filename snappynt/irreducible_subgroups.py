@@ -4,7 +4,7 @@ from sage.all import Integer, QQ, ZZ
 def within_epsilon(a, b, epsilon_coefficient=1):
     """
     I feel like Sage should probably have a way to do this anyway, but I was unable to
-    find it. What this does is take in two number from fixed=precision fields and test
+    find it. What this does is take in two number from fixed precision fields and test
     whether they're within the smallest nonzero positive number representatble in both
     fields times the epsilon_coefficient. One can tweak the epsilon_coefficient to be
     more or less conservative (depending on the application) with equality testing.

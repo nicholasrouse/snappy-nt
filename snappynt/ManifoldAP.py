@@ -20,15 +20,6 @@ import functools
 import irreducible_subgroups
 import misc_functions
 
-def try_various_precison(func, interable, fail_value=None):
-    """
-    This should maybe be in a separate module.
-    """
-    map_object = map(func, iterable)
-    for return_value in map_object:
-        if return_value != fail_value: break
-    return return_value
-
 
 class ManifoldAP(snappy.Manifold):
     # Probably make these changeable via a class method at some point.
@@ -82,12 +73,6 @@ class ManifoldAP(snappy.Manifold):
         self.approx_trace_field_gens = self.trace_field_gens()
         self.approx_invariant_trace_field_gens = self.invariant_trace_field_gens()
         if not delay_computations: self.compute_arithmetic_invariants()
-    
-    def precision_varier(self):
-        """
-        This will return a generator...somehow that conforms to the interface of the
-        methods that compute the arithmetic invariants.
-        """
 
     def has_two_torsion_in_homology(self):
         """
@@ -105,20 +90,12 @@ class ManifoldAP(snappy.Manifold):
     def defining_function(self, prec):
         return snappy.snap.polished_holonomy(self, bits_prec=prec)
 
-    def compute_trace_field(
-        self, prec=default_starting_prec, degree=default_starting_degree, be_smart=True, _force_compute=False
+    def compute_trace_field_fixed_prec(
+        self, prec=default_starting_prec, degree=default_starting_degree
     ):
         """
         Note that this will attempt to recompute the trace field even if it is known.
         """
-        if be_smart:
-            if self.invariant_trace_field:
-                ivt_deg = self.invariant_trace_field.degree()
-                if not self.has_two_torsion_in_homology or ivt_deg%2 == 1:
-                    degree = self.invariant_trace_field.degree()
-                elif:
-                    if degree >= ivt_deg: degree = ivt_deg
-                    else: degree = ivt_deg/2
         exact_field_data = self.approx_trace_field_gens.find_field(
             prec=prec, degree=degree, optimize=True
         )
@@ -151,7 +128,6 @@ class ManifoldAP(snappy.Manifold):
             self.invariant_trace_field_generators = exact_field_data[2]
         return self.invariant_trace_field
 
-    """
     def compute_trace_field(
         self,
         starting_prec=default_starting_prec,
@@ -163,7 +139,6 @@ class ManifoldAP(snappy.Manifold):
         verbosity=False,
         use_last_known_failed=False,
     ):
-    """
         """
         This is the exact field, returned as a sage NumberField. The exact generators for the
         field are not returned by this method to allow for easier interface with sage. They are
@@ -187,7 +162,6 @@ class ManifoldAP(snappy.Manifold):
         though.
          
         Docstring last updated: Aug-27-2020
-        """
         """
         prec = starting_prec
         degree = starting_degree
@@ -213,7 +187,6 @@ class ManifoldAP(snappy.Manifold):
             else:
                 degree = max_degree
         return self.trace_field
-        """
 
     def compute_invariant_trace_field(
         self,

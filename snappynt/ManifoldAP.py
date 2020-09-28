@@ -22,7 +22,7 @@ import misc_functions
 from collections import namedtuple
 
 
-def try_various_precison(func, interable, fail_value=None):
+def try_various_precision(func, iterable, fail_value=None):
     """
     This should maybe be in a separate module.
     """
@@ -38,27 +38,30 @@ PrecDegreeTuple = namedtuple("PrecDegreeTuple", ["prec", "degree"])
 
 def fix_names(name):
     name = name.lower()
-    if name == "tf" or "trace field":
+    if name == "tf" or name == "trace field":
         return "trace field"
-    elif name == "itf" or "invariant trace field":
+    elif name == "itf" or name == "invariant trace field":
         return "invariant trace field"
-    elif name == "qa" or "quaternion algebra":
+    elif name == "qa" or name == "quaternion algebra":
         return "quaternion algebra"
-    elif name == "iqa" or "invariant quaternion algebra":
+    elif name == "iqa" or name =="invariant quaternion algebra":
         return "invariant quaternion algebra"
 
 
 class ManifoldAP(snappy.Manifold):
+    default_starting_prec = 1000
+    default_starting_degree = 10
+    default_max_prec = 5 * 10 ** 5
+    default_max_degree = 100
+    default_prec_increment = 5000
+    default_degree_increment = 5
+    # One day we need to figure out how to add this to __init__. Right now changing the
+    # call signature of our __init__ breaks some Cython. I think it can be managed with
+    # some __new__ or (God forbid) metaclass magic.
+    delay_computations = False
     def __init__(
         self,
-        spec=None,
-        delay_computations=False,
-        default_starting_prec=1000,
-        default_starting_degree=10,
-        default_max_prec=10 ** 5,
-        default_max_degree=100,
-        default_prec_increment=5000,
-        default_degree_increment=5,
+        spec=None
     ):
         """
         It's worth noting that we store a lot of attributes here. The reason is that a
@@ -78,12 +81,6 @@ class ManifoldAP(snappy.Manifold):
         # We store the fields as a sage NumberField objects with a *monic* generating polynomial.
         # Perhaps subclass Sage's NumberField to store all this info?
         # The prec_record variables record whether a given prec and degree was sucessful.
-        self.default_starting_prec = default_starting_prec
-        self.default_starting_degree = default_starting_degree
-        self.default_max_prec = default_max_prec
-        self.default_max_degree = default_max_degree
-        self.default_prec_increment = default_prec_increment
-        self.default_degree_increment = default_degree_increment
         self.trace_field = None
         self.trace_field_numerical_root = None
         self.trace_field_generators = None
@@ -112,8 +109,15 @@ class ManifoldAP(snappy.Manifold):
         # This sometimes raises exceptions, but it happens in SnapPy itself.
         self.approx_trace_field_gens = self.trace_field_gens()
         self.approx_invariant_trace_field_gens = self.invariant_trace_field_gens()
-        if not delay_computations:
-            self.compute_arithmetic_invariants()
+        if not ManifoldAP.delay_computations:
+            # Can make this cleaner somehow. The issue is compute_arithmetic_invariants has no return value.
+            # Having code like this sort of defeats the purpose of the compute_arithmetic_invariants method.
+            # I think the answer is to add logic to not recompute invariants unless _force_compute.
+            methods = (self.compute_trace_field, self.compute_invariant_trace_field, self.compute_quaternion_algebra, self.compute_invariant_quaternion_algebra)
+            for method in methods:
+                try_various_precision(method, self.make_prec_degree_generator())
+            self.compute_denominators()
+            
 
     def next_prec_and_degree(self, invariant):
         """
@@ -155,7 +159,7 @@ class ManifoldAP(snappy.Manifold):
         record = self.dict_of_prec_records[invariant]
         if invariant == 'trace field' or invariant == 'invariant trace field':
             if not record:
-                return (self.default_starting_prec, self.default_starting_degree)
+                return PrecDegreeTuple(ManifoldAP.default_starting_prec, ManifoldAP.default_starting_degree)
             if True in record.values():
                 smallest_successful_prec = min(
                     [pair.prec for pair in record if record[pair]]
@@ -176,8 +180,8 @@ class ManifoldAP(snappy.Manifold):
                     [pair.degree for pair in record if not record[pair]]
                 )
                 newpair = PrecDegreeTuple(
-                largest_failed_prec + self.default_prec_increment,
-                largest_failed_degree + self.default_degree_increment,
+                largest_failed_prec + ManifoldAP.default_prec_increment,
+                largest_failed_degree + ManifoldAP.default_degree_increment,
             )
             return newpair
         if invariant == 'quaternion algebra' or invariant == 'invariant quaternion algebra':
@@ -186,7 +190,8 @@ class ManifoldAP(snappy.Manifold):
                 if invariant == "quaternion algebra"
                 else "invariant trace field"
             )
-            field_prec = self.next_prec_and_degree(field)
+            field_prec_deg = self.next_prec_and_degree(field)
+            field_prec = field_prec_deg.prec
             if not record:
                 return field_prec
             else:
@@ -194,7 +199,7 @@ class ManifoldAP(snappy.Manifold):
                     return min([prec for prec in record if record[prec]])
                 else:
                     largest_failed_prec = max([prec for prec in record if not record[prec]])
-                    return max(largest_failed_prec + self.default_prec_increment, field_prec)
+                    return max(largest_failed_prec + ManifoldAP.default_prec_increment, field_prec)
                 
             
 
@@ -219,8 +224,8 @@ class ManifoldAP(snappy.Manifold):
 
     def compute_trace_field(
         self,
-        prec=self.default_starting_prec,
-        degree=self.default_starting_degree,
+        prec=default_starting_prec,
+        degree=default_starting_degree,
         be_smart=True,
         verbosity=False,
         _force_compute=False,
@@ -299,8 +304,8 @@ class ManifoldAP(snappy.Manifold):
 
     def compute_invariant_trace_field(
         self,
-        prec=self.default_starting_prec,
-        degree=self.default_starting_degree,
+        prec=default_starting_prec,
+        degree=default_starting_degree,
         be_smart=True,
         verbosity=False,
         _force_compute=False,
@@ -315,7 +320,7 @@ class ManifoldAP(snappy.Manifold):
         if be_smart:
             prec, degree = self.next_prec_and_degree("invariant trace field")
             if self.trace_field:
-                tf_deg = self.invariant_trace_field.degree()
+                tf_deg = self.trace_field.degree()
                 if (
                     not self.has_two_torsion_in_homology
                     or self.trace_field.degree() % 2 == 1
@@ -335,7 +340,7 @@ class ManifoldAP(snappy.Manifold):
             print(
                 f"Trying to compute invariant trace field with precision={prec} and degree={degree}."
             )
-        exact_field_data = self.approx_invariant_trace_field.find_field(
+        exact_field_data = self.approx_invariant_trace_field_gens.find_field(
             prec=prec, degree=degree, optimize=True
         )
         self.invariant_trace_field_prec_record[PrecDegreeTuple(prec, degree)] = bool(
@@ -351,115 +356,6 @@ class ManifoldAP(snappy.Manifold):
             if verbosity:
                 print("\tInvariant trace field not found.")
         return self.invariant_trace_field
-
-        """
-    def compute_trace_field(
-        self,
-        starting_prec=default_starting_prec,
-        starting_degree=default_starting_degree,
-        prec_increment=default_prec_increment,
-        degree_increment=default_degree_increment,
-        max_prec=default_max_prec,
-        max_degree=default_max_degree,
-        verbosity=False,
-        use_last_known_failed=False,
-    ):
-        """
-        """
-        This is the exact field, returned as a sage NumberField. The exact generators for the
-        field are not returned by this method to allow for easier interface with sage. They are
-        however computed and stored as an attribute for later use. The method has a
-        semicomplicated interface to allow for multiple attempts to find the field. If only one
-        attempt is required (e.g. because the requisite precision and degree are known), the
-        method compute_trace_field_fixed_prec is probably better and will store the result if
-        successful.
-
-        Note that like compute_trace_field_fixed_prec, this method will attempt to
-        compute the trace field even it is already known. Use just self.trace_field
-        to access previously computed trace fields.
-
-        Something to add: logic for using information when the invariant trace field is
-        known. If we just want the number field, we can just check homology and go form
-        there, but if we want generators we maybe have to be more careful (or maybe
-        not; see MR p.134).
-
-        I think perhaps I should put all the code for computing this in another module
-        and just import for this one. I do need to decide on an interface for this one
-        though.
-         
-        Docstring last updated: Aug-27-2020
-        """
-        """
-        prec = starting_prec
-        degree = starting_degree
-        exact_field = None
-        while exact_field == None:
-            if verbosity:
-                print(
-                    str(self) + ":",
-                    f"Trying with precision={prec} and degree={degree}",
-                )
-            exact_field = ManifoldAP.compute_trace_field_fixed_prec(
-                self, prec=prec, degree=degree
-            )
-
-            if prec == max_prec and degree == max_degree:
-                return None
-            if prec + prec_increment <= max_prec:
-                prec = prec + prec_increment
-            else:
-                prec = max_prec
-            if degree + degree_increment <= max_degree:
-                degree = degree + degree_increment
-            else:
-                degree = max_degree
-        return self.trace_field
-        """
-
-        """
-    def compute_invariant_trace_field(
-        self,
-        starting_prec=self.default_starting_prec,
-        starting_degree=self.default_starting_degree,
-        prec_increment=self.default_prec_increment,
-        degree_increment=self.default_degree_increment,
-        max_prec=self.default_max_prec,
-        max_degree=self.default_max_degree,
-        verbosity=False,
-        use_last_known_failed=False,
-    ):
-        """
-        """
-        See docstring for compute_trace_field for more information. This should be
-        refactored somehow I think since it's close right now to a copy-paste of the
-        method for noninvariant trace fields.
-        """
-        """
-        prec = starting_prec
-        degree = starting_degree
-        exact_field = None
-        while exact_field == None:
-            if verbosity:
-                print(
-                    str(self) + ":",
-                    f"Trying with precision={prec} and degree={degree}",
-                )
-            exact_field = ManifoldAP.compute_invariant_trace_field_fixed_prec(
-                self, prec=prec, degree=degree
-            )
-
-            if prec == max_prec and degree == max_degree:
-                return None
-            if prec + prec_increment <= max_prec:
-                prec = prec + prec_increment
-            else:
-                prec = max_prec
-            if degree + degree_increment <= max_degree:
-                degree = degree + degree_increment
-            else:
-                degree = max_degree
-        return self.invariant_trace_field
-        """
 
     def approximate_trace(self, word):
         """
@@ -508,7 +404,7 @@ class ManifoldAP(snappy.Manifold):
         return (first_entry, second_entry)
 
     def compute_quaternion_algebra(
-        self, prec=self.default_starting_prec, be_smart=True, verbosity=False, **kwargs
+        self, prec=default_starting_prec, be_smart=True, verbosity=False, **kwargs
     ):
         """
         This method won't try to compute the trace field if it isn't known. The
@@ -547,7 +443,7 @@ class ManifoldAP(snappy.Manifold):
                 print(failure_message)
             return None
         if be_smart:
-            prec = self.next_prec_and_degree("quaternion algebra").prec
+            prec = self.next_prec_and_degree("quaternion algebra")
         primitive_element = self.trace_field_numerical_root  # An AAN
         (
             approx_first_entry,
@@ -581,7 +477,7 @@ class ManifoldAP(snappy.Manifold):
         return self.quaternion_algebra
 
     def compute_invariant_quaternion_algebra(
-        self, prec=self.default_starting_prec, be_smart=True, verbosity=False, **kwargs
+        self, prec=default_starting_prec, be_smart=True, verbosity=False, **kwargs
     ):
         """
         See docstring for compute_quaterion_algebra_fixed_prec. Should try to refactor this
@@ -593,14 +489,14 @@ class ManifoldAP(snappy.Manifold):
             if verbosity:
                 failure_message = (
                     "Invariant trace field not known. It can be "
-                    "computed with the compute_invaraint_trace_field method. It's "
+                    "computed with the compute_invariant_trace_field method. It's "
                     "possible that one needs high precision or degree to find the field, "
                     "though."
                 )
                 print(failure_message)
             return None
         if be_smart:
-            prec = self.next_prec_and_degree('invariant quaternion algebra').prec
+            prec = self.next_prec_and_degree('invariant quaternion algebra')
         degree = self.invariant_trace_field.degree()
         primitive_element = self.invariant_trace_field_numerical_root  # An AAN
         (
@@ -633,99 +529,7 @@ class ManifoldAP(snappy.Manifold):
             )
             self.invariant_quaternion_algebra_ramified_places_residue_characteristics.sort()
         return self.invariant_quaternion_algebra
-
-        """
-    def compute_quaternion_algebra(
-        self,
-        starting_prec=self.default_starting_prec,
-        starting_degree=self.default_starting_degree,
-        prec_increment=self.default_prec_increment,
-        degree_increment=self.default_degree_increment,
-        max_prec=self.default_max_prec,
-        max_degree=self.default_max_degree,
-        verbosity=False,
-        use_last_known_failed=False,
-    ):
-        """
-        """
-        Similar to other methods, this will try to compute the algebra even if it is
-        already known. It will use a known trace field without recomputing though (see
-        the docstring for the compute_quaternion_algebra_fixed_prec).
-
-        We should also maybe try to come up with a unified way to varying the precision
-        and degree since this is close to copy and paste of the trace field method.
-
-        To do: Incorporate use_last_known_failed.
-
-        Docstring last updated: Aug-27 2020.
-        """
-        """
-        prec = starting_prec
-        degree = starting_degree
-        while self.quaternion_algebra == None:
-            if verbosity:
-                print(
-                    str(self) + ":",
-                    f"Trying with precision={prec} and degree={degree}",
-                )
-            ManifoldAP.compute_quaternion_algebra_fixed_prec(
-                self, prec=prec, degree=degree
-            )
-
-            if prec == max_prec and degree == max_degree:
-                return None
-            if prec + prec_increment <= max_prec:
-                prec = prec + prec_increment
-            else:
-                prec = max_prec
-            if degree + degree_increment <= max_degree:
-                degree = degree + degree_increment
-            else:
-                degree = max_degree
-        return self.quaternion_algebra
-        """
-        """
-    def compute_invariant_quaternion_algebra(
-        self,
-        starting_prec=self.default_starting_prec,
-        starting_degree=self.default_starting_degree,
-        prec_increment=self.default_prec_increment,
-        degree_increment=self.default_degree_increment,
-        max_prec=self.default_max_prec,
-        max_degree=self.default_max_degree,
-        verbosity=False,
-        use_last_known_failed=False,
-    ):
-        """
-        """
-        See docstrings on compute_quaternion_algebra for more information. This one
-        works pretty similarly.
-        """
-        """
-        prec = starting_prec
-        degree = starting_degree
-        while self.invariant_quaternion_algebra == None:
-            if verbosity:
-                print(
-                    str(self) + ":",
-                    f"Trying with precision={prec} and degree={degree}",
-                )
-            ManifoldAP.compute_invariant_quaternion_algebra_fixed_prec(
-                self, prec=prec, degree=degree
-            )
-
-            if prec == max_prec and degree == max_degree:
-                return None
-            if prec + prec_increment <= max_prec:
-                prec = prec + prec_increment
-            else:
-                prec = max_prec
-            if degree + degree_increment <= max_degree:
-                degree = degree + degree_increment
-            else:
-                degree = max_degree
-        return self.invariant_quaternion_algebra
-        """
+    
     def compute_denominators(self, verbosity=False, **kwargs):
         """
         This function incidentally computes the residue characteristics of the
@@ -740,7 +544,6 @@ class ManifoldAP(snappy.Manifold):
         known. However, it will use known information about the trace field generators.
         In fact, it needs to know the trace field generators to work.
         """
-
         if not self.trace_field_generators:
             if verbosity:
                 failure_message = (
@@ -767,12 +570,12 @@ class ManifoldAP(snappy.Manifold):
     
     def make_prec_degree_generator(
         self,
-        starting_prec=self.default_starting_prec,
-        starting_degree=self.default_starting_degree,
-        prec_increment=self.default_prec_increment,
-        degree_increment=self.default_degree_increment,
-        max_prec=self.default_max_prec,
-        max_degree=self.default_max_degree,
+        starting_prec=default_starting_prec,
+        starting_degree=default_starting_degree,
+        prec_increment=default_prec_increment,
+        degree_increment=default_degree_increment,
+        max_prec=default_max_prec,
+        max_degree=default_max_degree,
         be_smart=True,
         verbosity=False
     ):
@@ -783,6 +586,9 @@ class ManifoldAP(snappy.Manifold):
         compute the invariants using different precision and degree parameters.
         Everything should be robust enough that even passing in degrees to methods that
         don't need them (e.g. to computing quaternion algbras) shouldn't break anything.
+
+        This function is also used together with try_various_precision at object
+        initialization time unless delay_computations=True.
         """
         def gen():
             """
@@ -794,13 +600,13 @@ class ManifoldAP(snappy.Manifold):
                 prec = min(prec + prec_increment, max_prec)
                 degree = min(degree + degree_increment, max_degree)
                 yield {'prec':prec, 'degree':degree, 'be_smart': be_smart, 'verbosity': verbosity}
-        return gen
+        return gen()
 
 
     def compute_arithmetic_invariants(
         self,
-        prec=self.default_starting_prec,
-        degree=self.default_starting_degree,
+        prec=default_starting_prec,
+        degree=default_starting_degree,
         be_smart=True,
         verbosity=False,
     ):
@@ -819,7 +625,7 @@ class ManifoldAP(snappy.Manifold):
         This function also has no return value, and I don't really see a good reason to
         return anything right now.
         """
-        arguments = locals().copy()
+        arguments = {'prec': prec, 'degree': degree, 'be_smart': be_smart, 'verbosity': verbosity}
         invariant_method_pairs = [
             (self.trace_field, ManifoldAP.compute_trace_field),
             (self.quaternion_algebra, ManifoldAP.compute_quaternion_algebra),
@@ -831,9 +637,30 @@ class ManifoldAP(snappy.Manifold):
         ]
         for (invariant, method) in invariant_method_pairs:
             if not invariant:
-                method(**arguments)
+                method(self,**arguments)
         if self.trace_field_generators:
-            ManifoldAP.compute_denominators(**arguments)
+            ManifoldAP.compute_denominators(self, **arguments)
+    
+    def is_arithmetic(self):
+        """
+        This checks whether the manifold (really the Kleinian group) is arithmetic.
+        It doesn't itself explicitly compute the necessary invariants if they aren't
+        already known.
+        For why this works, see MR Theorem 8.3.2 pp.261-262.
+        This could be a one-liner, but I think it's clearer this way.
+        """
+        (
+            number_of_real_places,
+            number_of_complex_places,
+        ) = self.invariant_trace_field.signature()
+        number_of_ramified_real_places = len(
+            misc_functions.ramified_real_places(self.invariant_quaternion_algebra)
+        )
+        return (
+            number_of_ramified_real_places == number_of_real_places
+            and number_of_complex_places == 1
+            and self.denominators == set()
+        )
 
     def p_arith(self):
         """
@@ -844,6 +671,7 @@ class ManifoldAP(snappy.Manifold):
         and defining __str__ methods in those classes.
         """
         print("Orbifold name:", self)
+        print("Volume:", self.volume())
         if self.trace_field:
             print("Trace field:", self.trace_field)
             print("\t Signature:", self.trace_field.signature())
@@ -940,9 +768,11 @@ class ManifoldAP(snappy.Manifold):
         self.quaternion_algebra = None
         self.quaternion_algebra_ramified_places = None
         self.quaternion_algebra_ramified_places_residue_characteristics = None
+        self.quaternion_algebra_prec_record = dict()
         self.invariant_quaternion_algebra = None
         self.invariant_quaternion_algebra_ramified_places = None
         self.invariant_quaternion_algebra_ramified_places_residue_characteristics = None
+        self.invariant_quaternion_algebra_prec_record = dict()
         self.denominators = None
         self.denominator_residue_characteristics = None
 
@@ -950,7 +780,8 @@ class ManifoldAP(snappy.Manifold):
         """
         This performs dehn surgery "in place," i.e. it doesn't return a new manifold
         but rather changes self. This, of course, necessitates recomputing all the
-        arithmetic invariants.
+        arithmetic invariants, so we have to override SnapPy's method to make sure
+        we clean out the invariants.
         """
         snappy.Manifold.dehn_fill(self, filling_data, which_cusp=None)
         self.delete_arithmetic_invariants()

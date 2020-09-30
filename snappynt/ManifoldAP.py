@@ -261,6 +261,8 @@ class ManifoldAP(snappy.Manifold):
 
         Last updated: Sept-24 2020
         """
+        if self.trace_field and not _force_compute:
+            return self.trace_field
         if be_smart:
             prec, degree = self.next_prec_and_degree("trace field")
             if self.invariant_trace_field:
@@ -317,6 +319,8 @@ class ManifoldAP(snappy.Manifold):
         2-torsion in homology, then the fields are the same.
         Last updated: Aug-29 2020
         """
+        if self.invariant_trace_field and not _force_compute:
+            return self.invariant_trace_field
         if be_smart:
             prec, degree = self.next_prec_and_degree("invariant trace field")
             if self.trace_field:
@@ -404,7 +408,7 @@ class ManifoldAP(snappy.Manifold):
         return (first_entry, second_entry)
 
     def compute_quaternion_algebra(
-        self, prec=default_starting_prec, be_smart=True, verbosity=False, **kwargs
+        self, prec=default_starting_prec, be_smart=True, verbosity=False, _force_compute=False, **kwargs
     ):
         """
         This method won't try to compute the trace field if it isn't known. The
@@ -432,6 +436,8 @@ class ManifoldAP(snappy.Manifold):
 
         For now though most everything is a ManifoldAP method.
         """
+        if self.quaternion_algebra and not _force_compute:
+            return self.quaternion_algebra
         if not self.trace_field:
             if verbosity:
                 failure_message = (
@@ -477,7 +483,7 @@ class ManifoldAP(snappy.Manifold):
         return self.quaternion_algebra
 
     def compute_invariant_quaternion_algebra(
-        self, prec=default_starting_prec, be_smart=True, verbosity=False, **kwargs
+        self, prec=default_starting_prec, be_smart=True, verbosity=False, _force_compute=False, **kwargs
     ):
         """
         See docstring for compute_quaterion_algebra_fixed_prec. Should try to refactor this
@@ -485,6 +491,8 @@ class ManifoldAP(snappy.Manifold):
 
         Last updated: Aug-29 2020
         """
+        if self.invariant_quaternion_algebra and not _force_compute:
+            return self.invariant_quaternion_algebra
         if not self.invariant_trace_field:
             if verbosity:
                 failure_message = (
@@ -577,7 +585,8 @@ class ManifoldAP(snappy.Manifold):
         max_prec=default_max_prec,
         max_degree=default_max_degree,
         be_smart=True,
-        verbosity=False
+        verbosity=False,
+        _force_compute=False
     ):
         """
         This makes a generator the output of which can be passed into any of the
@@ -595,11 +604,11 @@ class ManifoldAP(snappy.Manifold):
             This can be neater perhaps?
             """
             prec, degree = starting_prec, starting_degree
-            yield {'prec':prec, 'degree':degree, 'be_smart': be_smart, 'verbosity': verbosity}
+            yield {'prec':prec, 'degree':degree, 'be_smart': be_smart, 'verbosity': verbosity, "_force_compute": _force_compute}
             while prec <= max_prec and degree <= max_degree:
                 prec = min(prec + prec_increment, max_prec)
                 degree = min(degree + degree_increment, max_degree)
-                yield {'prec':prec, 'degree':degree, 'be_smart': be_smart, 'verbosity': verbosity}
+                yield {'prec':prec, 'degree':degree, 'be_smart': be_smart, 'verbosity': verbosity, "_force_compute": _force_compute}
         return gen()
 
 
@@ -609,6 +618,7 @@ class ManifoldAP(snappy.Manifold):
         degree=default_starting_degree,
         be_smart=True,
         verbosity=False,
+        _force_compute=False
     ):
         """
         This tries to compute the four basic arithmetic invariants: the two trace
@@ -619,11 +629,14 @@ class ManifoldAP(snappy.Manifold):
         but this can be disabled with a keyword argument when a ManifoldAP object is
         initialized.
 
-        We could probably make this even more implicit and slick with map or something,
-        but let's restrain outselves for now.
+        Warning: if you pass _force_compute in as True, then this method will try to
+        recompute the arithmetic invariants. If you combine this with vary_precision,
+        there is a good chance the computation will spend a long time recomputing known
+        invariants.
 
-        This function also has no return value, and I don't really see a good reason to
-        return anything right now.
+        The function returns None if any one of the invariants fails to compute and
+        returns True if they all are computed. The reason for these return values are
+        to work with the defaults of vary_precision. In particular, 
         """
         arguments = {'prec': prec, 'degree': degree, 'be_smart': be_smart, 'verbosity': verbosity}
         invariant_method_pairs = [

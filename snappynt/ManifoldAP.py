@@ -828,3 +828,25 @@ class ManifoldAP(snappy.Manifold):
         snappy.Manifold.dehn_fill(self, filling_data, which_cusp=None)
         self.delete_arithmetic_invariants()
         self.compute_arithmetic_invariants()
+    
+    def has_same_arithmetic_invariants(self, other, return_dict=None):
+        """
+        This takes two ManifoldAP's and computes whether they have isomorphic trace
+        fields, invariant trace fields, quaternion algebras, invariant quaternion
+        algebras, and denominators. It also checks whether the numerical roots of fields
+        agree. This function is primarily useful for testing various revisions of this
+        package against known correct computations. To thatend, this function might get
+        moved out of this module into some module designed for testing. Note that
+        checking whether number fields are isomorphic can be an expensive calculation if
+        the fields are not distinguished by simple invariants like degree or
+        discriminant.
+
+        We use a custom function in the field_isomorphism module to check that two
+        number fields are isomorphic and that their distinguished complex places
+        conincide.
+
+        One day other might be able to be a normal Manifold from SnapPy whence we
+        compute its arithmetic invariants and compare them to self.
+        """
+        return_dict = dict()
+        return_dict['Trace field'] = True

@@ -21,6 +21,7 @@ from sage.all import (
     coerce,
     hom,
     CC,
+    I
 )
 from sage.libs.pari.convert_sage import gen_to_sage
 
@@ -88,22 +89,86 @@ def transfer_embedding(isomorphism):
     choice of isomorphisms. That is, if there are multiple isomorphisms between the
     domain and codomain, the numerical value of the generator (and hence choice of
     embedding) should be the same.
+
+    The basic logic here is to take a generator for the domain with a specified
+    embedding into CC. This amounts to some numerical value for this generator. Then we
+    compare the image of the generator under the various embeddings of the codomain to
+    see which one gets closest to the original numerical value. In terms of the 
+    variables this means we compare domain_numerical_root and 
+    embedding(domain_generator_image) under the various embeddings of the codomain.
     """
     domain = isomorphism.domain()
     codomain = isomorphism.codomain()
-    domain_generator = domain.gen()
     domain_numerical_root = domain.gen_embedding()
+    domain_generator_image = isomorphism(domain.gen())
     if domain_numerical_root is None:
         raise AttributeError("There is no specified embedding for the number field.")
-    codomain_embeddings = [
-        embedding
-        for embedding in codomain.real_embeddings() + codomain.complex_embeddings()
-    ]
-    domain_generator_image = isomorphism(domain_generator)
+    # Sage's complex_embeddings() gives the real ones as well.
+    codomain_embeddings = [embedding for embedding in codomain.complex_embeddings()]
     special_embedding = min(
         codomain_embeddings,
         key=lambda embedding: abs(
-            domain_numerical_root - embedding(domain_generator_image)
+            CC(domain_numerical_root) - CC(embedding(domain_generator_image))
         ),
     )
-    return special_embedding(codomain.gen())
+    return CC(special_embedding(codomain.gen()))
+
+
+def compare_embeddings(field, first_numerical_root, second_numerical_root=None):
+    """
+    Tests whether the two numerical roots define the same embedding. This is to sidestep
+    issues of numerical precision. Sage might also have a way to do this, but I couldn't
+    find it.
+
+    One can pass in only a field and one numerical root if the field comes with an
+    embedding already attached to it.
+    """
+    generator = field.gen()  # Assumes field is given by a single generator I guess.
+    second_numerical_root = (
+        field.gen_embedding()
+        if second_numerical_root is None
+        else second_numerical_root
+    )
+    if second_numerical_root is None:
+        raise AttributeError("Got too few embeddings.")
+    embeddings = [embedding for embedding in field.complex_embeddings()]
+    first_embedding = min(
+        embeddings,
+        key=lambda embedding: abs(CC(first_numerical_root) - CC(embedding(generator))),
+    )
+    second_embedding = min(
+        embeddings,
+        key=lambda embedding: abs(CC(second_numerical_root) - CC(embedding(generator))),
+    )
+    return first_embedding == second_embedding
+
+
+def isomorphic_respecting_embeddings(first_field, second_field):
+    """
+    This compares two number fields with distinguished places and checks whether they're
+    isomorphic and that their distinguished places coincide.
+
+    This is a little too implicit. Needs some more documentation eventually.
+    """
+    iso_list = isomorphisms_between_number_fields(first_field, second_field)
+    if not iso_list:
+        return False
+    isomorphism = iso_list[0]  # Shouldn't matter which one
+    transfered_root = transfer_embedding(isomorphism)
+    return compare_embeddings(second_field, transfered_root)
+
+def run_tests():
+    """
+    A test bench for the various functions in this module. Probably one day add better
+    names for everything and add more tests. The convention is True should always mean
+    the test ran correctly.
+    """
+    # Comparing Embeddings
+    x = var("x")
+    log_dict = dict()
+    Field1 = NumberField(x**2+1, "i", embedding=I)
+    Field2 = NumberField(x**2+1, "minusi", embedding=-I)
+    log_dict['Distinguishing embeddings for QQ(i)'] = not isomorphic_respecting_embeddings(Field1, Field2)
+    Field3 = NumberField(x**2+2*x+(5/4), "a", embedding=-1+(1/2)*I)
+    log_dict['Integral and nonintegral minimal polynomials'] = isomorphic_respecting_embeddings(Field1, Field3)
+    return log_dict

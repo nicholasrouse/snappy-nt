@@ -14,8 +14,7 @@ Things to consider:
 
 
 import snappy, denominatorsforsnappy
-from sage.all import factor, NumberField, QuaternionAlgebra
-import math
+from sage.all import factor, NumberField, QuaternionAlgebra, radical
 import functools
 import irreducible_subgroups
 import misc_functions
@@ -109,7 +108,7 @@ class ManifoldAP(snappy.Manifold):
         self.invariant_quaternion_algebra_ramified_places_residue_characteristics = None
         self.invariant_quaternion_algebra_prec_record = dict()
         self.dict_of_prec_records = {
-            "trace field": self.invariant_trace_field_prec_record,
+            "trace field": self.trace_field_prec_record,
             "invariant trace field": self.invariant_trace_field_prec_record,
             "quaternion algebra": self.quaternion_algebra_prec_record,
             "invariant quaternion algebra": self.invariant_quaternion_algebra_prec_record,
@@ -477,7 +476,7 @@ class ManifoldAP(snappy.Manifold):
         ) = self.compute_approximate_hilbert_symbol()
         first_entry = primitive_element.express(approx_first_entry, prec=prec)
         second_entry = primitive_element.express(approx_second_entry, prec=prec)
-        self.quaternion_algebra_prec_record[prec] = (first_entry and second_entry)
+        self.quaternion_algebra_prec_record[prec] = bool(first_entry and second_entry)
         if first_entry == None or second_entry == None:
             if verbosity:
                 print('Failed to find quaternion algebra.')
@@ -495,7 +494,7 @@ class ManifoldAP(snappy.Manifold):
             ]
             self.quaternion_algebra_ramified_places_residue_characteristics = list(
                 {
-                    place.absolute_norm()
+                    radical(place.absolute_norm())
                     for place in self.quaternion_algebra_ramified_places
                 }
             )
@@ -534,7 +533,7 @@ class ManifoldAP(snappy.Manifold):
         ) = self.compute_approximate_hilbert_symbol(power=2)
         first_entry = primitive_element.express(approx_first_entry, prec=prec)
         second_entry = primitive_element.express(approx_second_entry, prec=prec)
-        self.invariant_quaternion_algebra_prec_record[prec] = (first_entry and second_entry)
+        self.invariant_quaternion_algebra_prec_record[prec] = bool(first_entry and second_entry)
         if first_entry == None or second_entry == None:
             if verbosity: print('Failed to find invariant quaternion algebra.')
             return None
@@ -552,7 +551,7 @@ class ManifoldAP(snappy.Manifold):
             ]
             self.invariant_quaternion_algebra_ramified_places_residue_characteristics = list(
                 {
-                    place.absolute_norm()
+                    radical(place.absolute_norm())
                     for place in self.invariant_quaternion_algebra_ramified_places
                 }
             )
@@ -620,11 +619,11 @@ class ManifoldAP(snappy.Manifold):
         This function is also used together with try_various_precision at object
         initialization time unless delay_computations=True.
         """
-        if starting_prec == None: prec = self.default_starting_prec
-        if starting_degree == None: degree = self.default_starting_degree
+        if starting_prec == None: starting_prec = self.default_starting_prec
+        if starting_degree == None: starting_degree = self.default_starting_degree
         if prec_increment == None: prec_increment = self.default_prec_increment
         if degree_increment == None: degree_increment = self.default_degree_increment
-        if max_prec == None: max_pec = self.default_max_prec
+        if max_prec == None: max_prec = self.default_max_prec
         if max_degree == None: max_degree = self.default_max_degree
         def gen():
             """
@@ -815,6 +814,12 @@ class ManifoldAP(snappy.Manifold):
         self.invariant_quaternion_algebra_ramified_places = None
         self.invariant_quaternion_algebra_ramified_places_residue_characteristics = None
         self.invariant_quaternion_algebra_prec_record = dict()
+        self.dict_of_prec_records = {
+            "trace field": self.invariant_trace_field_prec_record,
+            "invariant trace field": self.invariant_trace_field_prec_record,
+            "quaternion algebra": self.quaternion_algebra_prec_record,
+            "invariant quaternion algebra": self.invariant_quaternion_algebra_prec_record,
+        }
         self.denominators = None
         self.denominator_residue_characteristics = None
 

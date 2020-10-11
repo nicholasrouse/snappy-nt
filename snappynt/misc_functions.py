@@ -22,6 +22,8 @@ def ramified_real_places(quaternion_algebra):
     Takes in a quaternion algebra over a number field and returns a list of ramified
     places as maps. Obviously this could basically be a somewhat long one-liner, but
     I think it's a bit nicer this way.
+
+    To do: remove this as it is superceded in the QuaternionAlgebraNF module.
     """
     a,b = quaternion_algebra.invariants()
     field = quaternion_algebra.base_ring()

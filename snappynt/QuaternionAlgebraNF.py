@@ -25,7 +25,7 @@ number field methods in sage are not implemented for QQ. Maybe there's a clean f
 this, but for now I'm going to leave it since the functionality already pretty much
 exists in Sage for quaternion algebras over the rationals.
 """
-from sage.all import QuaternionAlgebra, QQ, radical
+from sage.all import QuaternionAlgebra, QQ, radical, pari
 from sage.algebras.quatalg.quaternion_algebra import QuaternionAlgebra_ab
 from sage.rings.number_field.number_field import is_NumberField
 import field_isomorphisms
@@ -46,6 +46,20 @@ def convert_QA_toQANF(quaternion_algebra, delay_computations=False, suppress_war
     a, b = quaternion_algebra.invariants()
     names = [str(gen) for gen in quaternion_algebra.gens()]
     return QuaternionAlgebraNF(field, a, b, names=names, delay_computations=delay_computations, suppress_warnings=suppress_warnings)
+
+def pari_local_symbol(a,b,prime):
+    """
+    This takes sage types for number field elements a,b and a prime ideal of the same
+    number field. However the calculation is outsourced to PARI.
+
+    This might not be totally necessary. It seems to be more or less how Sage does it
+    anyway.
+    """
+    field = pari(a.parent())
+    a = pari(a)
+    b = pari(b)
+    prime = prime.pari_prime()
+    return pari.nfhilbert(field, a, b, prime)
 
 
 class QuaternionAlgebraNF(QuaternionAlgebra_ab):
@@ -104,12 +118,38 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         parent class has a method ramified_primes() that returns a list. We think that a
         set is better suited and this method also gives us some flexibility to compute
         things like the residue characteristics along the way.
+
+        We try to be a little bit clever with Hilbert reciprocity. In practice the
+        dyadic places can take a long time to compute, so we try to avoid finding one of
+        them explictly. The point is the total number of ramified real and finite places
+        is even.
+        
+        We check that the multiplicity of the primes that a and b belong to are odd, but
+        this might be unnecessary if sage is smart enough to quickly compute their local
+        symbols. On the other hand it probably cuts down slightly on the total number of
+        function calls which should be a win. On the third hand having primes appear to
+        powers higher than 1 might be so rare in practice that this isn't worth it.
         """
         if not self._ramified_finite_places or force_compute:
-            discriminant_list = list(self.discriminant().factor())
-            self._ramified_finite_places = set([
-                ideal for (ideal, multiplicity) in discriminant_list
-            ])
+            a, b = self.invariants()
+            ramified_finite_primes = None
+            primes_dividing_a = {prime for (prime, multiplicity) in self.base_ring().ideal(a).factor() if multiplicity%2 != 0 and prime.absolute_norm()%2 != 0}
+            primes_dividing_b = {prime for (prime, multiplicity) in self.base_ring().ideal(b).factor() if multiplicity%2 != 0 and prime.absolute_norm()%2 != 0}
+            ramified_finite_primes = {
+                prime for prime in primes_dividing_a | primes_dividing_b if self.base_ring().hilbert_symbol(a, b, prime) == -1
+            }
+            total_number_ramified_places = len(self.ramified_real_places(force_compute=force_compute) | ramified_finite_primes)
+            # Experimentally we most want to avoid computing dyadic places with large residue class degree.
+            dyadic_primes = sorted(self.base_ring().ideal(2).prime_factors(), key=lambda prime : prime.residue_class_degree())
+            for prime in dyadic_primes:
+                if prime == dyadic_primes[-1]:
+                    if total_number_ramified_places%2 != 0:
+                        ramified_finite_primes.add(prime)
+                else:
+                    if self.base_ring().hilbert_symbol(a,b,prime) == -1:
+                        ramified_finite_primes.add(prime)
+                        total_number_ramified_places += 1
+            self._ramified_finite_places = ramified_finite_primes
         self.ramified_residue_characteristics(force_compute=force_compute)
         return self._ramified_finite_places
     

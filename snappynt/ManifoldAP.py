@@ -822,6 +822,8 @@ class ManifoldAP(snappy.Manifold):
         }
         self.denominators = None
         self.denominator_residue_characteristics = None
+        self.approx_trace_field_gens = self.trace_field_gens()
+        self.approx_invariant_trace_field_gens = self.invariant_trace_field_gens()
 
     def dehn_fill(self, filling_data, which_cusp=None):
         """

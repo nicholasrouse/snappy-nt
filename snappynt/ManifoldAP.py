@@ -256,12 +256,9 @@ class ManifoldAP(snappy.Manifold):
         compute the primes at which the Kleinian group has nonintegral trace. When
         _force_compute=True, these generators will be found assuming the method
         succeeds in finding the trace field at all. If there is 2-torsion in homology,
-        it's possible that trace field is a proper extension of degree 2 over the
+        it's possible that trace field is a proper extension of degree of the
         invariant trace field. In this case, we do still get some knowledge about the
-        degree. If whatever degree we were going to try is bigger than twice the degree
-        of the invariant trace field, then we drop down to twice the degree of the
-        invariant trace field. Otherwise, we go to the degree of the invariant trace
-        field.
+        degree, namely that it's at least as large as that of the invariant trace field.
 
         The verbosity argument prints some information as the method proceeds. This
         can be useful for large calculations.
@@ -279,7 +276,7 @@ class ManifoldAP(snappy.Manifold):
             prec, degree = self.next_prec_and_degree("trace field")
             if self.invariant_trace_field:
                 itf_deg = self.invariant_trace_field.degree()
-                if not self.has_two_torsion_in_homology:
+                if not self.has_two_torsion_in_homology():
                     self.trace_field_numerical_root = self.invariant_trace_field_numerical_root
                     self.trace_field = self.invariant_trace_field
                     self.trace_field_generators = self.invariant_trace_field_generators
@@ -291,10 +288,7 @@ class ManifoldAP(snappy.Manifold):
                         return self.trace_field
                     degree = self.invariant_trace_field.degree()
                 else:
-                    if degree >= 2 * itf_deg:
-                        degree = 2 * itf_deg
-                    else:
-                        degree = itf_deg
+                    if degree < 2*itf_deg: degree = 2*itf_deg
         if verbosity:
             print(
                 f"Trying to compute trace field with precision={prec} and degree={degree}."
@@ -342,22 +336,20 @@ class ManifoldAP(snappy.Manifold):
             if self.trace_field:
                 tf_deg = self.trace_field.degree()
                 if (
-                    not self.has_two_torsion_in_homology
+                    not self.has_two_torsion_in_homology()
                     or self.trace_field.degree() % 2 == 1
                 ):
                     self.invariant_trace_field = self.trace_field
                     self.invariant_trace_field_numerical_root = self.trace_field_numerical_root
                     self.invariant_trace_field_generators = self.trace_field_generators
                     if verbosity:
-                        print("Found trace field and no 2-torsion in homology.")
+                        print("Found trace field, and it conincides with invariant trace field.")
                     if not _force_compute:
                         return self.invariant_trace_field
                     degree = self.invariant_trace_field.degree()
                 else:
                     if degree >= tf_deg:
                         degree = tf_deg
-                    else:
-                        degree = tf_deg / 2
         if verbosity:
             print(
                 f"Trying to compute invariant trace field with precision={prec} and degree={degree}."
@@ -426,7 +418,7 @@ class ManifoldAP(snappy.Manifold):
         return (first_entry, second_entry)
 
     def compute_quaternion_algebra(
-        self, prec=None, be_smart=True, verbosity=False, _force_compute=False, **kwargs
+        self, prec=None, be_smart=True, verbosity=False, _force_compute=False, compute_ramification=True, **kwargs
     ):
         """
         This method won't try to compute the trace field if it isn't known. The
@@ -487,22 +479,23 @@ class ManifoldAP(snappy.Manifold):
                 self.trace_field, first_entry, second_entry
             )
         # Now we compute the ramified places.
-        if self.quaternion_algebra:
-            discriminant_list = list(self.quaternion_algebra.discriminant().factor())
-            self.quaternion_algebra_ramified_places = [
-                ideal for (ideal, multiplicity) in discriminant_list
-            ]
-            self.quaternion_algebra_ramified_places_residue_characteristics = list(
-                {
-                    radical(place.absolute_norm())
-                    for place in self.quaternion_algebra_ramified_places
-                }
-            )
-            self.quaternion_algebra_ramified_places_residue_characteristics.sort()
+        if compute_ramification:
+            if self.quaternion_algebra:
+                discriminant_list = list(self.quaternion_algebra.discriminant().factor())
+                self.quaternion_algebra_ramified_places = [
+                    ideal for (ideal, multiplicity) in discriminant_list
+                ]
+                self.quaternion_algebra_ramified_places_residue_characteristics = list(
+                    {
+                        radical(place.absolute_norm())
+                        for place in self.quaternion_algebra_ramified_places
+                    }
+                )
+                self.quaternion_algebra_ramified_places_residue_characteristics.sort()
         return self.quaternion_algebra
 
     def compute_invariant_quaternion_algebra(
-        self, prec=None, be_smart=True, verbosity=False, _force_compute=False, **kwargs
+        self, prec=None, be_smart=True, verbosity=False, _force_compute=False, compute_ramification=True, **kwargs
     ):
         """
         See docstring for compute_quaterion_algebra_fixed_prec. Should try to refactor this
@@ -542,20 +535,21 @@ class ManifoldAP(snappy.Manifold):
             self.invariant_quaternion_algebra = QuaternionAlgebra(
                 self.invariant_trace_field, first_entry, second_entry
             )
-        if self.invariant_quaternion_algebra:
-            discriminant_list = list(
-                self.invariant_quaternion_algebra.discriminant().factor()
-            )
-            self.invariant_quaternion_algebra_ramified_places = [
-                ideal for (ideal, multiplicity) in discriminant_list
-            ]
-            self.invariant_quaternion_algebra_ramified_places_residue_characteristics = list(
-                {
-                    radical(place.absolute_norm())
-                    for place in self.invariant_quaternion_algebra_ramified_places
-                }
-            )
-            self.invariant_quaternion_algebra_ramified_places_residue_characteristics.sort()
+        if compute_ramification:
+            if self.invariant_quaternion_algebra:
+                discriminant_list = list(
+                    self.invariant_quaternion_algebra.discriminant().factor()
+                )
+                self.invariant_quaternion_algebra_ramified_places = [
+                    ideal for (ideal, multiplicity) in discriminant_list
+                ]
+                self.invariant_quaternion_algebra_ramified_places_residue_characteristics = list(
+                    {
+                        radical(place.absolute_norm())
+                        for place in self.invariant_quaternion_algebra_ramified_places
+                    }
+                )
+                self.invariant_quaternion_algebra_ramified_places_residue_characteristics.sort()
         return self.invariant_quaternion_algebra
     
     def compute_denominators(self, verbosity=False, **kwargs):

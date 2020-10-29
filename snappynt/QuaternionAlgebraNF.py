@@ -111,6 +111,23 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
             self._ramified_residue_characteristics = Counter([radical(place.absolute_norm()) for place in self._ramified_finite_places])
         return self._ramified_residue_characteristics
     
+    def ramified_nondyadic_places(self, force_compute=False):
+        if not self._ramified_finite_places or force_compute:
+            a, b = self.invariants()
+            ramified_finite_primes = None
+            primes_dividing_a = {prime for (prime, multiplicity) in self.base_ring().ideal(a).factor() if multiplicity%2 != 0 and prime.absolute_norm()%2 != 0}
+            primes_dividing_b = {prime for (prime, multiplicity) in self.base_ring().ideal(b).factor() if multiplicity%2 != 0 and prime.absolute_norm()%2 != 0}
+            ramified_finite_primes = {
+                prime for prime in primes_dividing_a | primes_dividing_b if self.base_ring().hilbert_symbol(a, b, prime) == -1
+            }
+            if self._ramified_finite_places is not None:
+                self._ramified_finite_places = self._ramified_finite_places | ramified_finite_primes
+            else:
+                self._ramified_finite_places = ramified_finite_primes
+        answer = {prime for prime in self._ramified_finite_places if prime.absolute_norm()%2 != 0}
+        return answer
+        
+    
     def ramified_finite_places(self, force_compute=False):
         """
         Computes the ramified finite places as a set. Passing in force_compute=True will

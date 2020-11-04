@@ -9,7 +9,6 @@ Things to consider:
     2. Perhaps importing functions that actually compute the various invariants from
     numerical input. I.e. make another module and put all the ugly implementation for
     computations there.
-
 """
 
 
@@ -18,6 +17,8 @@ from sage.all import factor, NumberField, QuaternionAlgebra, radical
 import functools
 import irreducible_subgroups
 import misc_functions
+import field_isomorphisms
+import QuaternionAlgebraNF
 from collections import namedtuple
 
 
@@ -25,11 +26,11 @@ def try_various_precision(func, iterable, fail_value=None):
     """
     This should maybe be in a separate module.
     """
-    map_object = map(func, iterable)
-    for return_value in map_object:
+    for item in iterable:
+        return_value = func(item)
         if return_value != fail_value:
             break
-    return return_value
+    return return_value 
 
 
 PrecDegreeTuple = namedtuple("PrecDegreeTuple", ["prec", "degree"])
@@ -100,12 +101,8 @@ class ManifoldAP(snappy.Manifold):
         self.invariant_trace_field_generators = None
         self.invariant_trace_field_prec_record = dict()
         self.quaternion_algebra = None
-        self.quaternion_algebra_ramified_places = None
-        self.quaternion_algebra_ramified_places_residue_characteristics = None
         self.quaternion_algebra_prec_record = dict()
         self.invariant_quaternion_algebra = None
-        self.invariant_quaternion_algebra_ramified_places = None
-        self.invariant_quaternion_algebra_ramified_places_residue_characteristics = None
         self.invariant_quaternion_algebra_prec_record = dict()
         self.dict_of_prec_records = {
             "trace field": self.trace_field_prec_record,
@@ -155,9 +152,6 @@ class ManifoldAP(snappy.Manifold):
         fine. In fact it is somewhat important that it work this way because the
         methods that compute the algebras try to compute the fields if they're not
         known using whatever precision and degree is passed in.
-
-        I don't know whether it's prefered to have some longish return line or a new
-        variable assignment and then return that.
 
         The invariant needs to be passed in a string. The acceptable options are:
         "trace field", "invariant trace field", "quaternion algebra", "invariant
@@ -475,23 +469,9 @@ class ManifoldAP(snappy.Manifold):
             return None
         else:
             if verbosity: print('Found quaternion algebra.')
-            self.quaternion_algebra = QuaternionAlgebra(
-                self.trace_field, first_entry, second_entry
+            self.quaternion_algebra = QuaternionAlgebraNF.QuaternionAlgebraNF(
+                self.trace_field, first_entry, second_entry, compute_ramification=compute_ramification
             )
-        # Now we compute the ramified places.
-        if compute_ramification:
-            if self.quaternion_algebra:
-                discriminant_list = list(self.quaternion_algebra.discriminant().factor())
-                self.quaternion_algebra_ramified_places = [
-                    ideal for (ideal, multiplicity) in discriminant_list
-                ]
-                self.quaternion_algebra_ramified_places_residue_characteristics = list(
-                    {
-                        radical(place.absolute_norm())
-                        for place in self.quaternion_algebra_ramified_places
-                    }
-                )
-                self.quaternion_algebra_ramified_places_residue_characteristics.sort()
         return self.quaternion_algebra
 
     def compute_invariant_quaternion_algebra(
@@ -532,7 +512,7 @@ class ManifoldAP(snappy.Manifold):
             return None
         else:
             if verbosity: print('Found invariant quaternion algebra.')
-            self.invariant_quaternion_algebra = QuaternionAlgebra(
+            self.invariant_quaternion_algebra = QuaternionAlgebraNF.QuaternionAlgebraNF(
                 self.invariant_trace_field, first_entry, second_entry
             )
         if compute_ramification:
@@ -638,7 +618,8 @@ class ManifoldAP(snappy.Manifold):
         degree=None,
         be_smart=True,
         verbosity=False,
-        _force_compute=False
+        _force_compute=False,
+        return_flag=False
     ):
         """
         This tries to compute the four basic arithmetic invariants: the two trace
@@ -671,10 +652,11 @@ class ManifoldAP(snappy.Manifold):
             ),
         ]
         for (invariant, method) in invariant_method_pairs:
-            if not invariant:
-                method(self,**arguments)
+            method(self,**arguments)
         if self.trace_field_generators:
             ManifoldAP.compute_denominators(self, **arguments)
+        if return_flag:
+            
     
     def is_arithmetic(self):
         """
@@ -713,25 +695,8 @@ class ManifoldAP(snappy.Manifold):
             print("\t Discriminant:", self.trace_field.discriminant())
 
             if self.quaternion_algebra:
-                print("Quaternion Algebra:", self.quaternion_algebra)
-                print(
-                    "\t Finite Ramification:", self.quaternion_algebra_ramified_places
-                )
-                print(
-                    "\t Finite Ramification Residue Characteristic:",
-                    self.quaternion_algebra_ramified_places_residue_characteristics,
-                )
-                number_of_ramified_real_places = len(
-                    misc_functions.ramified_real_places(self.quaternion_algebra)
-                )
-                places_grammatical = (
-                    "place" if number_of_ramified_real_places == 1 else "places"
-                )
-                print(
-                    "\t Real Ramification:",
-                    number_of_ramified_real_places,
-                    places_grammatical,
-                )
+                print('Quaternion algebra:')
+                print(self.quaternion_algebra.ramification_string(leading_char='\t'))
             else:
                 print("Quaternion algebra not found.")
         else:
@@ -741,30 +706,8 @@ class ManifoldAP(snappy.Manifold):
             print("\t Signature:", self.invariant_trace_field.signature())
             print("\t Discriminant:", self.invariant_trace_field.discriminant())
             if self.invariant_quaternion_algebra:
-                print(
-                    "Invariant Quaternion Algebra:", self.invariant_quaternion_algebra
-                )
-                print(
-                    "\t Finite Ramification:",
-                    self.invariant_quaternion_algebra_ramified_places,
-                )
-                print(
-                    "\t Finite Ramification Residue Characteristic:",
-                    self.invariant_quaternion_algebra_ramified_places_residue_characteristics,
-                )
-                number_of_ramified_real_places = len(
-                    misc_functions.ramified_real_places(
-                        self.invariant_quaternion_algebra
-                    )
-                )
-                places_grammatical = (
-                    "place" if number_of_ramified_real_places == 1 else "places"
-                )
-                print(
-                    "\t Real Ramification:",
-                    number_of_ramified_real_places,
-                    places_grammatical,
-                )
+                print('Invariant quaternion algebra:')
+                print(self.invariant_quaternion_algebra.ramification_string(leading_char='\t'))
             else:
                 print("Invariant quaternion algebra not found.")
         else:
@@ -801,12 +744,8 @@ class ManifoldAP(snappy.Manifold):
         self.invariant_trace_field_generators = None
         self.invariant_trace_field_prec_record = dict()
         self.quaternion_algebra = None
-        self.quaternion_algebra_ramified_places = None
-        self.quaternion_algebra_ramified_places_residue_characteristics = None
         self.quaternion_algebra_prec_record = dict()
         self.invariant_quaternion_algebra = None
-        self.invariant_quaternion_algebra_ramified_places = None
-        self.invariant_quaternion_algebra_ramified_places_residue_characteristics = None
         self.invariant_quaternion_algebra_prec_record = dict()
         self.dict_of_prec_records = {
             "trace field": self.invariant_trace_field_prec_record,
@@ -830,13 +769,13 @@ class ManifoldAP(snappy.Manifold):
         self.delete_arithmetic_invariants()
         self.compute_arithmetic_invariants()
     
-    def has_same_arithmetic_invariants(self, other, return_dict=None):
+    def has_same_arithmetic_invariants(self, other, return_dict=False):
         """
         This takes two ManifoldAP's and computes whether they have isomorphic trace
         fields, invariant trace fields, quaternion algebras, invariant quaternion
-        algebras, and denominators. It also checks whether the numerical roots of fields
+        algebras, and denominators. It does check whether the numerical roots of fields
         agree. This function is primarily useful for testing various revisions of this
-        package against known correct computations. To thatend, this function might get
+        package against known correct computations. To that end, this function might get
         moved out of this module into some module designed for testing. Note that
         checking whether number fields are isomorphic can be an expensive calculation if
         the fields are not distinguished by simple invariants like degree or
@@ -849,5 +788,25 @@ class ManifoldAP(snappy.Manifold):
         One day other might be able to be a normal Manifold from SnapPy whence we
         compute its arithmetic invariants and compare them to self.
         """
-        return_dict = dict()
-        return_dict['Trace field'] = True
+        arith_dict = dict()
+        arith_dict['trace field'] = field_isomorphisms.isomorphic_respecting_embeddings(self.trace_field, other.trace_field)
+        arith_dict['invariant trace field'] = field_isomorphisms.isomorphic_respecting_embeddings(self.invariant_trace_field, other.invariant_trace_field)
+        if arith_dict['trace field']:
+            arith_dict['quaternion algebra'] = self.quaternion_algebra.is_isomorphic(other.quaternion_algebra)
+            # This should be computed and saved when we find whether the fields are isomorphic in the first place.
+            iso = field_isomorphisms.isomorphisms_between_number_fields(self.trace_field, other.trace_field)[0]
+            other_denominators = {iso(ideal) for ideal in other.denominators}
+            arith_dict['denominators'] = (self.denominators == other_denominators)
+        else: 
+            arith_dict['quaternion algebra'] = False
+            # When the trace fields differ, the convention we take is that the
+            # denominators are the same if and only both orbifolds have integral traces.
+            arith_dict['denominators'] = True if (self.denominators == set() and other.denominators == set()) else False
+        if arith_dict['invariant trace field']:
+            arith_dict['invariant quaternion algebra'] = self.invariant_quaternion_algebra.is_isomorphic(other.invariant_quaternion_algebra)
+        else: arith_dict['invariant quaternion algebra'] = False
+        answer = not (False in arith_dict.values())
+        if return_dict:
+            return (answer, arith_dict)
+        else:
+            return answer

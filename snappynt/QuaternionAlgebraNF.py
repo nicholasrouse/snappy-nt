@@ -64,7 +64,7 @@ def pari_local_symbol(a,b,prime):
 
 class QuaternionAlgebraNF(QuaternionAlgebra_ab):
 
-    def __init__(self, base_ring, a, b, names="i,j,k", delay_computations=False, suppress_warnings=False):
+    def __init__(self, base_ring, a, b, names="i,j,k", compute_ramification=True, suppress_warnings=False):
         """
         On initialization we by default compute the ramification set. We don't actually
         type-test that the base_ring is a number field, but we do print a warning if it
@@ -76,7 +76,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         self._ramified_real_places = None
         self._ramified_finite_places = None
         QuaternionAlgebra_ab.__init__(self, base_ring, a, b, names)
-        if not delay_computations:
+        if compute_ramification:
             self.ramified_real_places()
             self.ramified_finite_places()
 
@@ -105,7 +105,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         force_compute option will be passed forward to ramified_finite_places if the
         latter method needs to be invoked.
         """
-        if not self._ramified_finite_places:
+        if self._ramified_finite_places is None:
             self.ramified_finite_places(force_compute=force_compute)
         if not self._ramified_residue_characteristics or force_compute:
             self._ramified_residue_characteristics = Counter([radical(place.absolute_norm()) for place in self._ramified_finite_places])
@@ -175,7 +175,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         Overrides that from Sage's QuaternionAlgebra_ab class. Just whether there is any
         ramification.
         """
-        return bool(self._ramified_finite_places or self._ramified_finite_places)
+        return bool(self._ramified_finite_places) or bool(self._ramified_finite_places)
     
     def is_matrix_ring(self):
         """
@@ -187,7 +187,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
     def is_isomorphic(self, other, field_isomorphism=None):
         """
         Given two quaternion algebras over number fields, this function tests for
-        isomorphism. The first check is that their base fields are isomorphic. Assuming
+        isomorphism. The first check is that their base fields are (abstractly) isomorphic. Assuming
         that they are, the function uses the Albert-Brauer-Hasse-Noether theorem for
         quaternion algebras. The net effect is to check whether the ramification sets
         are the same. This can be a bit delicate in total generality, e.g. if self and
@@ -225,3 +225,48 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         same_real_ramification = (self._ramified_real_places == new_quaternion_algebra._ramified_real_places)
         same_finite_ramification = (self._ramified_finite_places == new_quaternion_algebra._ramified_finite_places)
         return (same_real_ramification and same_finite_ramification)
+
+    def ramification_string(self, full_finite_ramification=True, full_real_ramification=True, show_hilbert_symbol=True, show_field_data=False, leading_char=''):
+        """
+        This returns a somewhat large string that contains the ramification data in a
+        human readable format. Its intended use is to display in console sessions or to
+        write to some output file. It doesn't read off the field data by default. The
+        reason is that for Kleinian groups, the fields are important invariants in their
+        own right, so are reproduced elsewhere. Passing in full_ramification=False will
+        only give the residue characteristics rather than the ideals. Similarly the
+        full_real_ramification keyword argument determines whether the numerical values
+        of the the generator for the field at the ramified real places are specified. If
+        not, then only the number of ramified real places will be given. Finally the
+        leading_char keyword argument allows one to prepend each line of information
+        with a particular string. The use case I have in mind is a tab to display with
+        other information.
+
+        One should generally not try to access information by parsing the output of this
+        method: all the data it contains is much more easily accessible by other methods
+        in this class.
+        """
+        data_strings = list()
+        if show_field_data:
+            field_data = 'Base field: ' + str(self.base_ring())
+            data_strings.append(field_data)
+        hilbert_symbol = 'Hilbert symbol: ' + str(self.invariants())
+        data_strings.append(hilbert_symbol)
+        if full_finite_ramification:
+            finite_ramification_data = 'Finite ramification: ' + str(self.ramified_finite_places())
+            data_strings.append(finite_ramification_data)
+        ramified_residue_chars_data = 'Finite ramification residue characteristics: ' + str(self.ramified_residue_characteristics())
+        data_strings.append(ramified_residue_chars_data)
+        number_of_ramified_real_places = 'Number of ramified real places: ' + str(len(self.ramified_real_places()))
+        data_strings.append(number_of_ramified_real_places)
+        if full_real_ramification:
+            var = str(self.base_ring().gen())
+            small_maps = list()
+            for embedding in self.ramified_real_places():
+                numerical_value = str(embedding.im_gens()[0])
+                small_maps = [var + ' |--> ' + numerical_value]
+            ramified_real_places_data = 'Ramified real places: ' + str(small_maps)
+            data_strings.append(ramified_real_places_data)
+        output_string = str()
+        for element in data_strings:
+            output_string += leading_char + element + '\n'
+        return output_string.rstrip()

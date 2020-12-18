@@ -75,6 +75,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         self._ramified_residue_characteristics = None
         self._ramified_real_places = None
         self._ramified_finite_places = None
+        self._ramified_dyadic_places_computed = False
         QuaternionAlgebra_ab.__init__(self, base_ring, a, b, names)
         if compute_ramification:
             self.ramified_real_places()
@@ -97,7 +98,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
             self._ramified_real_places = ramified_places
             return ramified_places
     
-    def ramified_residue_characteristics(self, force_compute=False):
+    def ramified_residue_characteristics(self, force_compute=False, ignore_dyadic=False):
         """
         Find the residue characteristics of the ramified places. It will attempt to
         compute the ramified places if they're not known. The residue characteristics
@@ -106,7 +107,10 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         latter method needs to be invoked.
         """
         if self._ramified_finite_places is None:
-            self.ramified_finite_places(force_compute=force_compute)
+            if ignore_dyadic:
+                self.ramified_nondyadic_places(force_compute=force_compute)
+            else:
+                self.ramified_finite_places(force_compute=force_compute)
         if not self._ramified_residue_characteristics or force_compute:
             self._ramified_residue_characteristics = Counter([radical(place.absolute_norm()) for place in self._ramified_finite_places])
         return self._ramified_residue_characteristics
@@ -147,7 +151,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         function calls which should be a win. On the third hand having primes appear to
         powers higher than 1 might be so rare in practice that this isn't worth it.
         """
-        if not self._ramified_finite_places or force_compute:
+        if not self._ramified_finite_places or self._ramified_dyadic_places_computed or force_compute:
             a, b = self.invariants()
             ramified_finite_primes = None
             primes_dividing_a = {prime for (prime, multiplicity) in self.base_ring().ideal(a).factor() if multiplicity%2 != 0 and prime.absolute_norm()%2 != 0}

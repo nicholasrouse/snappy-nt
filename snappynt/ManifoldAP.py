@@ -214,6 +214,7 @@ class ManifoldAP(snappy.Manifold):
         """
         homology = self.homology()
         elementary_divisors = homology.elementary_divisors()
+        elementary_divisors = [divisor for divisor in elementary_divisors if divisor != 0]
         for divisor in elementary_divisors:
             if divisor % 2 == 0:
                 return True
@@ -465,6 +466,7 @@ class ManifoldAP(snappy.Manifold):
             return None
         else:
             if verbosity: print('Found quaternion algebra.')
+            first_entry, second_entry = first_entry(self._trace_field.gen()), second_entry(self._trace_field.gen())
             self._quaternion_algebra = QuaternionAlgebraNF.QuaternionAlgebraNF(
                 self._trace_field, first_entry, second_entry, compute_ramification=compute_ramification
             )
@@ -508,6 +510,7 @@ class ManifoldAP(snappy.Manifold):
             return None
         else:
             if verbosity: print('Found invariant quaternion algebra.')
+            first_entry, second_entry = first_entry(self._invariant_trace_field.gen()), second_entry(self._invariant_trace_field.gen())
             self._invariant_quaternion_algebra = QuaternionAlgebraNF.QuaternionAlgebraNF(
                 self._invariant_trace_field, first_entry, second_entry
             )
@@ -570,6 +573,10 @@ class ManifoldAP(snappy.Manifold):
     def denominator_residue_characteristics(self, verbosity=False, **kwargs):
         if self._denominators is None:
             self.denominators()
+        if self._denominator_residue_characteristics is None:
+            prime_ideals = self._denominators
+            norms = {ideal.absolute_norm() for ideal in prime_ideals}
+            self._denominator_residue_characteristics = denominatorsforsnappy.find_prime_factors_in_a_set(norms)
         return self._denominator_residue_characteristics
 
     def make_prec_degree_generator(

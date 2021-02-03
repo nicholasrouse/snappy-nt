@@ -88,7 +88,8 @@ def transfer_embedding(isomorphism):
     As a side note, the output of this function should be independent of the actual
     choice of isomorphisms. That is, if there are multiple isomorphisms between the
     domain and codomain, the numerical value of the generator (and hence choice of
-    embedding) should be the same.
+    embedding) should be the same. There is a major caveat that the output is only well
+    definined up to complex conjugation, however.
 
     The basic logic here is to take a generator for the domain with a specified
     embedding into CC. This amounts to some numerical value for this generator. Then we

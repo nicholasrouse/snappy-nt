@@ -23,7 +23,9 @@ class ManifoldAPDatabase:
     """
     def __init__(filename):
         """
-        The extant object could be either a shelve object or a file with an arry of
-        encoded ManifoldAP objects.
+        The extant object could be either a shelve object or a file with an array of
+        encoded ManifoldAP objects. The file can also not yet exist, in which case one
+        will be created with the name.
         """
-        
+        with shelve.open(filename) as shelve_object:
+            pass

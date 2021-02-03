@@ -31,7 +31,10 @@ from sage.rings.number_field.number_field import is_NumberField
 import field_isomorphisms
 from collections import Counter
 
-def convert_QA_toQANF(quaternion_algebra, delay_computations=False, suppress_warnings=False):
+
+def convert_QA_toQANF(
+    quaternion_algebra, delay_computations=False, suppress_warnings=False
+):
     """
     This converts a Sage quaternion algebra over a number field to an instance of the
     subclass QuaternionAlgebraNF. It's possible we can support passing in one of Sage's
@@ -45,9 +48,17 @@ def convert_QA_toQANF(quaternion_algebra, delay_computations=False, suppress_war
     field = quaternion_algebra.base_ring()
     a, b = quaternion_algebra.invariants()
     names = [str(gen) for gen in quaternion_algebra.gens()]
-    return QuaternionAlgebraNF(field, a, b, names=names, delay_computations=delay_computations, suppress_warnings=suppress_warnings)
+    return QuaternionAlgebraNF(
+        field,
+        a,
+        b,
+        names=names,
+        delay_computations=delay_computations,
+        suppress_warnings=suppress_warnings,
+    )
 
-def pari_local_symbol(a,b,prime):
+
+def pari_local_symbol(a, b, prime):
     """
     This takes sage types for number field elements a,b and a prime ideal of the same
     number field. However the calculation is outsourced to PARI.
@@ -63,15 +74,24 @@ def pari_local_symbol(a,b,prime):
 
 
 class QuaternionAlgebraNF(QuaternionAlgebra_ab):
-
-    def __init__(self, base_ring, a, b, names="i,j,k", compute_ramification=True, suppress_warnings=False):
+    def __init__(
+        self,
+        base_ring,
+        a,
+        b,
+        names="i,j,k",
+        compute_ramification=True,
+        suppress_warnings=False,
+    ):
         """
         On initialization we by default compute the ramification set. We don't actually
         type-test that the base_ring is a number field, but we do print a warning if it
         doesn't look like one of Sage's NumberField.
         """
         if suppress_warnings and not is_NumberField(base_ring):
-            print('The base ring does not appear to be a number field. Proceed with caution.')
+            print(
+                "The base ring does not appear to be a number field. Proceed with caution."
+            )
         self._ramified_residue_characteristics = None
         self._ramified_real_places = None
         self._ramified_finite_places = None
@@ -91,14 +111,18 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         if self._ramified_real_places and not force_compute:
             return self._ramified_real_places
         else:
-            a,b = self.invariants()
+            a, b = self.invariants()
             field = self.base_ring()
             real_places = field.real_places()
-            ramified_places = set([place for place in real_places if place(a) < 0 and place(b) < 0])
+            ramified_places = set(
+                [place for place in real_places if place(a) < 0 and place(b) < 0]
+            )
             self._ramified_real_places = ramified_places
             return ramified_places
-    
-    def ramified_residue_characteristics(self, force_compute=False, ignore_dyadic=False):
+
+    def ramified_residue_characteristics(
+        self, force_compute=False, ignore_dyadic=False
+    ):
         """
         Find the residue characteristics of the ramified places. It will attempt to
         compute the ramified places if they're not known. The residue characteristics
@@ -112,26 +136,46 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
             else:
                 self.ramified_finite_places(force_compute=force_compute)
         if not self._ramified_residue_characteristics or force_compute:
-            self._ramified_residue_characteristics = Counter([radical(place.absolute_norm()) for place in self._ramified_finite_places])
+            self._ramified_residue_characteristics = Counter(
+                [
+                    radical(place.absolute_norm())
+                    for place in self._ramified_finite_places
+                ]
+            )
         return self._ramified_residue_characteristics
-    
+
     def ramified_nondyadic_places(self, force_compute=False):
         if not self._ramified_finite_places or force_compute:
             a, b = self.invariants()
             ramified_finite_primes = None
-            primes_dividing_a = {prime for (prime, multiplicity) in self.base_ring().ideal(a).factor() if multiplicity%2 != 0 and prime.absolute_norm()%2 != 0}
-            primes_dividing_b = {prime for (prime, multiplicity) in self.base_ring().ideal(b).factor() if multiplicity%2 != 0 and prime.absolute_norm()%2 != 0}
+            primes_dividing_a = {
+                prime
+                for (prime, multiplicity) in self.base_ring().ideal(a).factor()
+                if multiplicity % 2 != 0 and prime.absolute_norm() % 2 != 0
+            }
+            primes_dividing_b = {
+                prime
+                for (prime, multiplicity) in self.base_ring().ideal(b).factor()
+                if multiplicity % 2 != 0 and prime.absolute_norm() % 2 != 0
+            }
             ramified_finite_primes = {
-                prime for prime in primes_dividing_a | primes_dividing_b if self.base_ring().hilbert_symbol(a, b, prime) == -1
+                prime
+                for prime in primes_dividing_a | primes_dividing_b
+                if self.base_ring().hilbert_symbol(a, b, prime) == -1
             }
             if self._ramified_finite_places is not None:
-                self._ramified_finite_places = self._ramified_finite_places | ramified_finite_primes
+                self._ramified_finite_places = (
+                    self._ramified_finite_places | ramified_finite_primes
+                )
             else:
                 self._ramified_finite_places = ramified_finite_primes
-        answer = {prime for prime in self._ramified_finite_places if prime.absolute_norm()%2 != 0}
+        answer = {
+            prime
+            for prime in self._ramified_finite_places
+            if prime.absolute_norm() % 2 != 0
+        }
         return answer
-        
-    
+
     def ramified_finite_places(self, force_compute=False):
         """
         Computes the ramified finite places as a set. Passing in force_compute=True will
@@ -151,36 +195,56 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         function calls which should be a win. On the third hand having primes appear to
         powers higher than 1 might be so rare in practice that this isn't worth it.
         """
-        if not self._ramified_finite_places or self._ramified_dyadic_places_computed or force_compute:
+        if (
+            not self._ramified_finite_places
+            or self._ramified_dyadic_places_computed
+            or force_compute
+        ):
             a, b = self.invariants()
             ramified_finite_primes = None
-            primes_dividing_a = {prime for (prime, multiplicity) in self.base_ring().ideal(a).factor() if multiplicity%2 != 0 and prime.absolute_norm()%2 != 0}
-            primes_dividing_b = {prime for (prime, multiplicity) in self.base_ring().ideal(b).factor() if multiplicity%2 != 0 and prime.absolute_norm()%2 != 0}
-            ramified_finite_primes = {
-                prime for prime in primes_dividing_a | primes_dividing_b if self.base_ring().hilbert_symbol(a, b, prime) == -1
+            primes_dividing_a = {
+                prime
+                for (prime, multiplicity) in self.base_ring().ideal(a).factor()
+                if multiplicity % 2 != 0 and prime.absolute_norm() % 2 != 0
             }
-            total_number_ramified_places = len(self.ramified_real_places(force_compute=force_compute) | ramified_finite_primes)
+            primes_dividing_b = {
+                prime
+                for (prime, multiplicity) in self.base_ring().ideal(b).factor()
+                if multiplicity % 2 != 0 and prime.absolute_norm() % 2 != 0
+            }
+            ramified_finite_primes = {
+                prime
+                for prime in primes_dividing_a | primes_dividing_b
+                if self.base_ring().hilbert_symbol(a, b, prime) == -1
+            }
+            total_number_ramified_places = len(
+                self.ramified_real_places(force_compute=force_compute)
+                | ramified_finite_primes
+            )
             # Experimentally we most want to avoid computing dyadic places with large residue class degree.
-            dyadic_primes = sorted(self.base_ring().ideal(2).prime_factors(), key=lambda prime : prime.residue_class_degree())
+            dyadic_primes = sorted(
+                self.base_ring().ideal(2).prime_factors(),
+                key=lambda prime: prime.residue_class_degree(),
+            )
             for prime in dyadic_primes:
                 if prime == dyadic_primes[-1]:
-                    if total_number_ramified_places%2 != 0:
+                    if total_number_ramified_places % 2 != 0:
                         ramified_finite_primes.add(prime)
                 else:
-                    if self.base_ring().hilbert_symbol(a,b,prime) == -1:
+                    if self.base_ring().hilbert_symbol(a, b, prime) == -1:
                         ramified_finite_primes.add(prime)
                         total_number_ramified_places += 1
             self._ramified_finite_places = ramified_finite_primes
         self.ramified_residue_characteristics(force_compute=force_compute)
         return self._ramified_finite_places
-    
+
     def is_division_algebra(self):
         """
         Overrides that from Sage's QuaternionAlgebra_ab class. Just whether there is any
         ramification.
         """
         return bool(self._ramified_finite_places) or bool(self._ramified_finite_places)
-    
+
     def is_matrix_ring(self):
         """
         Overrides the method from the parent class. This (obviously) exploits the
@@ -214,23 +278,45 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         other_field = other.base_ring()
         if field_isomorphism is None:
             try:
-                field_isomorphism = field_isomorphisms.isomorphisms_between_number_fields(self_field, other_field)[0]
+                field_isomorphism = field_isomorphisms.isomorphisms_between_number_fields(
+                    self_field, other_field
+                )[
+                    0
+                ]
             except IndexError:
                 return False
         # Trying if other already has some ramification data computed.
         try:
-            same_number_of_real_ramification = (len(self._ramified_real_places) == len(other._ramified_real_places))
-            same_residue_characteristics = (self._ramified_residue_characteristics == other._ramified_residue_characteristics)
+            same_number_of_real_ramification = len(self._ramified_real_places) == len(
+                other._ramified_real_places
+            )
+            same_residue_characteristics = (
+                self._ramified_residue_characteristics
+                == other._ramified_residue_characteristics
+            )
             if not (same_number_of_real_ramification and same_residue_characteristics):
                 return False
-        except AttributeError: pass
+        except AttributeError:
+            pass
         a, b = [field_isomorphism(gen) for gen in other.invariants()]
         new_quaternion_algebra = QuaternionAlgebraNF(self_field, a, b)
-        same_real_ramification = (self._ramified_real_places == new_quaternion_algebra._ramified_real_places)
-        same_finite_ramification = (self._ramified_finite_places == new_quaternion_algebra._ramified_finite_places)
-        return (same_real_ramification and same_finite_ramification)
+        same_real_ramification = (
+            self._ramified_real_places == new_quaternion_algebra._ramified_real_places
+        )
+        same_finite_ramification = (
+            self._ramified_finite_places
+            == new_quaternion_algebra._ramified_finite_places
+        )
+        return same_real_ramification and same_finite_ramification
 
-    def ramification_string(self, full_finite_ramification=True, full_real_ramification=True, show_hilbert_symbol=True, show_field_data=False, leading_char=''):
+    def ramification_string(
+        self,
+        full_finite_ramification=True,
+        full_real_ramification=True,
+        show_hilbert_symbol=True,
+        show_field_data=False,
+        leading_char="",
+    ):
         """
         This returns a somewhat large string that contains the ramification data in a
         human readable format. Its intended use is to display in console sessions or to
@@ -251,26 +337,33 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         """
         data_strings = list()
         if show_field_data:
-            field_data = 'Base field: ' + str(self.base_ring())
+            field_data = "Base field: " + str(self.base_ring())
             data_strings.append(field_data)
-        hilbert_symbol = 'Hilbert symbol: ' + str(self.invariants())
+        hilbert_symbol = "Hilbert symbol: " + str(self.invariants())
         data_strings.append(hilbert_symbol)
         if full_finite_ramification:
-            finite_ramification_data = 'Finite ramification: ' + str(self.ramified_finite_places())
+            finite_ramification_data = "Finite ramification: " + str(
+                self.ramified_finite_places()
+            )
             data_strings.append(finite_ramification_data)
-        ramified_residue_chars_data = 'Finite ramification residue characteristics: ' + str(self.ramified_residue_characteristics())
+        ramified_residue_chars_data = (
+            "Finite ramification residue characteristics: "
+            + str(self.ramified_residue_characteristics())
+        )
         data_strings.append(ramified_residue_chars_data)
-        number_of_ramified_real_places = 'Number of ramified real places: ' + str(len(self.ramified_real_places()))
+        number_of_ramified_real_places = "Number of ramified real places: " + str(
+            len(self.ramified_real_places())
+        )
         data_strings.append(number_of_ramified_real_places)
         if full_real_ramification:
             var = str(self.base_ring().gen())
             small_maps = list()
             for embedding in self.ramified_real_places():
                 numerical_value = str(embedding.im_gens()[0])
-                small_maps = [var + ' |--> ' + numerical_value]
-            ramified_real_places_data = 'Ramified real places: ' + str(small_maps)
+                small_maps = [var + " |--> " + numerical_value]
+            ramified_real_places_data = "Ramified real places: " + str(small_maps)
             data_strings.append(ramified_real_places_data)
         output_string = str()
         for element in data_strings:
-            output_string += leading_char + element + '\n'
+            output_string += leading_char + element + "\n"
         return output_string.rstrip()

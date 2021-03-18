@@ -19,6 +19,49 @@ from sage.rings.number_field.number_field import is_NumberField
 from sage.all import CC, radical, ZZ, PolynomialRing, QQ, NumberField, RR, RealField
 from collections import Counter
 
+def nested_decoder(func):
+    """
+    A decorator that tries to fix decoding of special objects inside containers. For
+    example, if I have a JSON array whose elements are encoded ManifoldAP objects, I'd
+    like to be able to call json.loads with cls=ManifoldAP_Decoder. As written without
+    this decorator, there will be an error because ManifoldAP_Decoder is coded to expect
+    a dictionary from the default JSON decoder, which is then pieces back into a 
+    ManifoldAP object. There is maybe a better way to code my decoders that makes
+    this decorator unnecessary.
+
+    The basic logic is to try to decode the object, if it's a nested object, then there
+    will be some error thrown. In particular, all the encoding in this module converts
+    the objects to a dictionary all of whose keys are strings that is serializable. So
+    if the object fed in is actually a list, we'll get a TypeError from something like
+    L["name"] where L is a list. Similarly, if the object we feed in is a dictionary but
+    not one of the form that gets encoded by JSON, then we'll need to catch a KeyError.
+    """
+    def wrapper(instance,text):
+        """
+        The instance should be an instance of the decoder class. We need it for the
+        call signature to be correct.
+        """
+        try:
+            return func(instance, text)
+        except (TypeError, AttributeError):
+            # Think that text actually gets decoded to a Python list.
+            # What we need to do is load the text, which return a Python list of Python
+            # dictionaries. We can't just call func on these dictionaries because func
+            # expects a string, but they will be dumpable via the default JSON encoder.
+            # So after we dump them, we get strings that func can handle.
+            raw_list = json.JSONDecoder().decode(text)
+            list_of_encoded_text = [json.dumps(elt) for elt in raw_list]
+            list_of_decoded_objects = [func(instance, elt) for elt in list_of_encoded_text]
+            return list_of_decoded_objects
+        except KeyError:
+            # Think that text is a dictionary whose values are the dicts that func is a
+            # special decoder for.
+            raw_dict = json.JSONDecoder().decode(text)
+            dict_of_encoded_text = {key : json.dumps(raw_dict[key]) for key in raw_dict}
+            dict_of_decoded_objects = {key : func(instance, dict_of_encoded_text[key]) for key in dict_of_encoded_text}
+            return dict_of_decoded_objects
+    return wrapper
+
 class FieldEncoder(json.JSONEncoder):
     """
     Returns a JSON dict for fields as they come to us from Kleinian groups. This will
@@ -105,6 +148,7 @@ def dict_to_field(d):
     return field
 
 class FieldDecoder(json.JSONDecoder):
+    @nested_decoder
     def decode(self, text):
         raw_dict = json.JSONDecoder().decode(text)
         #defining_poly = string_to_poly(raw_dict["defining polynomial"])
@@ -216,6 +260,7 @@ class QuaternionAlgebraDecoder(json.JSONDecoder):
     Decoding a JSON encoded QuaternionAlgebraNF. See the dict_to_quaternion_algebra
     function for details.
     """
+    @nested_decoder
     def decode(self, text):
         text_dict = json.JSONDecoder().decode(text)
         algebra = dict_to_quaternion_algebra(text_dict)
@@ -283,14 +328,41 @@ class ManifoldAP_Decoder(json.JSONDecoder):
     """
     Converts a serialized JSON object to a ManifoldAP object.
     """
+    @nested_decoder
     def decode(self, text):
-        pass
+        decoded_text = json.JSONDecoder().decode(text)
+        mfld = dict_to_manifold(decoded_text)
+        return mfld
 
-def convert_json_array_to_dict(json_array):
+def encode_list_of_manifolds(list_of_manifolds):
     """
-    By a json_array, we mean a JSON object all of whose elements are encoded ManifoldAP
-    JSON objects. The output of this function is a Python dictionary whose keys are the
-    names of the manifolds (as specified in their JSON objects) and whose values are
-    ManifoldAP objects.
+    Given a list of manifolds (or some other iterable with a similar interface), returns
+    a Python list of encoded manifolds. The returned object should be serializable with
+    the default JSON encoder. This ends up being unnecessary and unused.
     """
-    pass
+    l = [json.dumps(mfld, cls=ManifoldAP_Encoder) for mfld in list_of_manifolds]
+    return l
+
+def decode_list_of_manifolds(list_of_manifolds):
+    """
+    Given a Python list whose elements are encoded ManifoldAP objects, returns a list
+    with the decoded ManifoldAP objects.
+    """
+    l = [json.loads(mfld, cls=ManifoldAP_Decoder) for mfld in list_of_manifolds]
+    return l
+
+class ManifoldAP_List_Encoder(json.JSONEncoder):
+    """
+    I think this class is basically unneccesary as if we pass a list of ManifoldAPs in
+    with the class stipulated as ManifoldAP_Encoder, the list will be encoded correctly.
+    However, the dual decode function will not work because of how the ManifoldAP
+    encoder is written (which suggests I should rewrite it at some point). I leave this
+    for now so that we have ManifoldAP_List_Encoder and ManifoldAP_List_Decoder
+    """
+    def default(self, list_of_manifolds):
+        return [ManifoldAP_Encoder().default(mfld) for mfld in list_of_manifolds]
+
+class ManifoldAP_List_Decoder(json.JSONDecoder):
+    def decode(self, text):
+        text_list = json.JSONDecodeError().decode(text)
+        return decode_list_of_manifolds(text_list)

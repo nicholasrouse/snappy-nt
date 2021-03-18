@@ -35,7 +35,7 @@ def within_epsilon(a, b, epsilon_coefficient=1):
         return False
 
 
-def is_parabolic(element, epsilon_coefficient=1):
+def is_parabolic(element, epsilon_coefficient=10):
     """
     Tests whether an element has trace 2 using the within_epsilon method.  Actually it
     tests whether the element is within epsilon of 2 (see within_epsilon and
@@ -201,7 +201,7 @@ def find_hilbert_symbol_words(group, power=1):
         word2 = next(gen)
         numerical_elt1 = group(word1)
         numerical_elt2 = group(word2)
-        if not is_parabolic(numerical_elt1) and not generate_reducible_subgroup(numerical_elt1, numerical_elt2):
+        if not is_parabolic(numerical_elt1, epsilon_coefficient=10) and not generate_reducible_subgroup(numerical_elt1, numerical_elt2):
             return (word1, word2)
-        if not is_parabolic(numerical_elt2) and not generate_reducible_subgroup(numerical_elt1, numerical_elt2):
+        if not is_parabolic(numerical_elt2, epsilon_coefficient=10) and not generate_reducible_subgroup(numerical_elt1, numerical_elt2):
             return (word2, word1)

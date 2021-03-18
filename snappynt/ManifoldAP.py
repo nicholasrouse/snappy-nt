@@ -32,9 +32,7 @@ def try_various_precision(func, iterable, fail_value=None):
             break
     return return_value 
 
-
 PrecDegreeTuple = namedtuple("PrecDegreeTuple", ["prec", "degree"])
-
 
 def fix_names(name):
     name = name.lower()
@@ -110,7 +108,7 @@ class ManifoldAP(snappy.Manifold):
             "quaternion algebra": self._quaternion_algebra_prec_record,
             "invariant quaternion algebra": self._invariant_quaternion_algebra_prec_record,
         }
-        # denominators will be the empty set if there are no denominators.
+        # denominators will be the empty set (i.e. set()) if there are no denominators.
         self._denominators = None
         self._denominator_residue_characteristics = None
         # This sometimes raises exceptions, but it happens in SnapPy itself.
@@ -512,7 +510,7 @@ class ManifoldAP(snappy.Manifold):
             if verbosity: print('Found invariant quaternion algebra.')
             first_entry, second_entry = first_entry(self._invariant_trace_field.gen()), second_entry(self._invariant_trace_field.gen())
             self._invariant_quaternion_algebra = QuaternionAlgebraNF.QuaternionAlgebraNF(
-                self._invariant_trace_field, first_entry, second_entry
+                self._invariant_trace_field, first_entry, second_entry, compute_ramification=compute_ramification
             )
         if compute_ramification:
             if self._invariant_quaternion_algebra:
@@ -541,10 +539,11 @@ class ManifoldAP(snappy.Manifold):
         denominatorsforsnappy module that just returns the residue characteristics. We
         could add this as an optional argument at some point though.
 
-        This function also tries to compute the denominators even if they're already
-        known. However, it will use known information about the trace field generators.
-        In fact, it needs to know the trace field generators to work.
+        Recall the convention that self._denominators is None if they haven't been
+        computed but set() if they have been to computed to be the empty set.
         """
+        if self._denominators or self._denominators == set():
+            return self._denominators
         if not self._trace_field_generators:
             if verbosity:
                 failure_message = (
@@ -827,3 +826,13 @@ class ManifoldAP(snappy.Manifold):
             return (answer, arith_dict)
         else:
             return answer
+    
+    def identify(self):
+        """
+        I'm overriding this for now because for some reason I get an error that the
+        triangulation is empty when I call it on ManifoldAP objects. It seems to work
+        fine for snappy ones. My guess is that it's related to the __new__ Cython issue,
+        but I'll try to fix it later.
+        """
+        temp_mfld = snappy.Manifold(str(self))
+        return temp_mfld.identify()

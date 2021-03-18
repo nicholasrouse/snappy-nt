@@ -8,4 +8,9 @@ symbolicFiveTwoResidueChars.txt
 twistknotcharactervarieties.py
 Zannier_tests.py
 large_knots.py
+overflow.py
+snap_translator.py
+arithmetic_homology_spheres*
 *.ipynb
+*.json
+*.shelve

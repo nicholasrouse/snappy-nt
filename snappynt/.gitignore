@@ -14,3 +14,9 @@ arithmetic_homology_spheres*
 *.ipynb
 *.json
 *.shelve
+
+#Experimental files
+testing.py
+
+#Old, unused files
+pari_wrapper_for_quaternion_algebras.py

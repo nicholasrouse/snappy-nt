@@ -1,0 +1,1592 @@
+[
+    {
+        "name": "4_1(0,0)",
+        "volume": 2.029883212819307,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^2 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.5,
+                    "imaginary part": 0.8660254037844386
+                },
+                "discriminant": -3,
+                "signature": "(0, 1)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^2 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.5,
+                    "imaginary part": 0.8660254037844386
+                },
+                "discriminant": -3,
+                "signature": "(0, 1)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": true
+    },
+    {
+        "name": "5_2(0,0)",
+        "volume": 2.828122088330783,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^3 - x^2 + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.8774388331233465,
+                    "imaginary part": -0.7448617666197441
+                },
+                "discriminant": -23,
+                "signature": "(1, 1)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^3 - x^2 + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.8774388331233465,
+                    "imaginary part": -0.7448617666197441
+                },
+                "discriminant": -23,
+                "signature": "(1, 1)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "6_1(0,0)",
+        "volume": 3.1639632288831443,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^4 + x^2 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.5474237945860585,
+                    "imaginary part": -0.5856519796895727
+                },
+                "discriminant": 257,
+                "signature": "(0, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^4 + x^2 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.5474237945860585,
+                    "imaginary part": -0.5856519796895727
+                },
+                "discriminant": 257,
+                "signature": "(0, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "6_2(0,0)",
+        "volume": 4.400832516123044,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^5 - x^4 + x^3 - 2*x^2 + x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.27651107348728443,
+                    "imaginary part": -0.728236608887858
+                },
+                "discriminant": 1777,
+                "signature": "(1, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^5 - x^4 + x^3 - 2*x^2 + x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.27651107348728443,
+                    "imaginary part": -0.728236608887858
+                },
+                "discriminant": 1777,
+                "signature": "(1, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "6_3(0,0)",
+        "volume": 5.6930210912813015,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^6 - x^5 - x^4 + 2*x^3 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.0739495178523937,
+                    "imaginary part": 0.558751881411937
+                },
+                "discriminant": -10571,
+                "signature": "(0, 3)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^6 - x^5 - x^4 + 2*x^3 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.0739495178523937,
+                    "imaginary part": 0.558751881411937
+                },
+                "discriminant": -10571,
+                "signature": "(0, 3)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "7_2(0,0)",
+        "volume": 3.3317442316411134,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^5 - x^4 + x^2 + x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.9355375391547716,
+                    "imaginary part": 0.9039076887509032
+                },
+                "discriminant": 4409,
+                "signature": "(1, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^5 - x^4 + x^2 + x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.9355375391547716,
+                    "imaginary part": 0.9039076887509032
+                },
+                "discriminant": 4409,
+                "signature": "(1, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "7_3(0,0)",
+        "volume": 4.592125697027062,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^6 - x^5 + 3*x^4 - 2*x^3 + 2*x^2 - x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.40880248015417064,
+                    "imaginary part": 1.2763769607033533
+                },
+                "discriminant": 78301,
+                "signature": "(2, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^6 - x^5 + 3*x^4 - 2*x^3 + 2*x^2 - x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.40880248015417064,
+                    "imaginary part": 1.2763769607033533
+                },
+                "discriminant": 78301,
+                "signature": "(2, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "7_4(0,0)",
+        "volume": 5.137941201873417,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^3 + 2*x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": -0.22669882575820188,
+                    "imaginary part": 1.4677115087102242
+                },
+                "discriminant": -59,
+                "signature": "(1, 1)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^3 + 2*x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": -0.22669882575820188,
+                    "imaginary part": 1.4677115087102242
+                },
+                "discriminant": -59,
+                "signature": "(1, 1)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "7_5(0,0)",
+        "volume": 6.443537380850574,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^8 - x^7 - x^6 + 2*x^5 + x^4 - 2*x^3 + 2*x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.0318074350347248,
+                    "imaginary part": 0.6554697415289981
+                },
+                "discriminant": -4690927,
+                "signature": "(2, 3)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^8 - x^7 - x^6 + 2*x^5 + x^4 - 2*x^3 + 2*x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.0318074350347248,
+                    "imaginary part": 0.6554697415289981
+                },
+                "discriminant": -4690927,
+                "signature": "(2, 3)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "7_6(0,0)",
+        "volume": 7.084925953510829,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^9 - x^8 + 2*x^7 - x^6 + 3*x^5 - x^4 + 2*x^3 + x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.7289655571286424,
+                    "imaginary part": 0.9862947000577544
+                },
+                "discriminant": 90320393,
+                "signature": "(1, 4)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^9 - x^8 + 2*x^7 - x^6 + 3*x^5 - x^4 + 2*x^3 + x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.7289655571286424,
+                    "imaginary part": 0.9862947000577544
+                },
+                "discriminant": 90320393,
+                "signature": "(1, 4)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "7_7(0,0)",
+        "volume": 7.6433751723599554,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^4 + x^2 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": -0.5474237945860585,
+                    "imaginary part": -1.1208734899370594
+                },
+                "discriminant": 257,
+                "signature": "(0, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^4 + x^2 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": -0.5474237945860585,
+                    "imaginary part": -1.1208734899370594
+                },
+                "discriminant": 257,
+                "signature": "(0, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_1(0,0)",
+        "volume": 3.427205246274016,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^6 - x^5 + x^4 + 2*x^2 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.9327887872637926,
+                    "imaginary part": 0.9516106941544147
+                },
+                "discriminant": -92051,
+                "signature": "(0, 3)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^6 - x^5 + x^4 + 2*x^2 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.9327887872637926,
+                    "imaginary part": 0.9516106941544147
+                },
+                "discriminant": -92051,
+                "signature": "(0, 3)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_2(0,0)",
+        "volume": 4.9352426782806535,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^8 - x^7 + 3*x^6 - 2*x^5 + 3*x^4 - 2*x^3 - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.47351448414266506,
+                    "imaginary part": -1.273022302875877
+                },
+                "discriminant": -21309911,
+                "signature": "(2, 3)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^8 - x^7 + 3*x^6 - 2*x^5 + 3*x^4 - 2*x^3 - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.47351448414266506,
+                    "imaginary part": -1.273022302875877
+                },
+                "discriminant": -21309911,
+                "signature": "(2, 3)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_3(0,0)",
+        "volume": 5.238684100798438,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^8 - x^7 + 5*x^6 - 4*x^5 + 7*x^4 - 4*x^3 + 2*x^2 + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.19979871613312178,
+                    "imaginary part": 1.5136640375300554
+                },
+                "discriminant": 60020897,
+                "signature": "(0, 4)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^8 - x^7 + 5*x^6 - 4*x^5 + 7*x^4 - 4*x^3 + 2*x^2 + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.19979871613312178,
+                    "imaginary part": 1.5136640375300554
+                },
+                "discriminant": 60020897,
+                "signature": "(0, 4)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_4(0,0)",
+        "volume": 5.500486416347234,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^9 - x^8 - 4*x^7 + 3*x^6 + 5*x^5 - x^4 - 2*x^3 - 2*x^2 + x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.4912820337230261,
+                    "imaginary part": -0.23429602566756597
+                },
+                "discriminant": 1160970913,
+                "signature": "(1, 4)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^9 - x^8 - 4*x^7 + 3*x^6 + 5*x^5 - x^4 - 2*x^3 - 2*x^2 + x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.4912820337230261,
+                    "imaginary part": -0.23429602566756597
+                },
+                "discriminant": 1160970913,
+                "signature": "(1, 4)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_5(0,0)",
+        "volume": 6.997189147792216,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^5 - x^4 + 2*x^3 + x^2 + 2",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.19556705939246727,
+                    "imaginary part": 1.0026969500532261
+                },
+                "discriminant": 8968,
+                "signature": "(1, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^5 - x^4 + 2*x^3 + x^2 + 2",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.19556705939246727,
+                    "imaginary part": 1.0026969500532261
+                },
+                "discriminant": 8968,
+                "signature": "(1, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_6(0,0)",
+        "volume": 7.4752374295052455,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^11 - x^10 + 2*x^9 - x^8 + 4*x^7 - 2*x^6 + 4*x^5 - x^4 + 3*x^3 + x^2 + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.783272937622048,
+                    "imaginary part": -0.9737056666570651
+                },
+                "discriminant": -303291012439,
+                "signature": "(1, 5)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^11 - x^10 + 2*x^9 - x^8 + 4*x^7 - 2*x^6 + 4*x^5 - x^4 + 3*x^3 + x^2 + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.783272937622048,
+                    "imaginary part": -0.9737056666570651
+                },
+                "discriminant": -303291012439,
+                "signature": "(1, 5)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_7(0,0)",
+        "volume": 7.022196589095255,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^11 - x^10 - 2*x^9 + 3*x^8 + 2*x^7 - 4*x^6 + 3*x^4 - x^3 - x^2 + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.0810796288321556,
+                    "imaginary part": -0.6317086402157812
+                },
+                "discriminant": -121118604943,
+                "signature": "(1, 5)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^11 - x^10 - 2*x^9 + 3*x^8 + 2*x^7 - 4*x^6 + 3*x^4 - x^3 - x^2 + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.0810796288321556,
+                    "imaginary part": -0.6317086402157812
+                },
+                "discriminant": -121118604943,
+                "signature": "(1, 5)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_8(0,0)",
+        "volume": 7.801341224440062,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^12 - x^11 - x^10 + 2*x^9 + 3*x^8 - 4*x^7 - 2*x^6 + 4*x^5 + 2*x^4 - 3*x^3 - x^2 + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.9628867449383822,
+                    "imaginary part": -0.8288503082039516
+                },
+                "discriminant": 2885199252305,
+                "signature": "(0, 6)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^12 - x^11 - x^10 + 2*x^9 + 3*x^8 - 4*x^7 - 2*x^6 + 4*x^5 + 2*x^4 - 3*x^3 - x^2 + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.9628867449383822,
+                    "imaginary part": -0.8288503082039516
+                },
+                "discriminant": 2885199252305,
+                "signature": "(0, 6)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_9(0,0)",
+        "volume": 7.5881802236416265,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^12 - x^11 - 4*x^10 + x^9 + 10*x^8 + 2*x^7 - 12*x^6 - 6*x^5 + 7*x^4 + 4*x^3 - 2*x^2 + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": -0.8475379649643471,
+                    "imaginary part": 0.8120675343521135
+                },
+                "discriminant": 421901335721,
+                "signature": "(0, 6)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^12 - x^11 - 4*x^10 + x^9 + 10*x^8 + 2*x^7 - 12*x^6 - 6*x^5 + 7*x^4 + 4*x^3 - 2*x^2 + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": -0.8475379649643471,
+                    "imaginary part": 0.8120675343521135
+                },
+                "discriminant": 421901335721,
+                "signature": "(0, 6)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_10(0,0)",
+        "volume": 8.651148558017082,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^11 - 2*x^10 + 4*x^8 - 2*x^7 - 4*x^6 + 5*x^5 + 2*x^4 - 5*x^3 + x^2 + 3*x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.1260547888928132,
+                    "imaginary part": 0.7113551926043733
+                },
+                "discriminant": -170828814392,
+                "signature": "(1, 5)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^11 - 2*x^10 + 4*x^8 - 2*x^7 - 4*x^6 + 5*x^5 + 2*x^4 - 5*x^3 + x^2 + 3*x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.1260547888928132,
+                    "imaginary part": 0.7113551926043733
+                },
+                "discriminant": -170828814392,
+                "signature": "(1, 5)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_11(0,0)",
+        "volume": 8.286316817806592,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^10 - 2*x^9 + 3*x^8 - 4*x^7 + 4*x^6 - 5*x^5 + 5*x^4 - 3*x^3 + 3*x^2 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.32199445291189277,
+                    "imaginary part": 0.7144205683007119
+                },
+                "discriminant": -2334727687,
+                "signature": "(0, 5)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^10 - 2*x^9 + 3*x^8 - 4*x^7 + 4*x^6 - 5*x^5 + 5*x^4 - 3*x^3 + 3*x^2 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.32199445291189277,
+                    "imaginary part": 0.7144205683007119
+                },
+                "discriminant": -2334727687,
+                "signature": "(0, 5)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_12(0,0)",
+        "volume": 8.935856927486691,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^14 - 2*x^13 + 3*x^12 - 4*x^11 + 4*x^10 - 5*x^9 + 7*x^8 - 7*x^7 + 7*x^6 - 5*x^5 + 4*x^4 - 4*x^3 + 3*x^2 - 2*x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.3846305385170291,
+                    "imaginary part": 0.9230706088052529
+                },
+                "discriminant": -15441795725579,
+                "signature": "(0, 7)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^14 - 2*x^13 + 3*x^12 - 4*x^11 + 4*x^10 - 5*x^9 + 7*x^8 - 7*x^7 + 7*x^6 - 5*x^5 + 4*x^4 - 4*x^3 + 3*x^2 - 2*x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.3846305385170291,
+                    "imaginary part": 0.9230706088052529
+                },
+                "discriminant": -15441795725579,
+                "signature": "(0, 7)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_13(0,0)",
+        "volume": 8.531232201460416,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^14 - x^13 - 3*x^12 + 4*x^11 + 4*x^10 - 7*x^9 - x^8 + 6*x^7 - 2*x^6 - 2*x^5 + 2*x^4 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.1425941435537514,
+                    "imaginary part": 0.5467624949107861
+                },
+                "discriminant": -759929100364387,
+                "signature": "(0, 7)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^14 - x^13 - 3*x^12 + 4*x^11 + 4*x^10 - 7*x^9 - x^8 + 6*x^7 - 2*x^6 - 2*x^5 + 2*x^4 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.1425941435537514,
+                    "imaginary part": 0.5467624949107861
+                },
+                "discriminant": -759929100364387,
+                "signature": "(0, 7)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_14(0,0)",
+        "volume": 9.217800316021929,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^15 - x^14 + 4*x^13 - 3*x^12 + 8*x^11 - 6*x^10 + 10*x^9 - 7*x^8 + 8*x^7 - 6*x^6 + 6*x^5 - 4*x^4 + 4*x^3 - 2*x^2 + 2*x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.5940318154659676,
+                    "imaginary part": 1.0956167808267367
+                },
+                "discriminant": -26196407237223439,
+                "signature": "(1, 7)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^15 - x^14 + 4*x^13 - 3*x^12 + 8*x^11 - 6*x^10 + 10*x^9 - 7*x^8 + 8*x^7 - 6*x^6 + 6*x^5 - 4*x^4 + 4*x^3 - 2*x^2 + 2*x - 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.5940318154659676,
+                    "imaginary part": 1.0956167808267367
+                },
+                "discriminant": -26196407237223439,
+                "signature": "(1, 7)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_15(0,0)",
+        "volume": 9.930648293796184,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^7 - x^6 - x^5 + 2*x^4 + x^3 - 2*x^2 + x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.139457724988333,
+                    "imaginary part": 0.6301696873026073
+                },
+                "discriminant": -1172888,
+                "signature": "(1, 3)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^7 - x^6 - x^5 + 2*x^4 + x^3 - 2*x^2 + x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.139457724988333,
+                    "imaginary part": 0.6301696873026073
+                },
+                "discriminant": -1172888,
+                "signature": "(1, 3)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_16(0,0)",
+        "volume": 10.57902191689927,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^5 - 2*x^4 + 2*x^2 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.4175481209313556,
+                    "imaginary part": -0.4933740092574883
+                },
+                "discriminant": 5501,
+                "signature": "(1, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^5 - 2*x^4 + 2*x^2 - x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.4175481209313556,
+                    "imaginary part": -0.4933740092574883
+                },
+                "discriminant": 5501,
+                "signature": "(1, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_18(0,0)",
+        "volume": 12.350906209158198,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^4 - 2*x^3 + x^2 - 2*x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": -0.20710678118654752,
+                    "imaginary part": 0.9783183434785159
+                },
+                "discriminant": -448,
+                "signature": "(2, 1)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^4 - 2*x^3 + x^2 - 2*x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": -0.20710678118654752,
+                    "imaginary part": 0.9783183434785159
+                },
+                "discriminant": -448,
+                "signature": "(2, 1)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_20(0,0)",
+        "volume": 4.124903251807674,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^5 - x^4 + x^3 + 2*x^2 - 2*x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.44253774561779713,
+                    "imaginary part": -0.45447889187311186
+                },
+                "discriminant": 5864,
+                "signature": "(1, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^5 - x^4 + x^3 + 2*x^2 - 2*x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 0.44253774561779713,
+                    "imaginary part": -0.45447889187311186
+                },
+                "discriminant": 5864,
+                "signature": "(1, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    },
+    {
+        "name": "8_21(0,0)",
+        "volume": 6.7837135198351275,
+        "quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^4 - x^3 + x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.0661209411559502,
+                    "imaginary part": 0.8640541908597383
+                },
+                "discriminant": 392,
+                "signature": "(0, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "invariant quaternion algebra": {
+            "base field": {
+                "defining polynomial": "x^4 - x^3 + x + 1",
+                "generator name": "z",
+                "numerical root": {
+                    "real part": 1.0661209411559502,
+                    "imaginary part": 0.8640541908597383
+                },
+                "discriminant": 392,
+                "signature": "(0, 2)"
+            },
+            "Hilbert symbol": {
+                "first entry": "1",
+                "second entry": "1"
+            },
+            "ramification": {
+                "dyadic ramification": [],
+                "nondyadic ramification": [],
+                "residue characteristics": {},
+                "real ramification": []
+            }
+        },
+        "denominators": {
+            "ideals": [],
+            "residue characteristics": []
+        },
+        "arithmetic": false
+    }
+]

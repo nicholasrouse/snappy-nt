@@ -183,7 +183,7 @@ def enumerate_group_elements(group, as_word=False, power=1, verbosity=False):
         else: yield group(word)
 
 
-def find_hilbert_symbol_words(group, power=1):
+def find_hilbert_symbol_words(group, power=1, epsilon_coefficient=100):
     """
     Given a group, enumerates pairs of words until two, g and h, are found such that
     g and [g,h] (the commutator) are not parabolic. The function is so named because
@@ -194,14 +194,18 @@ def find_hilbert_symbol_words(group, power=1):
 
     Caution: The returned values are a pair of words (g,h), not the actual Hilbert
     symbol or approximations thereof.
+
+    We had to power up the epsilon_coefficients because we were missing some parabolics.
+    I should probably rethink the implementation a bit. Maybe a try--except block where
+    we can catch when we convert an approximate algebraic integer to 0 or 2 via LLL.
     """
-    gen = enumerate_group_elements(group, as_word=True)
+    gen = enumerate_group_elements(group, as_word=True, power=power)
     while True:
         word1 = next(gen)
         word2 = next(gen)
         numerical_elt1 = group(word1)
         numerical_elt2 = group(word2)
-        if not is_parabolic(numerical_elt1, epsilon_coefficient=10) and not generate_reducible_subgroup(numerical_elt1, numerical_elt2):
+        if not is_parabolic(numerical_elt1, epsilon_coefficient=epsilon_coefficient) and not generate_reducible_subgroup(numerical_elt1, numerical_elt2, epsilon_coefficient=epsilon_coefficient):
             return (word1, word2)
-        if not is_parabolic(numerical_elt2, epsilon_coefficient=10) and not generate_reducible_subgroup(numerical_elt1, numerical_elt2):
+        if not is_parabolic(numerical_elt2, epsilon_coefficient=epsilon_coefficient) and not generate_reducible_subgroup(numerical_elt1, numerical_elt2, epsilon_coefficient=epsilon_coefficient):
             return (word2, word1)

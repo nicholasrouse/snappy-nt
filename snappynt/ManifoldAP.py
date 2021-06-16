@@ -12,8 +12,9 @@ Things to consider:
 """
 
 
+#from testing import compare_against_database
 import snappy, denominatorsforsnappy
-from sage.all import factor, NumberField, QuaternionAlgebra, radical
+from sage.all import factor, NumberField, QuaternionAlgebra, radical, cached_function
 import functools
 import irreducible_subgroups
 import misc_functions
@@ -375,7 +376,7 @@ class ManifoldAP(snappy.Manifold):
 
         return snappy.snap.find_field.ApproximateAlgebraicNumber(trace_defining_func)
 
-    def compute_approximate_hilbert_symbol(self, power=1):
+    def compute_approximate_hilbert_symbol(self, power=1, epsilon_coefficient=10):
         """
         Somewhat cumbersomly computes a Hilbert symbol as a pair of
         ApproximateAlgebraicNumbers. It's possible I should use the class
@@ -395,7 +396,7 @@ class ManifoldAP(snappy.Manifold):
         Last updated: Aug-29 2020
         """
         (word1, word2) = irreducible_subgroups.find_hilbert_symbol_words(
-            self.defining_function(prec=self.default_starting_prec)
+            self.defining_function(prec=self.default_starting_prec), power=power, epsilon_coefficient=epsilon_coefficient
         )
         first_entry = self.approximate_trace(
             word1
@@ -451,12 +452,19 @@ class ManifoldAP(snappy.Manifold):
         if be_smart:
             prec = self.next_prec_and_degree("quaternion algebra")
         primitive_element = self._trace_field_numerical_root  # An AAN
-        (
-            approx_first_entry,
-            approx_second_entry,
-        ) = self.compute_approximate_hilbert_symbol()
-        first_entry = primitive_element.express(approx_first_entry, prec=prec)
-        second_entry = primitive_element.express(approx_second_entry, prec=prec)
+        epsilon_coefficient = 10
+        while True:
+            
+            (
+                approx_first_entry,
+                approx_second_entry,
+            ) = self.compute_approximate_hilbert_symbol(power=1, epsilon_coefficient=epsilon_coefficient)
+            first_entry = primitive_element.express(approx_first_entry, prec=prec)
+            second_entry = primitive_element.express(approx_second_entry, prec=prec)
+            if first_entry == 0 or second_entry == 0:
+                epsilon_coefficient *= 10
+            else:
+                break
         self._quaternion_algebra_prec_record[prec] = bool(first_entry and second_entry)
         if first_entry == None or second_entry == None:
             if verbosity:
@@ -494,14 +502,23 @@ class ManifoldAP(snappy.Manifold):
             return None
         if be_smart:
             prec = self.next_prec_and_degree('invariant quaternion algebra')
-        degree = self._invariant_trace_field.degree()
+        #degree = self._invariant_trace_field.degree()
         primitive_element = self._invariant_trace_field_numerical_root  # An AAN
-        (
-            approx_first_entry,
-            approx_second_entry,
-        ) = self.compute_approximate_hilbert_symbol(power=2)
-        first_entry = primitive_element.express(approx_first_entry, prec=prec)
-        second_entry = primitive_element.express(approx_second_entry, prec=prec)
+        epsilon_coefficient = 10
+        while True:
+            (
+                approx_first_entry,
+                approx_second_entry,
+            ) = self.compute_approximate_hilbert_symbol(power=2, epsilon_coefficient=epsilon_coefficient)
+            first_entry = primitive_element.express(approx_first_entry, prec=prec)
+            second_entry = primitive_element.express(approx_second_entry, prec=prec)
+            if verbosity:
+                print("epsilon_coefficient=", epsilon_coefficient, "\nfirst_entry=", first_entry, "\nsecond_entry=", second_entry)
+                print(first_entry == self.invariant_trace_field(0))
+            if first_entry == 0 or second_entry == 0:
+                epsilon_coefficient *= 10
+            else:
+                break
         self._invariant_quaternion_algebra_prec_record[prec] = bool(first_entry and second_entry)
         if first_entry == None or second_entry == None:
             if verbosity: print('Failed to find invariant quaternion algebra.')
@@ -785,7 +802,7 @@ class ManifoldAP(snappy.Manifold):
             func = functools.partial(self.compute_arithmetic_invariants, _return_flag=True)
             try_various_precision(func, self.make_prec_degree_generator(), fail_value=False)
     
-    def has_same_arithmetic_invariants(self, other, return_dict=False):
+    def compare_arithmetic_invariants(self, other):
         """
         This takes two ManifoldAP's and computes whether they have isomorphic trace
         fields, invariant trace fields, quaternion algebras, invariant quaternion
@@ -805,8 +822,8 @@ class ManifoldAP(snappy.Manifold):
         compute its arithmetic invariants and compare them to self.
         """
         arith_dict = dict()
-        arith_dict['trace field'] = field_isomorphisms.isomorphic_respecting_embeddings(self._trace_field, other._trace_field)
-        arith_dict['invariant trace field'] = field_isomorphisms.isomorphic_respecting_embeddings(self._invariant_trace_field, other._invariant_trace_field)
+        arith_dict['trace field'] = field_isomorphisms.same_subfield_of_CC(self._trace_field, other._trace_field)
+        arith_dict['invariant trace field'] = field_isomorphisms.same_subfield_of_CC(self._invariant_trace_field, other._invariant_trace_field)
         if arith_dict['trace field']:
             arith_dict['quaternion algebra'] = self._quaternion_algebra.is_isomorphic(other._quaternion_algebra)
             # This should be computed and saved when we find whether the fields are isomorphic in the first place.
@@ -821,11 +838,11 @@ class ManifoldAP(snappy.Manifold):
         if arith_dict['invariant trace field']:
             arith_dict['invariant quaternion algebra'] = self._invariant_quaternion_algebra.is_isomorphic(other._invariant_quaternion_algebra)
         else: arith_dict['invariant quaternion algebra'] = False
-        answer = not (False in arith_dict.values())
-        if return_dict:
-            return (answer, arith_dict)
-        else:
-            return answer
+        return arith_dict
+        
+    def has_same_arithmetic_invariants(self, other):
+        arith_dict = self.compare_arithmetic_invariants(other)
+        return not (False in arith_dict.values())
     
     def identify(self):
         """

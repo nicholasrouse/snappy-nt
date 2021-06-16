@@ -66,7 +66,7 @@ def looks_like_a_shelve_file(filename):
             for elt in shelve_object:
                 temp_dict[elt] = shelve_object[elt]
         return True
-    except dbm.error:
+    except dbm.error[0]:
         return False
 
 def change_file_extension(filename, old_extension, new_extension):

@@ -77,6 +77,40 @@ def isomorphisms_between_number_fields(domain_field, codomain_field):
             iso_list.append(domain_field.hom([-factor_with_multiplicity[0](0)]))
     return iso_list
 
+def canonical_embedding(field_with_embedding):
+    """
+    It seems sage doesn't have a built-in way to get this map.
+    """
+    return min(field_with_embedding.complex_embeddings(), key= lambda embedding : abs(CC(field_with_embedding.gen_embedding())-CC(embedding.im_gens()[0])))
+
+def same_subfield_of_CC(field1, field2):
+    try:
+        iso = isomorphisms_between_number_fields(field1,field2)[0]
+    except IndexError:
+        return False
+    gen1 = field1.gen()
+    transfered_gen = iso(gen1)
+    automorphisms = field2.automorphisms()
+    orbit = [automorphism(transfered_gen) for automorphism in automorphisms]
+    embedding2 = canonical_embedding(field2)
+    embedded_orbit = [embedding2(elt) for elt in orbit]
+    all_im_gens = [embedding.im_gens()[0] for embedding in field1.complex_embeddings()]
+    found_elts = [min(all_im_gens, key=lambda x : abs(CC(x)-CC(elt))) for elt in embedded_orbit]
+    leftovers = [elt for elt in all_im_gens if elt not in found_elts]
+    coerced_elt = min(all_im_gens, key=lambda x : abs(CC(x)-CC(field1.gen_embedding())))
+    if coerced_elt in leftovers:
+        return False
+    elif coerced_elt in found_elts:
+        return True
+    else:
+        raise
+    """
+    difference_between_embeddings = min(a-b for a in all_im_gens for b in all_im_gens if a != b)
+    if min(embedding1(gen1)-elt for elt in embedded_orbit) < difference_between_embeddings/2:
+        return True
+    else:
+        return False
+    """
 
 def transfer_embedding(isomorphism):
     """
@@ -108,9 +142,9 @@ def transfer_embedding(isomorphism):
         ),
     )
     return CC(special_embedding(codomain.gen()))
-
+"""
 def compare_embeddings(field, first_numerical_root, second_numerical_root=None):
-    """
+    
     Tests whether the two numerical roots define the same embedding. This is to sidestep
     issues of numerical precision. Sage might also have a way to do this, but I couldn't
     find it. Basically the two numerical roots passed should live in some kind of real
@@ -120,7 +154,7 @@ def compare_embeddings(field, first_numerical_root, second_numerical_root=None):
 
     One can pass in only a field and one numerical root if the field comes with an
     embedding already attached to it.
-    """
+    
     generator = field.gen()  # Assumes field is given by a single generator I guess.
     second_numerical_root = (
         field.gen_embedding()
@@ -134,9 +168,11 @@ def compare_embeddings(field, first_numerical_root, second_numerical_root=None):
     second_embedding = numerical_root_to_embedding(field, second_numerical_root)
     second_embedding_conjugate = numerical_root_to_embedding(field, second_numerical_root, conjugate_embedding=True)
     return (first_embedding == second_embedding or first_embedding == second_embedding_conjugate)
+"""
 
+"""
 def isomorphic_respecting_embeddings(first_field, second_field):
-    """
+    
     This compares two number fields with distinguished places and checks whether they're
     isomorphic and that there is an isomorphism such that composing the isomorphism with
     the embedding (or its conjugate) of the second field gives the specified embedding
@@ -144,14 +180,14 @@ def isomorphic_respecting_embeddings(first_field, second_field):
     are the same subfield of the complex numbers (or conjugates of one another).
 
     This is a little too implicit. Needs some more documentation eventually.
-    """
+    
     iso_list = isomorphisms_between_number_fields(first_field, second_field)
     for isomorphism in iso_list:
         transfered_root = transfer_embedding(isomorphism)
         if compare_embeddings(second_field, transfered_root):
             return True
     return False
-
+"""
 def run_tests():
     """
     A test bench for the various functions in this module. Probably one day add better
@@ -159,6 +195,7 @@ def run_tests():
     the test ran correctly.
     """
     # Comparing Embeddings
+    """
     x = var("x")
     log_dict = dict()
     Field1 = NumberField(x**2+1, "i", embedding=I)
@@ -175,4 +212,22 @@ def run_tests():
     FieldSixOne = NumberField(x**4+x**2-x+1, "b", embedding=CC(0.547423794586058 + 0.585651979689573*I))
     FieldSevenSeven = NumberField(x**4+x**2-x+1, "c", embedding=CC(-0.547423794586059 - 1.12087348993706*I))
     log_dict['Distinguishes the trace fields of 6_1 and 7_7'] = (bool(isomorphisms_between_number_fields(FieldSixOne, FieldSevenSeven)) and not isomorphic_respecting_embeddings(FieldSixOne, FieldSevenSeven))
+    return log_dict
+    """
+    x = var("x")
+    log_dict = dict()
+    Field1 = NumberField(x**2+1, "i", embedding=I)
+    Field2 = NumberField(x**2+1, "minusi", embedding=-I)
+    # Checks that conjugate embeddings are considered the same.
+    log_dict['Conjugate embeddings for QQ(i)'] = same_subfield_of_CC(Field1, Field2)
+    # Checks that giving a nonintegral minimal polynomial doesn't mess anything up.
+    # The issue would be finding the isomorphism in the first place.
+    Field3 = NumberField(x**2+2*x+(5/4), "a", embedding=-1+(1/2)*I)
+    log_dict['Integral and nonintegral minimal polynomials'] = same_subfield_of_CC(Field1, Field3)
+    # These next two fields are the trace fields of the knots 6_1 and 7_7 respectively.
+    # We test that we find an isomorphism between them and that they are distinguished
+    # by their embeddings into the complex numbers.
+    FieldSixOne = NumberField(x**4+x**2-x+1, "b", embedding=CC(0.547423794586058 + 0.585651979689573*I))
+    FieldSevenSeven = NumberField(x**4+x**2-x+1, "c", embedding=CC(-0.547423794586059 - 1.12087348993706*I))
+    log_dict['Distinguishes the trace fields of 6_1 and 7_7'] = (bool(isomorphisms_between_number_fields(FieldSixOne, FieldSevenSeven)) and not same_subfield_of_CC(FieldSixOne, FieldSevenSeven))
     return log_dict

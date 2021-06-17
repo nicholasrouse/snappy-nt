@@ -12,8 +12,7 @@ module for the same reasons one shouldn't do so with shelve or pickle.
 The JSON encoded object should be a JSON array the entries of which are encoded JSON
 encoded ManifoldAP objects.
 """
-
-import shelve, dbm
+import shelve, dbm, os.path, time
 import json_encoder, json
 import collections.abc
 
@@ -65,6 +64,7 @@ def looks_like_a_shelve_file(filename):
             temp_dict = dict()
             for elt in shelve_object:
                 temp_dict[elt] = shelve_object[elt]
+                break
         return True
     except dbm.error[0]:
         return False
@@ -98,7 +98,7 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
     the actual object behaves like a shelve object, which mostly behaves like a
     dictionary.
     """
-    def __init__(self, filename, other_filename=None):
+    def __init__(self, filename, other_filename=None, timing=False):
         """
         The filename should refer to a file containing either a shelve object or to a
         JSON file with an array of encoded ManifoldAP objects. The file can also not yet
@@ -108,6 +108,7 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
         .shelve. It will rip off the old extension of .json or .shelve for the new one
         though.
         """
+        if timing: time0 = time.perf_counter()
         self._original_filename = filename
         if looks_like_a_json_file(filename):
             self._json_filename = filename
@@ -115,40 +116,62 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
                 self._shelve_filename = other_filename
             else:
                 self._shelve_filename = change_file_extension(filename, "json", "shelve")
-            with open(filename, 'r') as fp:
-                self._dict = json_file_to_dict(fp)
+            with open(filename, 'r') as fp, shelve.open(self._shelve_filename) as shelve_object:
+                temp_dict = json_file_to_dict(fp)
+                for key in temp_dict: shelve_object[key] = temp_dict[key]
         elif looks_like_a_shelve_file(filename):
+            if timing: shelve_time0 = time.perf_counter()
+            print("Took", shelve_time0 - time0, "seconds to evaluate the shelve conditional.")
             self._shelve_filename = filename
             if other_filename:
                 self._json_filename = other_filename
             else:
                 self._json_filename = change_file_extension(filename, "shelve", "json")
-            with shelve.open(filename) as shelve_object:
-                self._dict = {key : shelve_object[key] for key in shelve_object}
+        elif not os.path.isfile(filename):
+            self._shelve_filename = filename
+            self._json_filename = change_file_extension(filename, "shelve", "json")
+        else:
+            raise RuntimeError("The database couldn't be created")
+        if timing:
+            time1 = time.perf_counter()
+            print("Took", time1 - time0, "seconds to do startup before opening shelve object")
+        self._shelve_object = shelve.open(self._shelve_filename, writeback=True)
+        if timing:
+            time2 = time.perf_counter()
+            print("Took", time2 - time1, "seconds to open the shelve object")
     
     def __getitem__(self, key):
-            return self._dict[key]
+            return self._shelve_object[key]
     
     def __setitem__(self, key, value):
-        self._dict[key] = value
+        self._shelve_object[key] = value
     
     def __delitem__(self, key):
-        del self._dict[key]
+        del self._shelve_object[key]
     
     def __len__(self):
-        return len(self._dict)
+        return len(self._shelve_object)
     
     def __iter__(self):
-        return iter(self._dict)
+        return iter(self._shelve_object)
 
     def update_shelve(self):
-        with shelve.open(self._shelve_filename) as shelve_object:
-            for key in self._dict: shelve_object[key] = self._dict[key]
+        self._shelve_object.sync()
     
     def update_json(self):
+        # It is perhaps a little nonstandard to have a "JSON stream", but I would like
+        # to avoid having all the manifolds in memory before we serialize them.
+        # This is probably kind of hacky right now, and there should be a proper
+        # way done in the module with the custom json classes.
         with open(self._json_filename, 'w') as fp:
-            list_of_manifolds = list(self._dict.values())
-            json.dump(list_of_manifolds, fp, cls=json_encoder.ManifoldAP_Encoder, indent=4)
+            s = str()
+            for elt in self._shelve_object.values():
+                s += json.dumps(elt, cls=json_encoder.ManifoldAP_Encoder, indent=4) + ",\n"
+            t = str()
+            for line in s.splitlines():
+                t += '    ' + line + '\n'
+            t = "[\n" + t[:-2] + "\n]"
+            fp.write(t)
     
     def __enter__(self):
         return self
@@ -156,3 +179,4 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
     def __exit__(self, exc_type, exc_value, traceback):
         self.update_json()
         self.update_shelve()
+        self._shelve_object.close()

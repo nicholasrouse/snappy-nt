@@ -14,7 +14,18 @@ encoded ManifoldAP objects.
 """
 import shelve, dbm, os.path, time
 import json_encoder, json
+import snappy
 import collections.abc
+
+def strip_off_cusp_data(s):
+    """
+    Converts things like "4_1(0,0)" and "L11n106(0,0)(0,0)" to "4_1" and "L11n106" so
+    that database objects can recognize them without the cusp data. We don't strip off
+    gluing data that changes the meaning. So "4_1(8,1)" doesn't change.
+    """
+    s = s.strip()
+    while s[-5:] == "(0,0)": s = s[:-5]
+    return s
 
 def json_array_to_dict(s):
     """
@@ -91,59 +102,93 @@ def change_file_extension(filename, old_extension, new_extension):
 
 class ManifoldAPDatabase(collections.abc.MutableMapping):
     """
-    This class wraps both a human readable JSON file object and a shelve object,
-    and keeps them consistent.
+    This class is a fairly thin wrapper around shelve. Extra functionality includes
+    being able to import and export from a human readable JSON file. However, these
+    operations can be expensive for large databases, so are not performed unless
+    requested. We also catch alternative names for manifolds using snappy's alias
+    system. Instances of the class can also be used with ManifoldAP objects to avoid
+    recomputing invariants.
 
-    There is some Manifold-specific modifications here as well, but for the most part
-    the actual object behaves like a shelve object, which mostly behaves like a
-    dictionary.
+    The writeback option is important: it behaves similarly to shelve's. If one wants to
+    modify the manifolds stored in the database, then oen should pass writeback=True.
+    However, there can be significant performance overhead for large databases.
     """
-    def __init__(self, filename, other_filename=None, timing=False):
+    def __init__(self, filename, writeback=False):
         """
         The filename should refer to a file containing either a shelve object or to a
         JSON file with an array of encoded ManifoldAP objects. The file can also not yet
-        exist, in which case one will be created with the name. The other_filename
-        parameter allows one to pass in a name for the JSON or shelve object to be
-        created. By default the newly created file will be named by appending .json or
-        .shelve. It will rip off the old extension of .json or .shelve for the new one
+        exist, in which case one will be created with the name. It will rip off the old
+        extension of .json or .shelve for the new one
         though.
         """
-        if timing: time0 = time.perf_counter()
         self._original_filename = filename
         if looks_like_a_json_file(filename):
             self._json_filename = filename
-            if other_filename:
-                self._shelve_filename = other_filename
-            else:
-                self._shelve_filename = change_file_extension(filename, "json", "shelve")
+            self._shelve_filename = change_file_extension(filename, "json", "shelve")
             with open(filename, 'r') as fp, shelve.open(self._shelve_filename) as shelve_object:
                 temp_dict = json_file_to_dict(fp)
                 for key in temp_dict: shelve_object[key] = temp_dict[key]
         elif looks_like_a_shelve_file(filename):
-            if timing: shelve_time0 = time.perf_counter()
-            print("Took", shelve_time0 - time0, "seconds to evaluate the shelve conditional.")
             self._shelve_filename = filename
-            if other_filename:
-                self._json_filename = other_filename
-            else:
-                self._json_filename = change_file_extension(filename, "shelve", "json")
+            self._json_filename = change_file_extension(filename, "shelve", "json")
         elif not os.path.isfile(filename):
             self._shelve_filename = filename
             self._json_filename = change_file_extension(filename, "shelve", "json")
         else:
             raise RuntimeError("The database couldn't be created")
-        if timing:
-            time1 = time.perf_counter()
-            print("Took", time1 - time0, "seconds to do startup before opening shelve object")
-        self._shelve_object = shelve.open(self._shelve_filename, writeback=True)
-        if timing:
-            time2 = time.perf_counter()
-            print("Took", time2 - time1, "seconds to open the shelve object")
+        self._shelve_object = shelve.open(self._shelve_filename, writeback=writeback)
+    
+    def aliases_in_database(self, name):
+        """
+        Returns a list of keys that are in self._shelve_object that are aliases for
+        name. E.g. if "4_1(0,0)" is in self._shelve_object, then name="m004" or 
+        name="4_1" should return "4_1(0,0)". If the return value is the empty list, then
+        the name is not recognized as an alias for any key in self._shelve_object.
+
+        We could optimize this later by only returning a single element if we find some
+        alias and None otherwise.
+
+        This does not raise an OSError if snappy can't find the Manifold, but returns
+        an empty list instead.
+        """
+        in_db = list()
+        try:
+            mfld = snappy.Manifold(name)
+        except OSError:
+            return list()
+        aliases = [str(m) for m in mfld.identify()]
+        aliases += [strip_off_cusp_data(alias) for alias in aliases]
+        for alias in aliases:
+            if alias in self._shelve_object:
+                in_db.append(alias)
+        return in_db
     
     def __getitem__(self, key):
+        try:
             return self._shelve_object[key]
+        except KeyError as ke:
+            aliases = self.aliases_in_database(key)
+            if aliases != list():
+                return self._shelve_object[aliases[0]]
+            else:
+                raise ke
     
+    def __contains__(self, key):
+        try:
+            self._shelve_object[key]
+            return True
+        except KeyError:
+            aliases = self.aliases_in_database(key)
+            if aliases != list():
+                return True
+            else:
+                return False
+
     def __setitem__(self, key, value):
+        """
+        This does not preclude giving multiple names to the same manifold. That is, we
+        don't do any alias intercepting in this method.
+        """
         self._shelve_object[key] = value
     
     def __delitem__(self, key):
@@ -155,15 +200,16 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
     def __iter__(self):
         return iter(self._shelve_object)
 
-    def update_shelve(self):
+    def _update_shelve(self):
         self._shelve_object.sync()
     
-    def update_json(self):
+    def export_json(self, json_filename=None):
         # It is perhaps a little nonstandard to have a "JSON stream", but I would like
         # to avoid having all the manifolds in memory before we serialize them.
         # This is probably kind of hacky right now, and there should be a proper
         # way done in the module with the custom json classes.
-        with open(self._json_filename, 'w') as fp:
+        filename = self._json_filename if json_filename is None else json_filename
+        with open(filename, 'w') as fp:
             s = str()
             for elt in self._shelve_object.values():
                 s += json.dumps(elt, cls=json_encoder.ManifoldAP_Encoder, indent=4) + ",\n"
@@ -177,6 +223,5 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
-        self.update_json()
-        self.update_shelve()
+        self._update_shelve()
         self._shelve_object.close()

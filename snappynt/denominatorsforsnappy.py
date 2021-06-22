@@ -18,7 +18,7 @@ import time
 import math
 import itertools
 import functools
-import large_knots
+#import large_knots
 
 
 def find_prime_factors_in_a_set(aSet):  # aSet should be (positive) integers
@@ -156,7 +156,7 @@ def trawl_census_iterator(iterator, function, start=0, stop=None, output_file=No
             )
             print("Estimated time remaining:", pretty_seconds(estimated_time_remaining))
 
-
+"""
 def find_denominators_for_large_knots():
     i = 0
     with shelve.open("Large_Nonintegral_Knots") as nonintegraldict:
@@ -184,7 +184,7 @@ def find_denominators_for_large_knots():
             except ValueError as error:
                 print("Snappy ran into a problem with", knot)
                 print(error)
-
+"""
 
 def test():
     i = 0

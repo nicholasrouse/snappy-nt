@@ -3,6 +3,7 @@ Module for general testing of correctness and performance of this package.
 """
 
 import ManifoldAP, database
+import unittest
 from sage.all import var, NumberField, CC, I
 from field_isomorphisms import same_subfield_of_CC, isomorphisms_between_number_fields
 
@@ -51,3 +52,11 @@ def field_isomorphism_tests_as_dict():
     FieldSevenSeven = NumberField(x**4+x**2-x+1, "c", embedding=CC(-0.547423794586059 - 1.12087348993706*I))
     log_dict['Distinguishes the trace fields of 6_1 and 7_7'] = (bool(isomorphisms_between_number_fields(FieldSixOne, FieldSevenSeven)) and not same_subfield_of_CC(FieldSixOne, FieldSevenSeven))
     return log_dict
+
+class Figure8Tester(unittest.TestCase):
+    def setUp(self):
+        self.variable = var("x")
+        self.mfld = ManifoldAP.ManifoldAP('4_1')
+    
+    def test_trace_field(self):
+        self.assertTrue(self.mfld.trace_field().is_isomorphic(NumberField(self.variable**2+3, "z")))

@@ -18,6 +18,7 @@ arithmetic_homology_spheres*
 trace_polynomials.py
 twist_knots_character_varieties.py
 T_29_example.py
+test_sample.py
 #Experimental files
 #testing.py
 

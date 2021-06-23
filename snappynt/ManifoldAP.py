@@ -14,7 +14,7 @@ Things to consider:
 
 #from testing import compare_against_database
 import snappy, denominatorsforsnappy
-from sage.all import factor, NumberField, QuaternionAlgebra, radical, cached_function, var
+from sage.all import NumberField, radical, var
 import functools
 import irreducible_subgroups
 import misc_functions
@@ -200,8 +200,6 @@ class ManifoldAP(snappy.Manifold):
                     largest_failed_prec = max([prec for prec in record if not record[prec]])
                     return max(largest_failed_prec + self.default_prec_increment, field_prec)
                 
-            
-
     def has_two_torsion_in_homology(self):
         """
         Returns True if there is two-torsion in homology and False if not. This doesn't
@@ -854,9 +852,3 @@ class ManifoldAP(snappy.Manifold):
         temp_mfld = snappy.Manifold(str(self))
         return temp_mfld.identify()
     
-    @staticmethod
-    def _test_1():
-        x = var('x')
-        fig8tf = ManifoldAP('4_1').trace_field()
-        third_cyclotomic_field = NumberField(x**2+3, "z")
-        assert fig8tf.is_isomorphic(third_cyclotomic_field)

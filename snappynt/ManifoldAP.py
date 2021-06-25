@@ -47,15 +47,8 @@ def fix_names(name):
         return "invariant quaternion algebra"
 
 
-class ManifoldAP(snappy.Manifold):
+class ManifoldAP:
 
-    def __new__(cls, spec=None, *pargs, **kwargs):
-        """
-        This is to get around some Cython curiosities. Basically, even though we
-        override the __init__, a superclass's __cinit__ acts like a __new__ and can mess
-        up the call signatures.
-        """
-        return snappy.Manifold.__new__(cls, spec)
     def __init__(
         self,
         spec=None,
@@ -81,7 +74,7 @@ class ManifoldAP(snappy.Manifold):
         and the computations will actually meaningfully slow down whatever is being
         done, one may pass in delay_computations=True.
         """
-        snappy.Manifold.__init__(self, spec)
+        self._snappy_mfld = snappy.Manifold(spec)
         # We store the fields as a sage NumberField objects with a *monic* generating polynomial.
         # Perhaps subclass Sage's NumberField to store all this info?
         # The prec_record variables record whether a given prec and degree was sucessful.
@@ -113,13 +106,43 @@ class ManifoldAP(snappy.Manifold):
         self._denominators = None
         self._denominator_residue_characteristics = None
         # This sometimes raises exceptions, but it happens in SnapPy itself.
-        self._approx_trace_field_gens = self.trace_field_gens()
-        self._approx_invariant_trace_field_gens = self.invariant_trace_field_gens()
+        self._approx_trace_field_gens = self._snappy_mfld.trace_field_gens()
+        self._approx_invariant_trace_field_gens = self._snappy_mfld.invariant_trace_field_gens()
         if not delay_computations:
             func = functools.partial(self.compute_arithmetic_invariants, _return_flag=True)
             try_various_precision(func, self.make_prec_degree_generator(), fail_value=False)
             self.denominators()
             
+    def __getattr__(self, attr):
+        return getattr(self._snappy_mfld, attr)
+    
+    def __str__(self):
+        return str(self._snappy_mfld)
+    
+    def __repr__(self):
+        return self._snappy_mfld.__repr__()
+    
+    # The _approx_trace_field_gens are unpicklable, so we have these
+    def __getstate__(self):
+        # Maybe move this, so we keep track of unpicklable object elsewhere.
+        unpicklable = ["_approx_trace_field_gens", "_approx_invariant_trace_field_gens"]
+        state = self.__dict__.copy()
+        for attr in unpicklable:
+            del state[attr]
+        # SnapPy has some issues with pickle. E.g. m003(-2,3) becomes m003(254,3) upon unpickling.
+        state["snappy_mfld_name"] = str(self._snappy_mfld)
+        del state["_snappy_mfld"]
+        return state
+    
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # We reconstruct the wrapped snappy manifold each time since it's cheap and has
+        # some issues being pickled.
+        self._snappy_mfld = snappy.Manifold(state["snappy_mfld_name"])
+        self._approx_trace_field_gens = self._snappy_mfld.trace_field_gens()
+        self._approx_invariant_trace_field_gens = self._snappy_mfld.invariant_trace_field_gens()
+        
+        
 
     def next_prec_and_degree(self, invariant):
         """
@@ -784,8 +807,8 @@ class ManifoldAP(snappy.Manifold):
         }
         self._denominators = None
         self._denominator_residue_characteristics = None
-        self._approx_trace_field_gens = self.trace_field_gens()
-        self._approx_invariant_trace_field_gens = self.invariant_trace_field_gens()
+        self._approx_trace_field_gens = self._snappy_mfld.trace_field_gens()
+        self._approx_invariant_trace_field_gens = self._snappy_mfld.invariant_trace_field_gens()
 
     def dehn_fill(self, filling_data, which_cusp=None, delay_computations=False):
         """
@@ -794,7 +817,7 @@ class ManifoldAP(snappy.Manifold):
         arithmetic invariants, so we have to override SnapPy's method to make sure
         we clean out the invariants.
         """
-        snappy.Manifold.dehn_fill(self, filling_data, which_cusp=which_cusp)
+        self._snappy_mfld.dehn_fill(filling_data, which_cusp=which_cusp)
         self.delete_arithmetic_invariants()
         if not delay_computations:
             func = functools.partial(self.compute_arithmetic_invariants, _return_flag=True)
@@ -841,14 +864,3 @@ class ManifoldAP(snappy.Manifold):
     def has_same_arithmetic_invariants(self, other):
         arith_dict = self.compare_arithmetic_invariants(other)
         return not (False in arith_dict.values())
-    
-    def identify(self):
-        """
-        I'm overriding this for now because for some reason I get an error that the
-        triangulation is empty when I call it on ManifoldAP objects. It seems to work
-        fine for snappy ones. My guess is that it's related to the __new__ Cython issue,
-        but I'll try to fix it later.
-        """
-        temp_mfld = snappy.Manifold(str(self))
-        return temp_mfld.identify()
-    

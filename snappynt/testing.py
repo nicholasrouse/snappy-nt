@@ -30,8 +30,8 @@ def MR_test_dictionary():
     result = dict()
     # Census tests
     result["MR Knots"] = agrees_with_database(database_path + "MRKnots.json")
-    result["MR Cusped"] = agrees_with_database(database_path + "MRKnots.json")
-    result["MR Closed"] = agrees_with_database(database_path + "MRKnots.json")
+    result["MR Cusped"] = agrees_with_database(database_path + "MRCusped.json")
+    result["MR Closed"] = agrees_with_database(database_path + "MRClosed.json")
     return result
 
 def field_isomorphism_tests_as_dict():

@@ -110,7 +110,7 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
     recomputing invariants.
 
     The writeback option is important: it behaves similarly to shelve's. If one wants to
-    modify the manifolds stored in the database, then oen should pass writeback=True.
+    modify the manifolds stored in the database, then one should pass writeback=True.
     However, there can be significant performance overhead for large databases.
     """
     def __init__(self, filename, writeback=False):
@@ -125,7 +125,7 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
         if looks_like_a_json_file(filename):
             self._json_filename = filename
             self._shelve_filename = change_file_extension(filename, "json", "shelve")
-            with open(filename, 'r') as fp, shelve.open(self._shelve_filename) as shelve_object:
+            with open(filename, 'r') as fp, shelve.open(self._shelve_filename, writeback=True) as shelve_object:
                 temp_dict = json_file_to_dict(fp)
                 for key in temp_dict: shelve_object[key] = temp_dict[key]
         elif looks_like_a_shelve_file(filename):

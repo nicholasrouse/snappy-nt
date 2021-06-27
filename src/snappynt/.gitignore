@@ -1,0 +1,27 @@
+__pycache__/
+.ipynb_checkpoints/
+variable_precision.py
+HolonomyGroupAP.py
+cosinenorms.py
+fivetwocalculations.py
+fivetwosurgeries
+symbolicFiveTwoResidueChars.txt
+twistknotcharactervarieties.py
+Zannier_tests.py
+large_knots.py
+overflow.py
+snap_translator.py
+arithmetic_homology_spheres*
+*.ipynb
+/*.json
+*.shelve
+trace_polynomials.py
+twist_knots_character_varieties.py
+T_29_example.py
+test_sample.py
+#Experimental files
+#testing.py
+
+#Old, unused files
+pari_wrapper_for_quaternion_algebras.py
+old/

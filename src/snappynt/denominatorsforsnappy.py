@@ -18,7 +18,7 @@ import shelve
 import time
 
 import snappy
-from sage.all import denominator, factor
+from sage.all import denominator, factor, value
 
 # import large_knots
 
@@ -102,7 +102,6 @@ def pretty_seconds(seconds):  # Seems like there should be a better way?
 
 
 # This should maybe be in a separate module. Jul-19-20.
-"""
 def trawl_census_iterator(
     iterator, function, start=0, stop=None, output_file=None, **kwargs
 ):
@@ -160,7 +159,7 @@ def trawl_census_iterator(
                 iterator_size - elements_considered
             )
             print("Estimated time remaining:", pretty_seconds(estimated_time_remaining))
-"""
+
 
 """
 def find_denominators_for_large_knots():

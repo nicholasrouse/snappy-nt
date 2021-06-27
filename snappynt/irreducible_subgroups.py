@@ -1,8 +1,4 @@
-from snappy.snap.find_field import (
-    ApproximateAlgebraicNumber,
-    ListOfApproximateAlgebraicNumbers,
-)
-from sage.all import Integer, QQ, ZZ
+from sage.all import QQ, ZZ
 
 
 def within_epsilon(a, b, epsilon_coefficient=1):
@@ -173,7 +169,7 @@ def enumerate_group_elements(group, as_word=False, power=1, verbosity=False):
     inverses = [gen.upper() for gen in gens]
     rank = len(gens)
     # The tietze_alphabet below just looks like [1,2,...,rank,-1,-2,...-rank]
-    tietze_alphabet = list(range(1, rank + 1)) + [-i for i in range(1, rank + 1)]
+    # tietze_alphabet = list(range(1, rank + 1)) + [-i for i in range(1, rank + 1)]
 
     def tietze_conversion(integer):
         if integer > 0:

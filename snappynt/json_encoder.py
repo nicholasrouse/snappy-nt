@@ -6,18 +6,19 @@ to compare future versions of this package against.
 The core invariants computed in the ManifoldAP module are the two trace fields, and the
 two quaternion algebras. Another invariant are the denominators, though these are often
 computed alongside the (noninvariant) trace field. We want this encoding and decoding to
-be somewhat flexible to allow for later information to be added. 
+be somewhat flexible to allow for later information to be added.
 
 We should add that we don't intend for the JSON representations to be totally minimal:
 since JSON is human readable, we include some extra information for quick reference.
 """
 
 import json
+from collections import Counter
+
 import ManifoldAP
 import QuaternionAlgebraNF
+from sage.all import CC, QQ, ZZ, NumberField, PolynomialRing, RealField, radical
 from sage.rings.number_field.number_field import is_NumberField
-from sage.all import CC, radical, ZZ, PolynomialRing, QQ, NumberField, RR, RealField
-from collections import Counter
 
 
 def nested_decoder(func):
@@ -399,8 +400,7 @@ def encode_list_of_manifolds(list_of_manifolds):
     a Python list of encoded manifolds. The returned object should be serializable with
     the default JSON encoder. This ends up being unnecessary and unused.
     """
-    l = [json.dumps(mfld, cls=ManifoldAP_Encoder) for mfld in list_of_manifolds]
-    return l
+    return [json.dumps(mfld, cls=ManifoldAP_Encoder) for mfld in list_of_manifolds]
 
 
 def decode_list_of_manifolds(list_of_manifolds):
@@ -408,8 +408,7 @@ def decode_list_of_manifolds(list_of_manifolds):
     Given a Python list whose elements are encoded ManifoldAP objects, returns a list
     with the decoded ManifoldAP objects.
     """
-    l = [json.loads(mfld, cls=ManifoldAP_Decoder) for mfld in list_of_manifolds]
-    return l
+    return [json.loads(mfld, cls=ManifoldAP_Decoder) for mfld in list_of_manifolds]
 
 
 class ManifoldAP_List_Encoder(json.JSONEncoder):

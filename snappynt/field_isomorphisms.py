@@ -5,25 +5,13 @@ of roots of another polynomial.
 
 Sage theoretically has this functionality, but as of 9.1, it doesn't actually compute
 the isomorphism correctly when one of the defining polynomials is not monic and
-integral.  The reason is that sage's implementation converts to PARI using 
+integral.  The reason is that sage's implementation converts to PARI using
 pari_polynomial which is always monic and integral.  That said, sage can factor
-polynomials over number fields correctly, and those factorizations can be used to 
+polynomials over number fields correctly, and those factorizations can be used to
 compute the isomorphisms.
 """
 
-from sage.all import (
-    var,
-    NumberField,
-    NumberFieldElement,
-    PolynomialRing,
-    localvars,
-    factor,
-    coerce,
-    hom,
-    CC,
-    RR,
-    I,
-)
+from sage.all import CC, I, NumberField, NumberFieldElement, PolynomialRing, factor, var
 from sage.libs.pari.convert_sage import gen_to_sage
 
 
@@ -47,7 +35,7 @@ def convert_polmod(polmod, name=None, mod_variable="x"):
     pari_lift = polmod.lift()
     pari_mod = polmod.mod()
     pari_var = polmod.variable()
-    lift_var = pari_var if name == None else name
+    lift_var = pari_var if name is None else name
     sage_mod = gen_to_sage(pari_mod, {str(pari_var): mod_variable})
     sage_lift = gen_to_sage(pari_lift, {str(pari_var): lift_var})
     sage_nf = NumberField(sage_mod, lift_var)
@@ -67,7 +55,6 @@ def isomorphisms_between_number_fields(domain_field, codomain_field):
     7-Aug-2020
     """
     polynomial_ring_over_codomain_field = PolynomialRing(codomain_field, "x")
-    x = polynomial_ring_over_codomain_field.gen()
     domain_min_poly = domain_field.defining_polynomial().change_variable_name("x")
     poly_to_factor = polynomial_ring_over_codomain_field.coerce(domain_min_poly)
     factorization = factor(poly_to_factor)
@@ -158,7 +145,7 @@ def transfer_embedding(isomorphism):
 
 """
 def compare_embeddings(field, first_numerical_root, second_numerical_root=None):
-    
+
     Tests whether the two numerical roots define the same embedding. This is to sidestep
     issues of numerical precision. Sage might also have a way to do this, but I couldn't
     find it. Basically the two numerical roots passed should live in some kind of real
@@ -168,7 +155,7 @@ def compare_embeddings(field, first_numerical_root, second_numerical_root=None):
 
     One can pass in only a field and one numerical root if the field comes with an
     embedding already attached to it.
-    
+
     generator = field.gen()  # Assumes field is given by a single generator I guess.
     second_numerical_root = (
         field.gen_embedding()
@@ -186,7 +173,7 @@ def compare_embeddings(field, first_numerical_root, second_numerical_root=None):
 
 """
 def isomorphic_respecting_embeddings(first_field, second_field):
-    
+
     This compares two number fields with distinguished places and checks whether they're
     isomorphic and that there is an isomorphism such that composing the isomorphism with
     the embedding (or its conjugate) of the second field gives the specified embedding
@@ -194,7 +181,7 @@ def isomorphic_respecting_embeddings(first_field, second_field):
     are the same subfield of the complex numbers (or conjugates of one another).
 
     This is a little too implicit. Needs some more documentation eventually.
-    
+
     iso_list = isomorphisms_between_number_fields(first_field, second_field)
     for isomorphism in iso_list:
         transfered_root = transfer_embedding(isomorphism)

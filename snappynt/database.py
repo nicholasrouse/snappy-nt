@@ -12,10 +12,14 @@ module for the same reasons one shouldn't do so with shelve or pickle.
 The JSON encoded object should be a JSON array the entries of which are encoded JSON
 encoded ManifoldAP objects.
 """
-import shelve, dbm, os.path, time
-import json_encoder, json
-import snappy
 import collections.abc
+import dbm
+import json
+import os.path
+import shelve
+
+import json_encoder
+import snappy
 
 
 def strip_off_cusp_data(s):
@@ -45,8 +49,8 @@ def json_array_to_dict(s):
 
 def json_file_to_dict(fp):
     """
-    Takes a file object containing JSON text representing an array of ManifoldAP objects, and
-    return a Python dictionary whose keys are the names of the manifolds and whose
+    Takes a file object containing JSON text representing an array of ManifoldAP objects
+    and return a Python dictionary whose keys are the names of the manifolds and whose
     values are the ManifoldAP objects.
     """
     list_of_manifolds = json.load(fp, cls=json_encoder.ManifoldAP_Decoder)

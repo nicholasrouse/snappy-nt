@@ -1,5 +1,5 @@
 """
-This is the module that contains the class for arbitrary precision Manifolds. 
+This is the module that contains the class for arbitrary precision Manifolds.
 
 Things to consider:
     1. Building some kind of database that can be loaded to avoid repeating expensive
@@ -12,15 +12,18 @@ Things to consider:
 """
 
 
-# from testing import compare_against_database
-import snappy, denominatorsforsnappy
-from sage.all import NumberField, radical, var
 import functools
+from collections import namedtuple
+
+import denominatorsforsnappy
+import field_isomorphisms
 import irreducible_subgroups
 import misc_functions
-import field_isomorphisms
 import QuaternionAlgebraNF
-from collections import namedtuple
+
+# from testing import compare_against_database
+import snappy
+from sage.all import radical
 
 
 def try_various_precision(func, iterable, fail_value=None):
@@ -76,9 +79,8 @@ class ManifoldAP:
         done, one may pass in delay_computations=True.
         """
         self._snappy_mfld = snappy.Manifold(spec)
-        # We store the fields as a sage NumberField objects with a *monic* generating polynomial.
+        # The fields are sage NumberField objects with a *monic* generating polynomial.
         # Perhaps subclass Sage's NumberField to store all this info?
-        # The prec_record variables record whether a given prec and degree was sucessful.
         self.default_starting_prec = default_starting_prec
         self.default_starting_degree = default_starting_degree
         self.default_max_prec = default_max_prec
@@ -136,7 +138,8 @@ class ManifoldAP:
         state = self.__dict__.copy()
         for attr in unpicklable:
             del state[attr]
-        # SnapPy has some issues with pickle. E.g. m003(-2,3) becomes m003(254,3) upon unpickling.
+        # SnapPy has some issues with pickle.
+        # E.g. m003(-2,3) becomes m003(254,3) upon unpickling.
         state["snappy_mfld_name"] = str(self._snappy_mfld)
         del state["_snappy_mfld"]
         return state
@@ -297,9 +300,9 @@ class ManifoldAP:
 
         Last updated: Sept-24 2020
         """
-        if prec == None:
+        if prec is None:
             prec = self.default_starting_prec
-        if degree == None:
+        if degree is None:
             degree = self.default_starting_degree
         if self._trace_field and not _force_compute:
             return self._trace_field
@@ -363,9 +366,9 @@ class ManifoldAP:
         2-torsion in homology, then the fields are the same.
         Last updated: Aug-29 2020
         """
-        if prec == None:
+        if prec is None:
             prec = self.default_starting_prec
-        if degree == None:
+        if degree is None:
             degree = self.default_starting_degree
         if self._invariant_trace_field and not _force_compute:
             return self._invariant_trace_field
@@ -498,7 +501,7 @@ class ManifoldAP:
 
         For now though most everything is a ManifoldAP method.
         """
-        if prec == None:
+        if prec is None:
             prec = self.default_starting_prec
         if self._quaternion_algebra and not _force_compute:
             return self._quaternion_algebra
@@ -531,7 +534,7 @@ class ManifoldAP:
             else:
                 break
         self._quaternion_algebra_prec_record[prec] = bool(first_entry and second_entry)
-        if first_entry == None or second_entry == None:
+        if first_entry is None or second_entry is None:
             if verbosity:
                 print("Failed to find quaternion algebra.")
             return None
@@ -564,7 +567,7 @@ class ManifoldAP:
 
         Last updated: Aug-29 2020
         """
-        if prec == None:
+        if prec is None:
             prec = self.default_starting_prec
         if self._invariant_quaternion_algebra and not _force_compute:
             return self._invariant_quaternion_algebra
@@ -609,7 +612,7 @@ class ManifoldAP:
         self._invariant_quaternion_algebra_prec_record[prec] = bool(
             first_entry and second_entry
         )
-        if first_entry == None or second_entry == None:
+        if first_entry is None or second_entry is None:
             if verbosity:
                 print("Failed to find invariant quaternion algebra.")
             return None
@@ -718,17 +721,17 @@ class ManifoldAP:
         This function is also used together with try_various_precision at object
         initialization time unless delay_computations=True.
         """
-        if starting_prec == None:
+        if starting_prec is None:
             starting_prec = self.default_starting_prec
-        if starting_degree == None:
+        if starting_degree is None:
             starting_degree = self.default_starting_degree
-        if prec_increment == None:
+        if prec_increment is None:
             prec_increment = self.default_prec_increment
-        if degree_increment == None:
+        if degree_increment is None:
             degree_increment = self.default_degree_increment
-        if max_prec == None:
+        if max_prec is None:
             max_prec = self.default_max_prec
-        if max_degree == None:
+        if max_degree is None:
             max_degree = self.default_max_degree
 
         def gen():
@@ -788,9 +791,9 @@ class ManifoldAP:
         this. This dodges the need for needing to create some partial functions, but
         maybe that's just the answer.
         """
-        if prec == None:
+        if prec is None:
             prec = self.default_starting_prec
-        if degree == None:
+        if degree is None:
             degree = self.default_starting_degree
         arguments = {
             "prec": prec,

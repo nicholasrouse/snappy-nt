@@ -2,10 +2,12 @@
 Module for general testing of correctness and performance of this package.
 """
 
-import ManifoldAP, database
 import unittest
-from sage.all import var, NumberField, CC, I
-from field_isomorphisms import same_subfield_of_CC, isomorphisms_between_number_fields
+
+import database
+import ManifoldAP
+from field_isomorphisms import isomorphisms_between_number_fields, same_subfield_of_CC
+from sage.all import CC, I, NumberField, var
 
 
 def compare_against_database(filename):

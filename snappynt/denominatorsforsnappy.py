@@ -11,13 +11,14 @@ rather than a custom subclass.
 # Need to make sure this is reliable for (non)integral traces.
 # NMR Jul-05-2020
 
-import snappy
-from sage.all import *
+import functools
+import itertools
+import math
 import shelve
 import time
-import math
-import itertools
-import functools
+
+import snappy
+from sage.all import denominator, factor, value
 
 # import large_knots
 
@@ -61,7 +62,7 @@ def find_denominators_for_a_manifold_variable_precision(
     prec = starting_prec
     degree = starting_degree
     primes = None
-    while primes == None:
+    while primes is None:
         if trace:
             print(
                 str(manifold) + ":", f"Trying with precision={prec} and degree={degree}"
@@ -101,8 +102,10 @@ def pretty_seconds(seconds):  # Seems like there should be a better way?
 
 
 # This should maybe be in a separate module. Jul-19-20.
-def trawl_census_iterator(iterator, function, start=0, stop=None, output_file=None):
-    if output_file == None:
+def trawl_census_iterator(
+    iterator, function, start=0, stop=None, output_file=None, **kwargs
+):
+    if output_file is None:
         iterator_name = str(iterator)
         function_name = function.__name__
         options_string = ""

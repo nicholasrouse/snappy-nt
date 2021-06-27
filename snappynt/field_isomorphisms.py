@@ -22,7 +22,7 @@ from sage.all import (
     hom,
     CC,
     RR,
-    I
+    I,
 )
 from sage.libs.pari.convert_sage import gen_to_sage
 
@@ -77,15 +77,22 @@ def isomorphisms_between_number_fields(domain_field, codomain_field):
             iso_list.append(domain_field.hom([-factor_with_multiplicity[0](0)]))
     return iso_list
 
+
 def canonical_embedding(field_with_embedding):
     """
     It seems sage doesn't have a built-in way to get this map.
     """
-    return min(field_with_embedding.complex_embeddings(), key= lambda embedding : abs(CC(field_with_embedding.gen_embedding())-CC(embedding.im_gens()[0])))
+    return min(
+        field_with_embedding.complex_embeddings(),
+        key=lambda embedding: abs(
+            CC(field_with_embedding.gen_embedding()) - CC(embedding.im_gens()[0])
+        ),
+    )
+
 
 def same_subfield_of_CC(field1, field2):
     try:
-        iso = isomorphisms_between_number_fields(field1,field2)[0]
+        iso = isomorphisms_between_number_fields(field1, field2)[0]
     except IndexError:
         return False
     gen1 = field1.gen()
@@ -95,9 +102,13 @@ def same_subfield_of_CC(field1, field2):
     embedding2 = canonical_embedding(field2)
     embedded_orbit = [embedding2(elt) for elt in orbit]
     all_im_gens = [embedding.im_gens()[0] for embedding in field1.complex_embeddings()]
-    found_elts = [min(all_im_gens, key=lambda x : abs(CC(x)-CC(elt))) for elt in embedded_orbit]
+    found_elts = [
+        min(all_im_gens, key=lambda x: abs(CC(x) - CC(elt))) for elt in embedded_orbit
+    ]
     leftovers = [elt for elt in all_im_gens if elt not in found_elts]
-    coerced_elt = min(all_im_gens, key=lambda x : abs(CC(x)-CC(field1.gen_embedding())))
+    coerced_elt = min(
+        all_im_gens, key=lambda x: abs(CC(x) - CC(field1.gen_embedding()))
+    )
     if coerced_elt in leftovers:
         return False
     elif coerced_elt in found_elts:
@@ -112,6 +123,7 @@ def same_subfield_of_CC(field1, field2):
         return False
     """
 
+
 def transfer_embedding(isomorphism):
     """
     This function takes an isomorphism whose domain is a number field with a specified
@@ -123,8 +135,8 @@ def transfer_embedding(isomorphism):
     The basic logic here is to take a generator for the domain with a specified
     embedding into CC. This amounts to some numerical value for this generator. Then we
     compare the image of the generator under the various embeddings of the codomain to
-    see which one gets closest to the original numerical value. In terms of the 
-    variables this means we compare domain_numerical_root and 
+    see which one gets closest to the original numerical value. In terms of the
+    variables this means we compare domain_numerical_root and
     embedding(domain_generator_image) under the various embeddings of the codomain.
     """
     domain = isomorphism.domain()
@@ -142,6 +154,8 @@ def transfer_embedding(isomorphism):
         ),
     )
     return CC(special_embedding(codomain.gen()))
+
+
 """
 def compare_embeddings(field, first_numerical_root, second_numerical_root=None):
     
@@ -188,6 +202,8 @@ def isomorphic_respecting_embeddings(first_field, second_field):
             return True
     return False
 """
+
+
 def run_tests():
     """
     A test bench for the various functions in this module. Probably one day add better
@@ -216,18 +232,30 @@ def run_tests():
     """
     x = var("x")
     log_dict = dict()
-    Field1 = NumberField(x**2+1, "i", embedding=I)
-    Field2 = NumberField(x**2+1, "minusi", embedding=-I)
+    Field1 = NumberField(x ** 2 + 1, "i", embedding=I)
+    Field2 = NumberField(x ** 2 + 1, "minusi", embedding=-I)
     # Checks that conjugate embeddings are considered the same.
-    log_dict['Conjugate embeddings for QQ(i)'] = same_subfield_of_CC(Field1, Field2)
+    log_dict["Conjugate embeddings for QQ(i)"] = same_subfield_of_CC(Field1, Field2)
     # Checks that giving a nonintegral minimal polynomial doesn't mess anything up.
     # The issue would be finding the isomorphism in the first place.
-    Field3 = NumberField(x**2+2*x+(5/4), "a", embedding=-1+(1/2)*I)
-    log_dict['Integral and nonintegral minimal polynomials'] = same_subfield_of_CC(Field1, Field3)
+    Field3 = NumberField(x ** 2 + 2 * x + (5 / 4), "a", embedding=-1 + (1 / 2) * I)
+    log_dict["Integral and nonintegral minimal polynomials"] = same_subfield_of_CC(
+        Field1, Field3
+    )
     # These next two fields are the trace fields of the knots 6_1 and 7_7 respectively.
     # We test that we find an isomorphism between them and that they are distinguished
     # by their embeddings into the complex numbers.
-    FieldSixOne = NumberField(x**4+x**2-x+1, "b", embedding=CC(0.547423794586058 + 0.585651979689573*I))
-    FieldSevenSeven = NumberField(x**4+x**2-x+1, "c", embedding=CC(-0.547423794586059 - 1.12087348993706*I))
-    log_dict['Distinguishes the trace fields of 6_1 and 7_7'] = (bool(isomorphisms_between_number_fields(FieldSixOne, FieldSevenSeven)) and not same_subfield_of_CC(FieldSixOne, FieldSevenSeven))
+    FieldSixOne = NumberField(
+        x ** 4 + x ** 2 - x + 1,
+        "b",
+        embedding=CC(0.547423794586058 + 0.585651979689573 * I),
+    )
+    FieldSevenSeven = NumberField(
+        x ** 4 + x ** 2 - x + 1,
+        "c",
+        embedding=CC(-0.547423794586059 - 1.12087348993706 * I),
+    )
+    log_dict["Distinguishes the trace fields of 6_1 and 7_7"] = bool(
+        isomorphisms_between_number_fields(FieldSixOne, FieldSevenSeven)
+    ) and not same_subfield_of_CC(FieldSixOne, FieldSevenSeven)
     return log_dict

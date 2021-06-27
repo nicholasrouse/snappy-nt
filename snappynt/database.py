@@ -17,6 +17,7 @@ import json_encoder, json
 import snappy
 import collections.abc
 
+
 def strip_off_cusp_data(s):
     """
     Converts things like "4_1(0,0)" and "L11n106(0,0)(0,0)" to "4_1" and "L11n106" so
@@ -24,8 +25,10 @@ def strip_off_cusp_data(s):
     gluing data that changes the meaning. So "4_1(8,1)" doesn't change.
     """
     s = s.strip()
-    while s[-5:] == "(0,0)": s = s[:-5]
+    while s[-5:] == "(0,0)":
+        s = s[:-5]
     return s
+
 
 def json_array_to_dict(s):
     """
@@ -36,8 +39,9 @@ def json_array_to_dict(s):
     important that a single encoded ManifoldAP string is not passed in.
     """
     list_of_manifolds = json.loads(s, cls=json_encoder.ManifoldAP_Decoder)
-    dict_of_manifolds = {str(mfld) : mfld for mfld in list_of_manifolds}
+    dict_of_manifolds = {str(mfld): mfld for mfld in list_of_manifolds}
     return dict_of_manifolds
+
 
 def json_file_to_dict(fp):
     """
@@ -46,8 +50,9 @@ def json_file_to_dict(fp):
     values are the ManifoldAP objects.
     """
     list_of_manifolds = json.load(fp, cls=json_encoder.ManifoldAP_Decoder)
-    dict_of_manifolds = {str(mfld) : mfld for mfld in list_of_manifolds}
+    dict_of_manifolds = {str(mfld): mfld for mfld in list_of_manifolds}
     return dict_of_manifolds
+
 
 def looks_like_a_json_file(filename, cls=json_encoder.ManifoldAP_Decoder):
     """
@@ -55,13 +60,14 @@ def looks_like_a_json_file(filename, cls=json_encoder.ManifoldAP_Decoder):
     ManifoldAP_Decoder (or whatever cls is passed in).
     """
     try:
-        with open(filename, 'r') as fp:
+        with open(filename, "r") as fp:
             list_of_manifolds = json.load(fp, cls=cls)
             for mfld in list_of_manifolds:
                 mfld.trace_field()
             return True
     except (FileNotFoundError, UnicodeDecodeError, json.JSONDecodeError):
         return False
+
 
 def looks_like_a_shelve_file(filename):
     """
@@ -71,7 +77,7 @@ def looks_like_a_shelve_file(filename):
     It's important to note that if the file doesn't exist, this will not return true.
     """
     try:
-        with shelve.open(filename, flag='r') as shelve_object:
+        with shelve.open(filename, flag="r") as shelve_object:
             temp_dict = dict()
             for elt in shelve_object:
                 temp_dict[elt] = shelve_object[elt]
@@ -79,6 +85,7 @@ def looks_like_a_shelve_file(filename):
         return True
     except dbm.error[0]:
         return False
+
 
 def change_file_extension(filename, old_extension, new_extension):
     """
@@ -91,14 +98,23 @@ def change_file_extension(filename, old_extension, new_extension):
     """
     old_extension = old_extension[1:] if old_extension[0] == "." else old_extension
     new_extension = new_extension[1:] if new_extension[0] == "." else new_extension
-    if filename[-len(old_extension):] == old_extension:
-        new_name = filename[:-len(old_extension)]
-        new_name = new_name + new_extension if new_name[-1] == "." else new_name + "." + new_extension
+    if filename[-len(old_extension) :] == old_extension:
+        new_name = filename[: -len(old_extension)]
+        new_name = (
+            new_name + new_extension
+            if new_name[-1] == "."
+            else new_name + "." + new_extension
+        )
     elif filename[-len(new_extension)] == new_extension:
-         pass
+        pass
     else:
-        new_name = filename + new_extension if filename[-1] == "." else filename + "." + new_extension
+        new_name = (
+            filename + new_extension
+            if filename[-1] == "."
+            else filename + "." + new_extension
+        )
     return new_name
+
 
 class ManifoldAPDatabase(collections.abc.MutableMapping):
     """
@@ -113,6 +129,7 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
     modify the manifolds stored in the database, then one should pass writeback=True.
     However, there can be significant performance overhead for large databases.
     """
+
     def __init__(self, filename, writeback=False):
         """
         The filename should refer to a file containing either a shelve object or to a
@@ -125,9 +142,12 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
         if looks_like_a_json_file(filename):
             self._json_filename = filename
             self._shelve_filename = change_file_extension(filename, "json", "shelve")
-            with open(filename, 'r') as fp, shelve.open(self._shelve_filename) as shelve_object:
+            with open(filename, "r") as fp, shelve.open(
+                self._shelve_filename
+            ) as shelve_object:
                 temp_dict = json_file_to_dict(fp)
-                for key in temp_dict: shelve_object[key] = temp_dict[key]
+                for key in temp_dict:
+                    shelve_object[key] = temp_dict[key]
         elif looks_like_a_shelve_file(filename):
             self._shelve_filename = filename
             self._json_filename = change_file_extension(filename, "shelve", "json")
@@ -137,11 +157,11 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
         else:
             raise RuntimeError("The database couldn't be created")
         self._shelve_object = shelve.open(self._shelve_filename, writeback=writeback)
-    
+
     def aliases_in_database(self, name):
         """
         Returns a list of keys that are in self._shelve_object that are aliases for
-        name. E.g. if "4_1(0,0)" is in self._shelve_object, then name="m004" or 
+        name. E.g. if "4_1(0,0)" is in self._shelve_object, then name="m004" or
         name="4_1" should return "4_1(0,0)". If the return value is the empty list, then
         the name is not recognized as an alias for any key in self._shelve_object.
 
@@ -162,7 +182,7 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
             if alias in self._shelve_object:
                 in_db.append(alias)
         return in_db
-    
+
     def __getitem__(self, key):
         try:
             return self._shelve_object[key]
@@ -172,7 +192,7 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
                 return self._shelve_object[aliases[0]]
             else:
                 raise ke
-    
+
     def __contains__(self, key):
         try:
             self._shelve_object[key]
@@ -190,38 +210,41 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
         don't do any alias intercepting in this method.
         """
         self._shelve_object[key] = value
-    
+
     def __delitem__(self, key):
         del self._shelve_object[key]
-    
+
     def __len__(self):
         return len(self._shelve_object)
-    
+
     def __iter__(self):
         return iter(self._shelve_object)
 
     def _update_shelve(self):
         self._shelve_object.sync()
-    
+
     def export_json(self, json_filename=None):
         # It is perhaps a little nonstandard to have a "JSON stream", but I would like
         # to avoid having all the manifolds in memory before we serialize them.
         # This is probably kind of hacky right now, and there should be a proper
         # way done in the module with the custom json classes.
         filename = self._json_filename if json_filename is None else json_filename
-        with open(filename, 'w') as fp:
+        with open(filename, "w") as fp:
             s = str()
             for elt in self._shelve_object.values():
-                s += json.dumps(elt, cls=json_encoder.ManifoldAP_Encoder, indent=4) + ",\n"
+                s += (
+                    json.dumps(elt, cls=json_encoder.ManifoldAP_Encoder, indent=4)
+                    + ",\n"
+                )
             t = str()
             for line in s.splitlines():
-                t += '    ' + line + '\n'
+                t += "    " + line + "\n"
             t = "[\n" + t[:-2] + "\n]"
             fp.write(t)
-    
+
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         self._update_shelve()
         self._shelve_object.close()

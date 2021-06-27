@@ -188,7 +188,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         dyadic places can take a long time to compute, so we try to avoid finding one of
         them explictly. The point is the total number of ramified real and finite places
         is even.
-        
+
         We check that the multiplicity of the primes that a and b belong to are odd, but
         this might be unnecessary if sage is smart enough to quickly compute their local
         symbols. On the other hand it probably cuts down slightly on the total number of
@@ -263,7 +263,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         polynomials.
 
         Fortunately for us, given an isomorphism of fields f: K -> L and an ideal I of
-        the ring of integers of K, Sage will correctly interpret f(I) as an ideal of 
+        the ring of integers of K, Sage will correctly interpret f(I) as an ideal of
         (the ring of integers) of L.
 
         This might not be especially efficient, but our first pass algorithm is just
@@ -278,11 +278,11 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         other_field = other.base_ring()
         if field_isomorphism is None:
             try:
-                field_isomorphism = field_isomorphisms.isomorphisms_between_number_fields(
-                    self_field, other_field
-                )[
-                    0
-                ]
+                field_isomorphism = (
+                    field_isomorphisms.isomorphisms_between_number_fields(
+                        self_field, other_field
+                    )[0]
+                )
             except IndexError:
                 return False
         # Trying if other already has some ramification data computed.

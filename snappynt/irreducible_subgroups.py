@@ -1,5 +1,9 @@
-from snappy.snap.find_field import ApproximateAlgebraicNumber, ListOfApproximateAlgebraicNumbers
+from snappy.snap.find_field import (
+    ApproximateAlgebraicNumber,
+    ListOfApproximateAlgebraicNumbers,
+)
 from sage.all import Integer, QQ, ZZ
+
 
 def within_epsilon(a, b, epsilon_coefficient=1):
     """
@@ -21,15 +25,19 @@ def within_epsilon(a, b, epsilon_coefficient=1):
 
     Comment last updated: Aug-15 2020
     """
-    if isinstance(a, int): base_field_a = QQ
-    else: base_field_a = a.parent().base()
-    if isinstance(b, int): base_field_b = QQ
-    else: base_field_b = b.parent().base()
+    if isinstance(a, int):
+        base_field_a = QQ
+    else:
+        base_field_a = a.parent().base()
+    if isinstance(b, int):
+        base_field_b = QQ
+    else:
+        base_field_b = b.parent().base()
     if base_field_a.is_exact() and base_field_b.is_exact():
         epsilon = 0
     else:
         epsilon = max(base_field_a.epsilon(), base_field_b.epsilon())
-    if abs(a - b) <= epsilon_coefficient * epsilon or (epsilon == 0 and a==b):
+    if abs(a - b) <= epsilon_coefficient * epsilon or (epsilon == 0 and a == b):
         return True
     else:
         return False
@@ -46,7 +54,7 @@ def is_parabolic(element, epsilon_coefficient=10):
     My plan right now is to use the cusp info from SnapPy to determine whether a Kleinian
     group contains parabolics. Realistically, this is probably pretty safe, but there's no
     way that I know of to exclude the possibility that the trace differs from 2 by an amout
-    smaller than what can be detected by for a given fixed precision. 
+    smaller than what can be detected by for a given fixed precision.
     """
     if within_epsilon(element.trace(), ZZ(2), epsilon_coefficient):
         return True
@@ -79,9 +87,10 @@ def generate_reducible_subgroup(g, h, epsilon_coefficient=10):
     else:
         return False
 
+
 def get_trace_as_AAN(group, word):
     """
-    This gets the trace of a group element given as a word as an 
+    This gets the trace of a group element given as a word as an
     ApproximatAlgebraicNumber. The group does need to be passed in as ab ``arbitrary
     precision group", i.e. one whose elements can be calculated to arbitrary
     precision. The group's __call__ also needs to word for word like 'abA'.
@@ -134,15 +143,15 @@ def enumerate_words(rank, power=1):
         return False
 
     previous_element = [1]
-    yield previous_element*power
+    yield previous_element * power
     while True:
         if previous_element == [-rank] * len(previous_element):
             previous_element = [1] * (len(previous_element) + 1)
-            yield previous_element*power
+            yield previous_element * power
         else:
             previous_element = next_element(previous_element)
             if not has_simplification(previous_element):
-                yield previous_element*power
+                yield previous_element * power
 
 
 def enumerate_group_elements(group, as_word=False, power=1, verbosity=False):
@@ -151,7 +160,7 @@ def enumerate_group_elements(group, as_word=False, power=1, verbosity=False):
     coming from polished_holonomy in SnapPy. In particul.ar it makes use of a __call__
     interface with the group, i.e. to get the element a*b^2*a^(-1) of the group G by
     calling G('abbA'). Unfortunately this pattern won't work with most groups in sage
-    or (nonpolished) holonomy groups from SnapPy. Later we can go back and make the 
+    or (nonpolished) holonomy groups from SnapPy. Later we can go back and make the
     interface more robust if needed. The use case of this function is to get group
     elements that may be used as generators for various fields or quaternion algebras.
 
@@ -179,8 +188,10 @@ def enumerate_group_elements(group, as_word=False, power=1, verbosity=False):
         word = "".join(list_word)
         if verbosity:
             print(word)
-        if as_word: yield word
-        else: yield group(word)
+        if as_word:
+            yield word
+        else:
+            yield group(word)
 
 
 def find_hilbert_symbol_words(group, power=1, epsilon_coefficient=100):
@@ -205,7 +216,15 @@ def find_hilbert_symbol_words(group, power=1, epsilon_coefficient=100):
         word2 = next(gen)
         numerical_elt1 = group(word1)
         numerical_elt2 = group(word2)
-        if not is_parabolic(numerical_elt1, epsilon_coefficient=epsilon_coefficient) and not generate_reducible_subgroup(numerical_elt1, numerical_elt2, epsilon_coefficient=epsilon_coefficient):
+        if not is_parabolic(
+            numerical_elt1, epsilon_coefficient=epsilon_coefficient
+        ) and not generate_reducible_subgroup(
+            numerical_elt1, numerical_elt2, epsilon_coefficient=epsilon_coefficient
+        ):
             return (word1, word2)
-        if not is_parabolic(numerical_elt2, epsilon_coefficient=epsilon_coefficient) and not generate_reducible_subgroup(numerical_elt1, numerical_elt2, epsilon_coefficient=epsilon_coefficient):
+        if not is_parabolic(
+            numerical_elt2, epsilon_coefficient=epsilon_coefficient
+        ) and not generate_reducible_subgroup(
+            numerical_elt1, numerical_elt2, epsilon_coefficient=epsilon_coefficient
+        ):
             return (word2, word1)

@@ -1,3 +1,4 @@
+from paths import convert_rel_to_abs
 from sage.all import NumberField, var
 
 import snappynt.database as database
@@ -35,12 +36,12 @@ def test_fig8_field():
 
 
 def test_knots():
-    assert agrees_with_database("data/MRKnots.json")
+    assert agrees_with_database(convert_rel_to_abs("data/MRKnots.json"))
 
 
 def test_cusped():
-    assert agrees_with_database("data/MRCusped.json")
+    assert agrees_with_database(convert_rel_to_abs("data/MRCusped.json"))
 
 
 def test_closed():
-    assert agrees_with_database("data/MRClosed.json")
+    assert agrees_with_database(convert_rel_to_abs("data/MRClosed.json"))

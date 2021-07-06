@@ -15,15 +15,16 @@ Things to consider:
 import functools
 from collections import namedtuple
 
-import denominatorsforsnappy
-import field_isomorphisms
-import irreducible_subgroups
-import misc_functions
-import QuaternionAlgebraNF
-
-# from testing import compare_against_database
 import snappy
 from sage.all import radical
+
+from . import (
+    QuaternionAlgebraNF,
+    denominatorsforsnappy,
+    field_isomorphisms,
+    irreducible_subgroups,
+    misc_functions,
+)
 
 
 def try_various_precision(func, iterable, fail_value=None):

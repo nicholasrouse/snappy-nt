@@ -18,8 +18,9 @@ import json
 import os.path
 import shelve
 
-import json_encoder
 import snappy
+
+from . import json_encoder
 
 
 def strip_off_cusp_data(s):

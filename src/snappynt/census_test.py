@@ -1,6 +1,6 @@
-import database
-import ManifoldAP
 from sage.all import NumberField, var
+
+from . import ManifoldAP, database
 
 
 def compare_against_database(filename):

@@ -15,10 +15,10 @@ since JSON is human readable, we include some extra information for quick refere
 import json
 from collections import Counter
 
-import ManifoldAP
-import QuaternionAlgebraNF
 from sage.all import CC, QQ, ZZ, NumberField, PolynomialRing, RealField, radical
 from sage.rings.number_field.number_field import is_NumberField
+
+from . import ManifoldAP, QuaternionAlgebraNF
 
 
 def nested_decoder(func):

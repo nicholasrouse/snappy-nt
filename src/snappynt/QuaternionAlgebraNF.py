@@ -27,10 +27,11 @@ exists in Sage for quaternion algebras over the rationals.
 """
 from collections import Counter
 
-import field_isomorphisms
 from sage.algebras.quatalg.quaternion_algebra import QuaternionAlgebra_ab
 from sage.all import pari, radical
 from sage.rings.number_field.number_field import is_NumberField
+
+from . import field_isomorphisms
 
 
 def convert_QA_toQANF(

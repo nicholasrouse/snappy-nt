@@ -28,51 +28,10 @@ exists in Sage for quaternion algebras over the rationals.
 from collections import Counter
 
 from sage.algebras.quatalg.quaternion_algebra import QuaternionAlgebra_ab
-from sage.all import pari, radical
+from sage.all import radical
 from sage.rings.number_field.number_field import is_NumberField
 
 from . import field_isomorphisms
-
-
-def convert_QA_toQANF(
-    quaternion_algebra, delay_computations=False, suppress_warnings=False
-):
-    """
-    This converts a Sage quaternion algebra over a number field to an instance of the
-    subclass QuaternionAlgebraNF. It's possible we can support passing in one of Sage's
-    QuaternionAlgebra objects to __init__ for QuaternionAlgebraNF, but it's going
-    to take some contortions, so I think this is better.
-
-    We don't actually type-test that the base_ring is a NumberField just like we don't
-    in QuaternionAlgebraNF. There is a warning printed though coming from the __init__
-    method unless suppress_warnings=True.
-    """
-    field = quaternion_algebra.base_ring()
-    a, b = quaternion_algebra.invariants()
-    names = [str(gen) for gen in quaternion_algebra.gens()]
-    return QuaternionAlgebraNF(
-        field,
-        a,
-        b,
-        names=names,
-        delay_computations=delay_computations,
-        suppress_warnings=suppress_warnings,
-    )
-
-
-def pari_local_symbol(a, b, prime):
-    """
-    This takes sage types for number field elements a,b and a prime ideal of the same
-    number field. However the calculation is outsourced to PARI.
-
-    This might not be totally necessary. It seems to be more or less how Sage does it
-    anyway.
-    """
-    field = pari(a.parent())
-    a = pari(a)
-    b = pari(b)
-    prime = prime.pari_prime()
-    return pari.nfhilbert(field, a, b, prime)
 
 
 class QuaternionAlgebraNF(QuaternionAlgebra_ab):

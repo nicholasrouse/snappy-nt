@@ -39,3 +39,4 @@ coverage.xml
 
 # System-specific
 local_install.sh
+coverage.sh

@@ -183,7 +183,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
                 self._ramified_dyadic_places_dict[prime] = True
                 self._ramified_dyadic_places.add(prime)
             else:
-                self._ramified_dyadic_places[prime] = False
+                self._ramified_dyadic_places_dict[prime] = False
         if last_prime is not None:
             if (
                 len(

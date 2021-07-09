@@ -318,8 +318,8 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
             self._ramified_real_places == new_quaternion_algebra._ramified_real_places
         )
         same_finite_ramification = (
-            self._ramified_finite_places
-            == new_quaternion_algebra._ramified_finite_places
+            self.ramified_finite_places()
+            == new_quaternion_algebra.ramified_finite_places()
         )
         return same_real_ramification and same_finite_ramification
 

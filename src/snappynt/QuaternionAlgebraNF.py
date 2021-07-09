@@ -25,14 +25,10 @@ number field methods in sage are not implemented for QQ. Maybe there's a clean f
 this, but for now I'm going to leave it since the functionality already pretty much
 exists in Sage for quaternion algebras over the rationals.
 """
-# fmt: off
-import sage.all  # isort: skip
-from sage.all import QQ, radical  # isort:skip
-# fmt: on
-
 from collections import Counter
 
 from sage.algebras.quatalg.quaternion_algebra import QuaternionAlgebra_ab
+from sage.all import QQ, radical
 from sage.rings.number_field.number_field import is_NumberField
 
 from . import field_isomorphisms

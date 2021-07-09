@@ -119,7 +119,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         if recompute:
             self._ramified_real_places = set()
         field = self.base_ring()
-        real_places = field.real_places() - self._ramified_real_places
+        real_places = set(field.real_places()) - self._ramified_real_places
         ramified_places = set(
             [
                 place

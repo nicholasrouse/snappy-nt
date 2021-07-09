@@ -20,7 +20,7 @@ repos:
       - id: flake8
         args:
           - "--max-line-length=88"
-          - "--extend-ignore=E203,E501"
+          - "--extend-ignore=E203,E501,F401"
         exclude: "src/snappynt/__init__.py"
   #- repo: local
   #  hooks:

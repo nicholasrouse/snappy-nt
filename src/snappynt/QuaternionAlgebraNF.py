@@ -26,6 +26,7 @@ this, but for now I'm going to leave it since the functionality already pretty m
 exists in Sage for quaternion algebras over the rationals.
 """
 # fmt: off
+import sage.all  # isort: skip
 from sage.all import QQ, radical  # isort:skip
 # fmt: on
 

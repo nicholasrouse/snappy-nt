@@ -28,7 +28,7 @@ exists in Sage for quaternion algebras over the rationals.
 from collections import Counter
 
 from sage.algebras.quatalg.quaternion_algebra import QuaternionAlgebra_ab
-from sage.all import radical
+from sage.all import QQ, radical
 from sage.rings.number_field.number_field import is_NumberField
 
 from . import field_isomorphisms
@@ -41,7 +41,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         a,
         b,
         names="i,j,k",
-        compute_ramification=True,
+        compute_ramification=False,
         suppress_warnings=False,
     ):
         """
@@ -49,97 +49,159 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         type-test that the base_ring is a number field, but we do print a warning if it
         doesn't look like one of Sage's NumberField.
         """
+        if base_ring == QQ:
+            raise NotImplementedError(
+                "Use QuaternionAlgebra when the base field is the rational numbers."
+            )
         if suppress_warnings and not is_NumberField(base_ring):
             print(
                 "The base ring does not appear to be a number field. Proceed with caution."
             )
-        self._ramified_residue_characteristics = None
-        self._ramified_real_places = None
-        self._ramified_finite_places = None
-        self._ramified_dyadic_places_computed = False
+        self._ramified_dyadic_residue_chars = Counter()
+        self._ramified_real_places = set()
+        self._ramified_real_places_known = False
+        self._ramified_nondyadic_places = set()
+        self._ramified_nondyadic_residue_chars = Counter()
+        self._ramified_nondyadic_places_known = False
+        self._ramified_dyadic_places = set()
+        self._ramified_dyadic_residue_chars = Counter()
+        self._ramified_dyadic_places_known = False
+        self._ramified_dyadic_places_dict = dict()
         QuaternionAlgebra_ab.__init__(self, base_ring, a, b, names)
         if compute_ramification:
             self.ramified_real_places()
             self.ramified_finite_places()
 
-    def ramified_real_places(self, force_compute=False):
+    def is_ramified_at(self, place, recompute=False):
+        """
+        Returns True or False depending on whether the algebra is ramified at the place.
+        The place parameter can be either a prime ideal of the base_ring, or a real
+        place of the base ring as contained in the output of base_ring.real_places().
+        """
+        if not recompute:
+            if (
+                place
+                in self._ramified_dyadic_places
+                | self._ramified_nondyadic_places
+                | self._ramified_real_places
+            ):
+                return True
+            else:
+                if place in self._ramified_dyadic_places_dict:
+                    return self._ramified_dyadic_places_dict[place]
+        if self.base_ring().hilbert_symbol(*self.invariants(), place) == -1:
+            try:
+                if place.absolute_norm() % 2 != 0:
+                    self._ramified_nondyadic_places.add(place)
+                else:
+                    self._ramified_dyadic_places_dict[place] = True
+                    self._ramified_dyadic_places.add(place)
+            except AttributeError:
+                self._ramified_real_places.add(place)
+            return True
+        else:
+            if place.absolute_norm() % 2 == 0:
+                self._ramified_dyadic_places_dict[place] = False
+            return False
+
+    def ramified_real_places(self, recompute=False):
         """
         Takes in a quaternion algebra over a number field and returns a list of ramified
         places as maps. Obviously this could basically be a somewhat long one-liner, but
         I think it's a bit nicer this way. The output by the way is a set as the places
         are hashable in Sage.
+
+        If recompute=True, then the attribute storing the real places will be cleared,
+        and the ramification will be recomputed.
         """
-        if self._ramified_real_places and not force_compute:
+        if self._ramified_real_places_known and not recompute:
             return self._ramified_real_places
-        else:
-            a, b = self.invariants()
-            field = self.base_ring()
-            real_places = field.real_places()
-            ramified_places = set(
-                [place for place in real_places if place(a) < 0 and place(b) < 0]
-            )
-            self._ramified_real_places = ramified_places
-            return ramified_places
+        if recompute:
+            self._ramified_real_places = set()
+        field = self.base_ring()
+        real_places = field.real_places() - self._ramified_real_places
+        ramified_places = set(
+            [
+                place
+                for place in real_places
+                if field.hilbert_symbol(*self.invariants(), place)
+            ]
+        )
+        self._ramified_real_places |= ramified_places
+        self._ramified_dyadic_places_known = True
+        return ramified_places
 
-    def ramified_residue_characteristics(
-        self, force_compute=False, ignore_dyadic=False
-    ):
-        """
-        Find the residue characteristics of the ramified places. It will attempt to
-        compute the ramified places if they're not known. The residue characteristics
-        are a Counter (morally a multiset) to keep track of multiplicity. The
-        force_compute option will be passed forward to ramified_finite_places if the
-        latter method needs to be invoked.
-        """
-        if self._ramified_finite_places is None:
-            if ignore_dyadic:
-                self.ramified_nondyadic_places(force_compute=force_compute)
-            else:
-                self.ramified_finite_places(force_compute=force_compute)
-        if not self._ramified_residue_characteristics or force_compute:
-            self._ramified_residue_characteristics = Counter(
-                [
-                    radical(place.absolute_norm())
-                    for place in self._ramified_finite_places
-                ]
-            )
-        return self._ramified_residue_characteristics
-
-    def ramified_nondyadic_places(self, force_compute=False):
-        if not self._ramified_finite_places or force_compute:
-            a, b = self.invariants()
-            ramified_finite_primes = None
-            primes_dividing_a = {
-                prime
-                for (prime, multiplicity) in self.base_ring().ideal(a).factor()
-                if multiplicity % 2 != 0 and prime.absolute_norm() % 2 != 0
-            }
-            primes_dividing_b = {
-                prime
-                for (prime, multiplicity) in self.base_ring().ideal(b).factor()
-                if multiplicity % 2 != 0 and prime.absolute_norm() % 2 != 0
-            }
-            ramified_finite_primes = {
-                prime
-                for prime in primes_dividing_a | primes_dividing_b
-                if self.base_ring().hilbert_symbol(a, b, prime) == -1
-            }
-            if self._ramified_finite_places is not None:
-                self._ramified_finite_places = (
-                    self._ramified_finite_places | ramified_finite_primes
-                )
-            else:
-                self._ramified_finite_places = ramified_finite_primes
-        answer = {
+    def ramified_nondyadic_places(self, recompute=False):
+        if self._ramified_nondyadic_places_known and not recompute:
+            return self._ramified_nondyadic_places
+        if recompute:
+            self._ramified_nondyadic_places = set()
+        a, b = self.invariants()
+        primes_dividing_a = {
             prime
-            for prime in self._ramified_finite_places
-            if prime.absolute_norm() % 2 != 0
+            for (prime, multiplicity) in self.base_ring().ideal(a).factor()
+            if multiplicity % 2 != 0
+            and prime.absolute_norm() % 2 != 0
+            and prime not in self._ramified_nondyadic_places
         }
-        return answer
+        primes_dividing_b = {
+            prime
+            for (prime, multiplicity) in self.base_ring().ideal(b).factor()
+            if multiplicity % 2 != 0
+            and prime.absolute_norm() % 2 != 0
+            and prime not in self._ramified_nondyadic_places
+        }
+        ramified_primes = {
+            prime
+            for prime in primes_dividing_a | primes_dividing_b
+            if self.base_ring().hilbert_symbol(a, b, prime) == -1
+        }
+        self._ramified_nondyadic_places |= ramified_primes
+        self._ramified_dyadic_places_known = True
+        return self._ramified_nondyadic_places
 
-    def ramified_finite_places(self, force_compute=False):
+    def ramified_dyadic_places(self, recompute=False):
+        if self._ramified_dyadic_places_known and not recompute:
+            return self._ramified_dyadic_places
+        if recompute:
+            self._ramified_dyadic_places = set()
+            self._ramified_dyadic_places_dict = dict()
+        dyadic_primes = sorted(
+            (
+                prime
+                for prime in self.base_ring().ideal(2).prime_factors()
+                if prime not in self._ramified_dyadic_places_dict
+            ),
+            key=lambda prime: prime.residue_class_degree(),
+        )
+        if self._ramified_nondyadic_places_known and self._ramified_real_places_known:
+            dyadic_primes, last_prime = dyadic_primes[:-1], dyadic_primes[-1]
+        else:
+            last_prime = None
+        for prime in dyadic_primes:
+            if self.base_ring().hilbert_symbol(*self.invariants(), prime) == -1:
+                self._ramified_dyadic_places_dict[prime] = True
+                self._ramified_dyadic_places.add(prime)
+            else:
+                self._ramified_dyadic_places[prime] = False
+        if last_prime is not None:
+            if (
+                len(
+                    self._ramified_real_places
+                    | self._ramified_dyadic_places
+                    | self._ramified_nondyadic_places
+                )
+                % 2
+                == 1
+            ):
+                self._ramified_dyadic_places_dict[last_prime] = True
+                self._ramified_dyadic_places.add(last_prime)
+
+        return self._ramified_dyadic_places
+
+    def ramified_finite_places(self, recompute=False):
         """
-        Computes the ramified finite places as a set. Passing in force_compute=True will
+        Computes the ramified finite places as a set. Passing in recompute=True will
         recompute the finite places and the residue characteristics. We note that the
         parent class has a method ramified_primes() that returns a list. We think that a
         set is better suited and this method also gives us some flexibility to compute
@@ -156,55 +218,44 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         function calls which should be a win. On the third hand having primes appear to
         powers higher than 1 might be so rare in practice that this isn't worth it.
         """
-        if (
-            not self._ramified_finite_places
-            or self._ramified_dyadic_places_computed
-            or force_compute
-        ):
-            a, b = self.invariants()
-            ramified_finite_primes = None
-            primes_dividing_a = {
-                prime
-                for (prime, multiplicity) in self.base_ring().ideal(a).factor()
-                if multiplicity % 2 != 0 and prime.absolute_norm() % 2 != 0
-            }
-            primes_dividing_b = {
-                prime
-                for (prime, multiplicity) in self.base_ring().ideal(b).factor()
-                if multiplicity % 2 != 0 and prime.absolute_norm() % 2 != 0
-            }
-            ramified_finite_primes = {
-                prime
-                for prime in primes_dividing_a | primes_dividing_b
-                if self.base_ring().hilbert_symbol(a, b, prime) == -1
-            }
-            total_number_ramified_places = len(
-                self.ramified_real_places(force_compute=force_compute)
-                | ramified_finite_primes
-            )
-            # Experimentally we most want to avoid computing dyadic places with large residue class degree.
-            dyadic_primes = sorted(
-                self.base_ring().ideal(2).prime_factors(),
-                key=lambda prime: prime.residue_class_degree(),
-            )
-            for prime in dyadic_primes:
-                if prime == dyadic_primes[-1]:
-                    if total_number_ramified_places % 2 != 0:
-                        ramified_finite_primes.add(prime)
-                else:
-                    if self.base_ring().hilbert_symbol(a, b, prime) == -1:
-                        ramified_finite_primes.add(prime)
-                        total_number_ramified_places += 1
-            self._ramified_finite_places = ramified_finite_primes
-        self.ramified_residue_characteristics(force_compute=force_compute)
-        return self._ramified_finite_places
+        return self.ramified_dyadic_places(
+            recompute=recompute
+        ) | self.ramified_nondyadic_places(recompute=recompute)
+
+    def ramified_nondyadic_residue_characteristics(self, recompute=False):
+        self._ramified_nondyadic_residue_chars = Counter(
+            [
+                radical(place.absolute_norm())
+                for place in self.ramified_nondyadic_places(recompute=recompute)
+            ]
+        )
+
+    def ramified_dyadic_residue_characteristics(self, recompute=False):
+        self._ramified_dyadic_residue_chars = Counter(
+            [
+                radical(place.absolute_norm())
+                for place in self.ramified_dyadic_places(recompute=recompute)
+            ]
+        )
+
+    def ramified_residue_characteristics(self, recompute=False):
+        """
+        Find the residue characteristics of the ramified places. It will attempt to
+        compute the ramified places if they're not known. The residue characteristics
+        are a Counter (morally a multiset) to keep track of multiplicity. The
+        recompute option will be passed forward to the methods computing the finite
+        ramification.
+        """
+        return self.ramified_dyadic_residue_characteristics(
+            recompute=recompute
+        ) | self.ramified_nondyadic_residue_characteristics(recompute=recompute)
 
     def is_division_algebra(self):
         """
         Overrides that from Sage's QuaternionAlgebra_ab class. Just whether there is any
         ramification.
         """
-        return bool(self._ramified_finite_places) or bool(self._ramified_finite_places)
+        return bool(self.ramified_finite_places()) or bool(self.ramified_real_places())
 
     def is_matrix_ring(self):
         """
@@ -252,8 +303,10 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
                 other._ramified_real_places
             )
             same_residue_characteristics = (
-                self._ramified_residue_characteristics
-                == other._ramified_residue_characteristics
+                self._ramified_nondyadic_residue_chars
+                | self._ramified_dyadic_residue_chars
+                == other._ramified_nondyadic_residue_chars
+                | other._ramified_dyadic_residue_chars
             )
             if not (same_number_of_real_ramification and same_residue_characteristics):
                 return False
@@ -300,8 +353,9 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         if show_field_data:
             field_data = "Base field: " + str(self.base_ring())
             data_strings.append(field_data)
-        hilbert_symbol = "Hilbert symbol: " + str(self.invariants())
-        data_strings.append(hilbert_symbol)
+        if show_hilbert_symbol:
+            hilbert_symbol = "Hilbert symbol: " + str(self.invariants())
+            data_strings.append(hilbert_symbol)
         if full_finite_ramification:
             finite_ramification_data = "Finite ramification: " + str(
                 self.ramified_finite_places()

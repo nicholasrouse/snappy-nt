@@ -264,7 +264,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         """
         return not self.is_division_algebra()
 
-    def is_isomorphic(self, other, field_isomorphism=None):
+    def is_isomorphic(self, other):
         """
         Given two quaternion algebras over number fields, this function tests for
         isomorphism. The first check is that their base fields are (abstractly) isomorphic. Assuming
@@ -278,50 +278,61 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         the ring of integers of K, Sage will correctly interpret f(I) as an ideal of
         (the ring of integers) of L.
 
-        This might not be especially efficient, but our first pass algorithm is just
-        going to be to make a QuaternionAlgebraNF out of other which has the same base
-        field as self. We do first try to distinguish by some obvious invariants.
-
-        The expensive portion of this method is actually most likely computing an
-        isomorphism of the base number fields. For this reason we allow for an
-        isomorphism to be passed in.
+        There are a lot of if statements to avoid the expensive computations as
+        much as possible. There is some choice about whether finding the nondyadic
+        ramification or finding whether there is an isomorphism of number fields is
+        faster, which basically boils down to factoring an integer versus factoring a
+        polynomial. We opt for the polynomial since often they'll be degree <100, but
+        we have no a priori control over how big the integer is.
         """
         self_field = self.base_ring()
         other_field = other.base_ring()
-        if field_isomorphism is None:
-            try:
-                field_isomorphism = (
-                    field_isomorphisms.isomorphisms_between_number_fields(
-                        self_field, other_field
-                    )[0]
-                )
-            except IndexError:
+        if self_field == other_field:
+            if self.ramified_real_places() != other.ramified_real_places():
                 return False
-        # Trying if other already has some ramification data computed.
-        try:
-            same_number_of_real_ramification = len(self._ramified_real_places) == len(
-                other._ramified_real_places
-            )
-            same_residue_characteristics = (
-                self._ramified_nondyadic_residue_chars
-                | self._ramified_dyadic_residue_chars
-                == other._ramified_nondyadic_residue_chars
-                | other._ramified_dyadic_residue_chars
-            )
-            if not (same_number_of_real_ramification and same_residue_characteristics):
+            if self.ramified_nondyadic_places != other.ramified_nondyadic_places():
                 return False
-        except AttributeError:
-            pass
-        a, b = [field_isomorphism(gen) for gen in other.invariants()]
-        new_quaternion_algebra = QuaternionAlgebraNF(self_field, a, b)
-        same_real_ramification = (
-            self._ramified_real_places == new_quaternion_algebra._ramified_real_places
+            if self.ramified_dyadic_places() != other.ramified_dyadic_places():
+                return False
+            return True
+        if len(self.ramified_real_places()) != len(other.ramified_real_places()):
+            return False
+        if (
+            self._ramified_nondyadic_places_known
+            and other._ramified_nondyadic_places_known
+        ):
+            if (
+                self.ramified_nondyadic_residue_characteristics()
+                != other.ramified_nondyadic_residue_characteristics()
+            ):
+                return False
+        if self._ramified_dyadic_places_known and other._ramified_dyadic_places_known:
+            if (
+                self.ramified_dyadic_residue_characteristics()
+                != other.ramified_dyadic_residue_characteristics()
+            ):
+                return False
+        isomorphisms = field_isomorphisms.isomorphisms_between_number_fields(
+            other_field, self_field
         )
-        same_finite_ramification = (
-            self.ramified_finite_places()
-            == new_quaternion_algebra.ramified_finite_places()
-        )
-        return same_real_ramification and same_finite_ramification
+        if len(field_isomorphisms) == 0:
+            return False
+        for isomorphism in isomorphisms:
+            a, b = [isomorphism(gen) for gen in other.invariants()]
+            if (
+                self.ramified_real_places()
+                != QuaternionAlgebraNF(self_field, a, b).ramified_real_places()
+            ):
+                continue
+            if self.ramified_nondyadic_places() != set(
+                isomorphism(place) for place in other.ramified_nondyadic_places()
+            ):
+                continue
+            if self.ramified_dyadic_places() != set(
+                isomorphism(place) for place in other.ramified_dyadic_places()
+            ):
+                continue
+            return True
 
     def ramification_string(
         self,

@@ -283,7 +283,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         isomorphisms = field_isomorphisms.isomorphisms_between_number_fields(
             other_field, self_field
         )
-        if len(field_isomorphisms) == 0:
+        if len(isomorphisms) == 0:
             return False
         for isomorphism in isomorphisms:
             a, b = [isomorphism(gen) for gen in other.invariants()]

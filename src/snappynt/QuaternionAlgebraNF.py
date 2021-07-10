@@ -135,7 +135,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
             if self.base_ring().hilbert_symbol(a, b, prime) == -1
         }
         self._ramified_nondyadic_places |= ramified_primes
-        self._ramified_dyadic_places_known = True
+        self._ramified_nondyadic_places_known = True
         return self._ramified_nondyadic_places
 
     def ramified_dyadic_places(self):
@@ -171,6 +171,8 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
             ):
                 self._ramified_dyadic_places_dict[last_prime] = True
                 self._ramified_dyadic_places.add(last_prime)
+            else:
+                self._ramified_dyadic_places_dict[last_prime] = False
 
         return self._ramified_dyadic_places
 
@@ -201,11 +203,13 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
                 for place in self.ramified_nondyadic_places()
             ]
         )
+        return self._ramified_nondyadic_residue_chars
 
     def ramified_dyadic_residue_characteristics(self):
         self._ramified_dyadic_residue_chars = Counter(
             [radical(place.absolute_norm()) for place in self.ramified_dyadic_places()]
         )
+        return self._ramified_dyadic_residue_chars
 
     def ramified_residue_characteristics(self):
         """
@@ -253,6 +257,8 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         polynomial. We opt for the polynomial since often they'll be degree <100, but
         we have no a priori control over how big the integer is.
         """
+        if self == other:
+            return True
         self_field = self.base_ring()
         other_field = other.base_ring()
         if self_field == other_field:

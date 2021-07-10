@@ -72,23 +72,12 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
             self.ramified_real_places()
             self.ramified_finite_places()
 
-    def is_ramified_at(self, place, recompute=False):
+    def is_ramified_at(self, place):
         """
         Returns True or False depending on whether the algebra is ramified at the place.
         The place parameter can be either a prime ideal of the base_ring, or a real
         place of the base ring as contained in the output of base_ring.real_places().
         """
-        if not recompute:
-            if (
-                place
-                in self._ramified_dyadic_places
-                | self._ramified_nondyadic_places
-                | self._ramified_real_places
-            ):
-                return True
-            else:
-                if place in self._ramified_dyadic_places_dict:
-                    return self._ramified_dyadic_places_dict[place]
         if self.base_ring().hilbert_symbol(*self.invariants(), place) == -1:
             try:
                 if place.absolute_norm() % 2 != 0:
@@ -104,20 +93,15 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
                 self._ramified_dyadic_places_dict[place] = False
             return False
 
-    def ramified_real_places(self, recompute=False):
+    def ramified_real_places(self):
         """
         Takes in a quaternion algebra over a number field and returns a list of ramified
         places as maps. Obviously this could basically be a somewhat long one-liner, but
         I think it's a bit nicer this way. The output by the way is a set as the places
         are hashable in Sage.
-
-        If recompute=True, then the attribute storing the real places will be cleared,
-        and the ramification will be recomputed.
         """
-        if self._ramified_real_places_known and not recompute:
+        if self._ramified_real_places_known:
             return self._ramified_real_places
-        if recompute:
-            self._ramified_real_places = set()
         field = self.base_ring()
         real_places = set(field.real_places()) - self._ramified_real_places
         ramified_places = set(
@@ -131,11 +115,9 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         self._ramified_dyadic_places_known = True
         return ramified_places
 
-    def ramified_nondyadic_places(self, recompute=False):
-        if self._ramified_nondyadic_places_known and not recompute:
+    def ramified_nondyadic_places(self):
+        if self._ramified_nondyadic_places_known:
             return self._ramified_nondyadic_places
-        if recompute:
-            self._ramified_nondyadic_places = set()
         a, b = self.invariants()
         primes_dividing_a = {
             prime
@@ -160,12 +142,9 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         self._ramified_dyadic_places_known = True
         return self._ramified_nondyadic_places
 
-    def ramified_dyadic_places(self, recompute=False):
-        if self._ramified_dyadic_places_known and not recompute:
+    def ramified_dyadic_places(self):
+        if self._ramified_dyadic_places_known:
             return self._ramified_dyadic_places
-        if recompute:
-            self._ramified_dyadic_places = set()
-            self._ramified_dyadic_places_dict = dict()
         dyadic_primes = sorted(
             (
                 prime
@@ -199,10 +178,9 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
 
         return self._ramified_dyadic_places
 
-    def ramified_finite_places(self, recompute=False):
+    def ramified_finite_places(self):
         """
-        Computes the ramified finite places as a set. Passing in recompute=True will
-        recompute the finite places and the residue characteristics. We note that the
+        Computes the ramified finite places as a set. We note that the
         parent class has a method ramified_primes() that returns a list. We think that a
         set is better suited and this method also gives us some flexibility to compute
         things like the residue characteristics along the way.
@@ -218,37 +196,31 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         function calls which should be a win. On the third hand having primes appear to
         powers higher than 1 might be so rare in practice that this isn't worth it.
         """
-        return self.ramified_dyadic_places(
-            recompute=recompute
-        ) | self.ramified_nondyadic_places(recompute=recompute)
+        return self.ramified_dyadic_places() | self.ramified_nondyadic_places()
 
-    def ramified_nondyadic_residue_characteristics(self, recompute=False):
+    def ramified_nondyadic_residue_characteristics(self):
         self._ramified_nondyadic_residue_chars = Counter(
             [
                 radical(place.absolute_norm())
-                for place in self.ramified_nondyadic_places(recompute=recompute)
+                for place in self.ramified_nondyadic_places()
             ]
         )
 
-    def ramified_dyadic_residue_characteristics(self, recompute=False):
+    def ramified_dyadic_residue_characteristics(self):
         self._ramified_dyadic_residue_chars = Counter(
-            [
-                radical(place.absolute_norm())
-                for place in self.ramified_dyadic_places(recompute=recompute)
-            ]
+            [radical(place.absolute_norm()) for place in self.ramified_dyadic_places()]
         )
 
-    def ramified_residue_characteristics(self, recompute=False):
+    def ramified_residue_characteristics(self):
         """
         Find the residue characteristics of the ramified places. It will attempt to
         compute the ramified places if they're not known. The residue characteristics
-        are a Counter (morally a multiset) to keep track of multiplicity. The
-        recompute option will be passed forward to the methods computing the finite
-        ramification.
+        are a Counter (morally a multiset) to keep track of multiplicity.
         """
-        return self.ramified_dyadic_residue_characteristics(
-            recompute=recompute
-        ) | self.ramified_nondyadic_residue_characteristics(recompute=recompute)
+        return (
+            self.ramified_dyadic_residue_characteristics()
+            | self.ramified_nondyadic_residue_characteristics()
+        )
 
     def is_division_algebra(self):
         """

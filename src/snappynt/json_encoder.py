@@ -274,9 +274,7 @@ def dict_to_quaternion_algebra(d):
     field = dict_to_field(d["base field"])
     a = field(d["Hilbert symbol"]["first entry"])
     b = field(d["Hilbert symbol"]["second entry"])
-    algebra = QuaternionAlgebraNF.QuaternionAlgebraNF(
-        field, a, b, compute_ramification=False
-    )
+    algebra = QuaternionAlgebraNF.QuaternionAlgebraNF(field, a, b)
     ramified_real_places = {
         real_place_finder(field, s) for s in ramification_dict["real ramification"]
     }

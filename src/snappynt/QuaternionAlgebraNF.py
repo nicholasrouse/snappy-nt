@@ -41,7 +41,6 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         a,
         b,
         names="i,j,k",
-        compute_ramification=False,
         suppress_warnings=False,
     ):
         """
@@ -68,9 +67,6 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         self._ramified_dyadic_places_known = False
         self._ramified_dyadic_places_dict = dict()
         QuaternionAlgebra_ab.__init__(self, base_ring, a, b, names)
-        if compute_ramification:
-            self.ramified_real_places()
-            self.ramified_finite_places()
 
     def is_ramified_at(self, place):
         """

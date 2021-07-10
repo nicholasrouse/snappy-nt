@@ -16,7 +16,6 @@ import functools
 from collections import namedtuple
 
 import snappy
-from sage.all import radical
 
 from . import (
     QuaternionAlgebraNF,
@@ -473,7 +472,6 @@ class ManifoldAP:
         be_smart=True,
         verbosity=False,
         _force_compute=False,
-        compute_ramification=True,
         **kwargs,
     ):
         """
@@ -549,7 +547,6 @@ class ManifoldAP:
                 self._trace_field,
                 first_entry,
                 second_entry,
-                compute_ramification=compute_ramification,
             )
         return self._quaternion_algebra
 
@@ -559,7 +556,6 @@ class ManifoldAP:
         be_smart=True,
         verbosity=False,
         _force_compute=False,
-        compute_ramification=True,
         **kwargs,
     ):
         """
@@ -628,25 +624,8 @@ class ManifoldAP:
                     self._invariant_trace_field,
                     first_entry,
                     second_entry,
-                    compute_ramification=compute_ramification,
                 )
             )
-        if compute_ramification:
-            if self._invariant_quaternion_algebra:
-                discriminant_list = list(
-                    self._invariant_quaternion_algebra.discriminant().factor()
-                )
-                self._invariant_quaternion_algebra_ramified_places = [
-                    ideal for (ideal, multiplicity) in discriminant_list
-                ]
-                self._invariant_quaternion_algebra_ramified_places_residue_characteristics = list(
-                    {
-                        radical(place.absolute_norm())
-                        for place in self._invariant_quaternion_algebra_ramified_places
-                    }
-                )
-                self._invariant_quaternion_algebra_ramified_places_residue_characteristics.sort()
-        return self._invariant_quaternion_algebra
 
     def denominators(self, verbosity=False, **kwargs):
         """

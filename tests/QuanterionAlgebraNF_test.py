@@ -29,7 +29,8 @@ def div_alg_third_cyclo_field(third_cyclo_field):
     # Ramified at places above 2 and 3.
     field = third_cyclo_field
     z = field.gen()
-    return QuaternionAlgebraNF.QuaternionAlgebraNF(field, z - 1, 2)
+    entries = field(z - 1), field(2)
+    return QuaternionAlgebraNF.QuaternionAlgebraNF(field, *entries)
 
 
 @pytest.fixture
@@ -37,7 +38,8 @@ def mat_alg_third_cyclo_field(third_cyclo_field):
     # Neither -z or -1 are squares, but the algebra is split.
     field = third_cyclo_field
     z = field.gen()
-    return QuaternionAlgebraNF.QuaternionAlgebraNF(field, -z, -1)
+    entries = field(-z), field(-1)
+    return QuaternionAlgebraNF.QuaternionAlgebraNF(field, *entries)
 
 
 @pytest.fixture
@@ -45,7 +47,8 @@ def div_alg_cubic_field(cubic_field):
     # Ramified at primes above 2, 3, and 23 and at the real place.
     field = cubic_field
     z = field.gen()
-    return QuaternionAlgebraNF.QuaternionAlgebraNF(field, z - 1, z ** 2 + 2 * z + 1)
+    entries = field(z - 1), field(z ** 2 + 2 * z + 1)
+    return QuaternionAlgebraNF.QuaternionAlgebraNF(field, *entries)
 
 
 @pytest.fixture
@@ -53,7 +56,8 @@ def mat_alg_cubic_field(cubic_field):
     # z is not a square, but (z, 1-z) is always split when z != 0,1.
     field = cubic_field
     z = field.gen()
-    return QuaternionAlgebraNF.QuaternionAlgebraNF(field, z, 1 - z)
+    entries = field(z), field(1 - z)
+    return QuaternionAlgebraNF.QuaternionAlgebraNF(field, *entries)
 
 
 # Fixtures that return iterables. Used for testing behavior that should be uniform

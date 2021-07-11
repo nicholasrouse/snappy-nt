@@ -108,8 +108,8 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
             ]
         )
         self._ramified_real_places |= ramified_places
-        self._ramified_dyadic_places_known = True
-        return ramified_places
+        self._ramified_real_places_known = True
+        return self._ramified_real_places
 
     def ramified_nondyadic_places(self):
         if self._ramified_nondyadic_places_known:

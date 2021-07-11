@@ -173,7 +173,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
                 self._ramified_dyadic_places.add(last_prime)
             else:
                 self._ramified_dyadic_places_dict[last_prime] = False
-
+        self._ramified_dyadic_places_known = True
         return self._ramified_dyadic_places
 
     def ramified_finite_places(self):

@@ -47,7 +47,7 @@ def div_alg_cubic_field(cubic_field):
     # Ramified at primes above 2, 3, and 23 and at the real place.
     field = cubic_field
     z = field.gen()
-    entries = field(z - 1), field(z ** 2 + 2 * z + 1)
+    entries = field(z - 1), field(z ** 2 + 2 * z - 1)
     return QuaternionAlgebraNF.QuaternionAlgebraNF(field, *entries)
 
 

@@ -29,7 +29,7 @@ def div_alg_third_cyclo_field(third_cyclo_field):
     # Ramified at places above 2 and 3.
     field = third_cyclo_field
     z = field.gen()
-    return QuaternionAlgebraNF.QuaternionAlgebraNF(field, 1 + z, z)
+    return QuaternionAlgebraNF.QuaternionAlgebraNF(field, z - 1, 2)
 
 
 @pytest.fixture
@@ -76,7 +76,7 @@ def all_algebras(matrix_algebras, division_algebras):
 
 # Tests
 def test_div_alg_third_cyclo_field_finite_ramification(div_alg_third_cyclo_field):
-    residue_chars = div_alg_third_cyclo_field.ramified_residue_chararcteristics()
+    residue_chars = div_alg_third_cyclo_field.ramified_residue_characteristics()
     assert residue_chars == Counter({2: 1, 3: 1})
 
 

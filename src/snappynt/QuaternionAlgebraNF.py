@@ -29,7 +29,6 @@ from collections import Counter
 
 from sage.algebras.quatalg.quaternion_algebra import QuaternionAlgebra_ab
 from sage.all import QQ, radical
-from sage.rings.number_field.number_field import is_NumberField
 
 from . import field_isomorphisms
 
@@ -41,7 +40,6 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         a,
         b,
         names="i,j,k",
-        suppress_warnings=False,
     ):
         """
         On initialization we by default compute the ramification set. We don't actually
@@ -52,10 +50,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
             raise NotImplementedError(
                 "Use QuaternionAlgebra when the base field is the rational numbers."
             )
-        if suppress_warnings and not is_NumberField(base_ring):
-            print(
-                "The base ring does not appear to be a number field. Proceed with caution."
-            )
+        a, b = base_ring(a), base_ring(b)  # Do the coercion explictly.
         self._ramified_dyadic_residue_chars = Counter()
         self._ramified_real_places = set()
         self._ramified_real_places_known = False

@@ -23,7 +23,7 @@ def cubic_field():
     return NumberField(x ** 3 + x + 1, "z")
 
 
-# Quaternion algebras
+# Quaternion algebras and relevant ideals
 @pytest.fixture
 def div_alg_third_cyclo_field(third_cyclo_field):
     # Ramified at places above 2 and 3.
@@ -31,6 +31,15 @@ def div_alg_third_cyclo_field(third_cyclo_field):
     z = field.gen()
     entries = field(z - 1), field(2)
     return QuaternionAlgebraNF.QuaternionAlgebraNF(field, *entries)
+
+
+@pytest.fixture
+def div_alg_third_cyclo_field_ramified_primes(third_cyclo_field):
+    field = third_cyclo_field
+    z = field.gen()
+    dyadic_ideal = field.ideal(2)
+    triadic_ideal = field.ideal(2 * z - 1)
+    return set([dyadic_ideal, triadic_ideal])
 
 
 @pytest.fixture
@@ -49,6 +58,14 @@ def div_alg_cubic_field(cubic_field):
     z = field.gen()
     entries = field(z - 1), field(z ** 2 + 2 * z - 1)
     return QuaternionAlgebraNF.QuaternionAlgebraNF(field, *entries)
+
+
+@pytest.fixture
+def div_alg_cubic_field_ramified_primes(cubic_field):
+    # It's a set even though there's only one element.
+    field = cubic_field
+    z = field.gen()
+    return set([field.ideal(z - 1)])
 
 
 @pytest.fixture
@@ -79,18 +96,43 @@ def all_algebras(matrix_algebras, division_algebras):
 
 
 # Tests
-def test_div_alg_third_cyclo_field_finite_ramification(div_alg_third_cyclo_field):
+def test_div_alg_third_cyclo_field_finite_residue_chars(div_alg_third_cyclo_field):
     residue_chars = div_alg_third_cyclo_field.ramified_residue_characteristics()
     assert residue_chars == Counter({2: 1, 3: 1})
+
+
+def test_div_alg_third_cyclo_field_finite_ramification(
+    div_alg_third_cyclo_field, div_alg_third_cyclo_field_ramified_primes
+):
+    new_computation = set(
+        [
+            prime
+            for prime in div_alg_third_cyclo_field_ramified_primes
+            if div_alg_third_cyclo_field.is_ramified_at(prime)
+        ]
+    )
+    assert new_computation == div_alg_third_cyclo_field.ramified_finite_places()
 
 
 def test_div_alg_third_cyclo_field_infinite_ramification(div_alg_third_cyclo_field):
     assert div_alg_third_cyclo_field.ramified_real_places() == set()
 
 
-def test_div_alg_cubic_field_finite_ramification(div_alg_cubic_field):
+def test_div_alg_cubic_field_finite_residue_chars(div_alg_cubic_field):
     residue_chars = div_alg_cubic_field.ramified_residue_characteristics()
     assert residue_chars == Counter({3: 1})
+
+
+def test_div_alg_cubic_field_finite_ramification(
+    div_alg_cubic_field, div_alg_cubic_field_ramified_primes
+):
+    field = div_alg_cubic_field.base_ring()
+    dyadic_primes = field.ideal(2).prime_factors()
+    primes = dyadic_primes | div_alg_cubic_field_ramified_primes
+    new_computation = set(
+        [prime for prime in primes if div_alg_cubic_field.is_ramified_at(prime)]
+    )
+    assert new_computation == div_alg_cubic_field.ramified_finite_places()
 
 
 def test_div_alg_cubic_field_infinite_ramification(div_alg_cubic_field):
@@ -179,7 +221,7 @@ def test_ramification_string_works(all_algebras):
     failing_algebras = set()
     for algebra in all_algebras:
         algebra.ramified_places()
-        if not isinstance(algebra.ramification_string(), str):
+        if not isinstance(algebra.ramification_string(show_field_data=True), str):
             failing_algebras.add(algebra)
     assert failing_algebras == set()
 

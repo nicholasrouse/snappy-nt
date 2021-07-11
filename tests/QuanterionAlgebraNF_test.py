@@ -6,20 +6,20 @@ from sage.all import QQ, NumberField, var
 
 import snappynt.QuaternionAlgebraNF as QuaternionAlgebraNF
 
+x = var("x")
+
 # Fixtures: these are mostly particular algebras and fields that we use for tests.
 
 
 # Fields
 @pytest.fixture
 def third_cyclo_field():
-    x = var("x")
     return NumberField(x ** 2 + x + 1, "z")
 
 
 @pytest.fixture
 def cubic_field():
     # Discriminant equals -31.
-    x = var("x")
     return NumberField(x ** 3 + x + 1, "z")
 
 
@@ -274,7 +274,6 @@ def test_same_field_different_nondyadic_ram(div_alg_cubic_field, cubic_field):
 
 def test_same_field_different_dyadic_ram():
     # Need at least two dyadic places for all the other ramification to match up.
-    x = var("x")
     field = NumberField(x ** 2 + 7, "z")
     z = field.gen()
     matrix_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(field, 1, 1)
@@ -289,3 +288,53 @@ def test_same_field_isomorphic_algs(div_alg_cubic_field, cubic_field):
     new_invariants = [z ** 2 * inv for inv in div_alg_cubic_field.invariants()]
     new_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(cubic_field, *new_invariants)
     assert new_alg.is_isomorphic(div_alg_cubic_field)
+
+
+def test_different_field_different_real_ram_len(div_alg_cubic_field):
+    new_field = NumberField(x ** 3 + x + 1, "t")
+    matrix_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(new_field, 1, 1)
+    assert not matrix_alg.is_isomorphic(div_alg_cubic_field)
+
+
+def test_different_field_different_nondyadic_ram_computed(div_alg_cubic_field):
+    new_field = NumberField(x ** 3 + x + 1, "t")
+    new_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(new_field, -1, -1)
+    new_alg.ramified_places()
+    div_alg_cubic_field.ramified_places()
+    assert not new_alg.is_isomorphic(div_alg_cubic_field)
+
+
+def test_different_field_different_nondyadic_ram(div_alg_cubic_field):
+    new_field = NumberField(x ** 3 + x + 1, "t")
+    new_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(new_field, -1, -1)
+    assert not new_alg.is_isomorphic(div_alg_cubic_field)
+
+
+def test_different_field_different_dyadic_ram_computed():
+    field = NumberField(x ** 2 + 7, "z")
+    z = field.gen()
+    field2 = NumberField(x ** 2 + 7, "t")
+    matrix_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(field2, 1, 1)
+    division_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(
+        field, field((1 / 2)) * z + field((1 / 2)), -1
+    )
+    matrix_alg.ramified_places()
+    division_alg.ramified_places()
+    assert not matrix_alg.is_isomorphic(division_alg)
+
+
+def test_different_fields_computed(mat_alg_cubic_field, mat_alg_third_cyclo_field):
+    mat_alg_cubic_field.ramified_places()
+    mat_alg_third_cyclo_field.ramified_places()
+    assert not mat_alg_cubic_field.is_isomorphic(mat_alg_third_cyclo_field)
+
+
+def test_different_field_different_dyadic_ram():
+    field = NumberField(x ** 2 + 7, "z")
+    z = field.gen()
+    field2 = NumberField(x ** 2 + 7, "t")
+    matrix_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(field2, 1, 1)
+    division_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(
+        field, field((1 / 2)) * z + field((1 / 2)), -1
+    )
+    assert not matrix_alg.is_isomorphic(division_alg)

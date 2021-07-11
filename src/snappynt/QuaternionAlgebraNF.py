@@ -194,7 +194,10 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         function calls which should be a win. On the third hand having primes appear to
         powers higher than 1 might be so rare in practice that this isn't worth it.
         """
-        return self.ramified_dyadic_places() | self.ramified_nondyadic_places()
+        return self.ramified_nondyadic_places() | self.ramified_dyadic_places()
+
+    def ramified_places(self):
+        return self.ramified_real_places() | self.ramified_finite_places()
 
     def ramified_nondyadic_residue_characteristics(self):
         self._ramified_nondyadic_residue_chars = Counter(

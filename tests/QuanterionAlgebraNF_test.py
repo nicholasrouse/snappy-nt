@@ -64,6 +64,7 @@ def matrix_algebras(mat_alg_third_cyclo_field, mat_alg_cubic_field):
     return (mat_alg_third_cyclo_field, mat_alg_cubic_field)
 
 
+@pytest.fixture
 def division_algebras(div_alg_third_cyclo_field, div_alg_cubic_field):
     return (div_alg_third_cyclo_field, div_alg_cubic_field)
 

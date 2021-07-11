@@ -38,7 +38,7 @@ def div_alg_third_cyclo_field_ramified_primes(third_cyclo_field):
     field = third_cyclo_field
     z = field.gen()
     dyadic_ideal = field.ideal(2)
-    triadic_ideal = field.ideal(2 * z - 1)
+    triadic_ideal = field.ideal(-2 * z - 1)
     return set([dyadic_ideal, triadic_ideal])
 
 
@@ -104,12 +104,14 @@ def test_div_alg_third_cyclo_field_finite_residue_chars(div_alg_third_cyclo_fiel
 def test_div_alg_third_cyclo_field_finite_ramification(
     div_alg_third_cyclo_field, div_alg_third_cyclo_field_ramified_primes
 ):
+    # We throw in some other primes for fun (and to get some branch coverage).
+    primes = {
+        prime
+        for prime in div_alg_third_cyclo_field.base_ring().ideal(7).prime_factors()
+    }
+    primes |= div_alg_third_cyclo_field_ramified_primes
     new_computation = set(
-        [
-            prime
-            for prime in div_alg_third_cyclo_field_ramified_primes
-            if div_alg_third_cyclo_field.is_ramified_at(prime)
-        ]
+        [prime for prime in primes if div_alg_third_cyclo_field.is_ramified_at(prime)]
     )
     assert new_computation == div_alg_third_cyclo_field.ramified_finite_places()
 
@@ -127,7 +129,7 @@ def test_div_alg_cubic_field_finite_ramification(
     div_alg_cubic_field, div_alg_cubic_field_ramified_primes
 ):
     field = div_alg_cubic_field.base_ring()
-    dyadic_primes = field.ideal(2).prime_factors()
+    dyadic_primes = set(field.ideal(2).prime_factors())
     primes = dyadic_primes | div_alg_cubic_field_ramified_primes
     new_computation = set(
         [prime for prime in primes if div_alg_cubic_field.is_ramified_at(prime)]
@@ -136,7 +138,9 @@ def test_div_alg_cubic_field_finite_ramification(
 
 
 def test_div_alg_cubic_field_infinite_ramification(div_alg_cubic_field):
-    assert len(div_alg_cubic_field.ramified_real_places()) == 1
+    field = div_alg_cubic_field.base_ring()
+    place = field.real_places()[0]
+    assert div_alg_cubic_field.is_ramified_at(place)
 
 
 def test_division_algebras(division_algebras):
@@ -217,15 +221,71 @@ def test_different_names(all_algebras):
 
 def test_ramification_string_works(all_algebras):
     # This just checks that ramification string runs without errors and returns a
-    # string.
+    # string. We do some sorcery with keyword arguments to make coverage's branch
+    # coverage tool happy.
     failing_algebras = set()
     for algebra in all_algebras:
         algebra.ramified_places()
-        if not isinstance(algebra.ramification_string(show_field_data=True), str):
-            failing_algebras.add(algebra)
+        keywords = (
+            "full_finite_ramification",
+            "full_real_ramification",
+            "show_hilbert_symbol",
+            "show_field_data",
+        )
+        bool_tups = itertools.product((True, False), repeat=4)
+        keyword_dicts = [dict(zip(keywords, bool_tup)) for bool_tup in bool_tups]
+        for keyword_dict in keyword_dicts:
+            s = algebra.ramification_string(**keyword_dict)
+            if not isinstance(s, str):
+                failing_algebras.add(algebra)
     assert failing_algebras == set()
 
 
 def test_error_raised_for_rationals():
     with pytest.raises(NotImplementedError):
         QuaternionAlgebraNF.QuaternionAlgebraNF(QQ, 1, 1)
+
+
+# Tests for is_isomorphic
+
+
+def test_isomorphic_to_self(all_algebras):
+    failing_algebras = set()
+    for algebra in all_algebras:
+        if not algebra.is_isomorphic(algebra):
+            failing_algebras.add(algebra)
+    assert failing_algebras == set()
+
+
+def test_same_field_different_real_ram(div_alg_cubic_field, mat_alg_cubic_field):
+    # Testing the branch where the algebras are distinguished by real ramification.
+    # This is a priori a bit delicate since it depends on the order that things
+    # are tested in is_isomorphic.
+    assert not div_alg_cubic_field.is_isomorphic(mat_alg_cubic_field)
+
+
+def test_same_field_different_nondyadic_ram(div_alg_cubic_field, cubic_field):
+    # Have to cook up a new algebra here. Fortunately, (-1,-1)_K will be ramified
+    # at the real place and the dyadic place. div_alg_cubic_field has triadic
+    # ramification, so they will be distinguished there.
+    new_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(cubic_field, -1, -1)
+    assert not new_alg.is_isomorphic(div_alg_cubic_field)
+
+
+def test_same_field_different_dyadic_ram():
+    # Need at least two dyadic places for all the other ramification to match up.
+    x = var("x")
+    field = NumberField(x ** 2 + 7, "z")
+    z = field.gen()
+    matrix_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(field, 1, 1)
+    division_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(
+        field, field((1 / 2)) * z + field((1 / 2)), -1
+    )
+    assert not matrix_alg.is_isomorphic(division_alg)
+
+
+def test_same_field_isomorphic_algs(div_alg_cubic_field, cubic_field):
+    z = cubic_field.gen()
+    new_invariants = [z ** 2 * inv for inv in div_alg_cubic_field.invariants()]
+    new_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(cubic_field, *new_invariants)
+    assert new_alg.is_isomorphic(div_alg_cubic_field)

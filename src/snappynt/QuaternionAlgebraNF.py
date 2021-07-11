@@ -262,7 +262,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         if self_field == other_field:
             if self.ramified_real_places() != other.ramified_real_places():
                 return False
-            if self.ramified_nondyadic_places != other.ramified_nondyadic_places():
+            if self.ramified_nondyadic_places() != other.ramified_nondyadic_places():
                 return False
             if self.ramified_dyadic_places() != other.ramified_dyadic_places():
                 return False

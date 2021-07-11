@@ -2,7 +2,7 @@ import itertools
 from collections import Counter
 
 import pytest
-from sage.all import NumberField, var
+from sage.all import QQ, NumberField, var
 
 import snappynt.QuaternionAlgebraNF as QuaternionAlgebraNF
 
@@ -44,7 +44,7 @@ def mat_alg_third_cyclo_field(third_cyclo_field):
 
 @pytest.fixture
 def div_alg_cubic_field(cubic_field):
-    # Ramified at primes above 2, 3, and 23 and at the real place.
+    # Ramified at a prime above 3 and at the real place.
     field = cubic_field
     z = field.gen()
     entries = field(z - 1), field(z ** 2 + 2 * z - 1)
@@ -90,11 +90,27 @@ def test_div_alg_third_cyclo_field_infinite_ramification(div_alg_third_cyclo_fie
 
 def test_div_alg_cubic_field_finite_ramification(div_alg_cubic_field):
     residue_chars = div_alg_cubic_field.ramified_residue_characteristics()
-    assert residue_chars == Counter({2: 1, 3: 1, 23: 1})
+    assert residue_chars == Counter({3: 1})
 
 
 def test_div_alg_cubic_field_infinite_ramification(div_alg_cubic_field):
     assert len(div_alg_cubic_field.ramified_real_places()) == 1
+
+
+def test_division_algebras(division_algebras):
+    failing_algebras = set()
+    for algebra in division_algebras:
+        if not algebra.is_division_algebra():
+            failing_algebras.add(algebra)
+    assert failing_algebras == set()
+
+
+def test_matrix_algebras(matrix_algebras):
+    failing_algebras = set()
+    for algebra in matrix_algebras:
+        if not algebra.is_matrix_ring():
+            failing_algebras.add(algebra)
+    assert failing_algebras == set()
 
 
 def test_real_ramification_flag(all_algebras):
@@ -155,3 +171,19 @@ def test_different_names(all_algebras):
         if not new_alg.is_isomorphic(algebra):
             failing_algebras.add(algebra)
     assert failing_algebras == set()
+
+
+def test_ramification_string_works(all_algebras):
+    # This just checks that ramification string runs without errors and returns a
+    # string.
+    failing_algebras = set()
+    for algebra in all_algebras:
+        algebra.ramified_places()
+        if not isinstance(algebra.ramification_string(), str):
+            failing_algebras.add(algebra)
+    assert failing_algebras == set()
+
+
+def test_error_raised_for_rationals():
+    with pytest.raises(NotImplementedError):
+        QuaternionAlgebraNF.QuaternionAlgebraNF(QQ, 1, 1)

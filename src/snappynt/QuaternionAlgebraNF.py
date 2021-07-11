@@ -104,7 +104,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
             [
                 place
                 for place in real_places
-                if field.hilbert_symbol(*self.invariants(), place)
+                if field.hilbert_symbol(*self.invariants(), place) == -1
             ]
         )
         self._ramified_real_places |= ramified_places

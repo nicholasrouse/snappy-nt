@@ -322,7 +322,8 @@ def test_different_field_different_real_ram(div_alg_cubic_field):
     isos = isomorphisms_between_number_fields(old_field, new_field)
     matrix_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(new_field, 1, 1)
     results = [
-        matrix_alg.same_ramification_via_isomorphism(matrix_alg, iso) for iso in isos
+        div_alg_cubic_field.same_ramification_via_isomorphism(matrix_alg, iso)
+        for iso in isos
     ]
     assert True not in results
 

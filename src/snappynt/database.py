@@ -1,5 +1,5 @@
 """
-Module for making and managing databases of ManifoldAP objects. These databases are
+Module for making and managing databases of ManifoldNT objects. These databases are
 fairly rudimentary at this point. Their primary purposes are to have a test bench of
 known correct computations to test revisions of the package against and to allow saving
 of calculations in a persistent and human readable way. It's worth pointing out that
@@ -10,7 +10,7 @@ It might be important to note that one shouldn't load untrusted binary data usin
 module for the same reasons one shouldn't do so with shelve or pickle.
 
 The JSON encoded object should be a JSON array the entries of which are encoded JSON
-encoded ManifoldAP objects.
+encoded ManifoldNT objects.
 """
 import collections.abc
 import dbm
@@ -37,32 +37,32 @@ def strip_off_cusp_data(s):
 
 def json_array_to_dict(s):
     """
-    Takes a Python string that represents an encoded JSON array with elements ManifoldAP
+    Takes a Python string that represents an encoded JSON array with elements ManifoldNT
     objects and converts it to a Python dictionary where the keys are the names of the
-    manifolds and the values are the ManifoldAP objects. Note that s cannot be a file,
+    manifolds and the values are the ManifoldNT objects. Note that s cannot be a file,
     but we provide another function json_file_to_dict to handle this. It's also
-    important that a single encoded ManifoldAP string is not passed in.
+    important that a single encoded ManifoldNT string is not passed in.
     """
-    list_of_manifolds = json.loads(s, cls=json_encoder.ManifoldAP_Decoder)
+    list_of_manifolds = json.loads(s, cls=json_encoder.ManifoldNT_Decoder)
     dict_of_manifolds = {str(mfld): mfld for mfld in list_of_manifolds}
     return dict_of_manifolds
 
 
 def json_file_to_dict(fp):
     """
-    Takes a file object containing JSON text representing an array of ManifoldAP objects
+    Takes a file object containing JSON text representing an array of ManifoldNT objects
     and return a Python dictionary whose keys are the names of the manifolds and whose
-    values are the ManifoldAP objects.
+    values are the ManifoldNT objects.
     """
-    list_of_manifolds = json.load(fp, cls=json_encoder.ManifoldAP_Decoder)
+    list_of_manifolds = json.load(fp, cls=json_encoder.ManifoldNT_Decoder)
     dict_of_manifolds = {str(mfld): mfld for mfld in list_of_manifolds}
     return dict_of_manifolds
 
 
-def looks_like_a_json_file(filename, cls=json_encoder.ManifoldAP_Decoder):
+def looks_like_a_json_file(filename, cls=json_encoder.ManifoldNT_Decoder):
     """
     Takes a filename and tests whether it can load it using the
-    ManifoldAP_Decoder (or whatever cls is passed in).
+    ManifoldNT_Decoder (or whatever cls is passed in).
     """
     try:
         with open(filename, "r") as fp:
@@ -121,13 +121,13 @@ def change_file_extension(filename, old_extension, new_extension):
     return new_name
 
 
-class ManifoldAPDatabase(collections.abc.MutableMapping):
+class ManifoldNTDatabase(collections.abc.MutableMapping):
     """
     This class is a fairly thin wrapper around shelve. Extra functionality includes
     being able to import and export from a human readable JSON file. However, these
     operations can be expensive for large databases, so are not performed unless
     requested. We also catch alternative names for manifolds using snappy's alias
-    system. Instances of the class can also be used with ManifoldAP objects to avoid
+    system. Instances of the class can also be used with ManifoldNT objects to avoid
     recomputing invariants.
 
     The writeback option is important: it behaves similarly to shelve's. If one wants to
@@ -138,7 +138,7 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
     def __init__(self, filename, writeback=False):
         """
         The filename should refer to a file containing either a shelve object or to a
-        JSON file with an array of encoded ManifoldAP objects. The file can also not yet
+        JSON file with an array of encoded ManifoldNT objects. The file can also not yet
         exist, in which case one will be created with the name. It will rip off the old
         extension of .json or .shelve for the new one
         though.
@@ -238,7 +238,7 @@ class ManifoldAPDatabase(collections.abc.MutableMapping):
             s = str()
             for elt in self._shelve_object.values():
                 s += (
-                    json.dumps(elt, cls=json_encoder.ManifoldAP_Encoder, indent=4)
+                    json.dumps(elt, cls=json_encoder.ManifoldNT_Encoder, indent=4)
                     + ",\n"
                 )
             t = str()

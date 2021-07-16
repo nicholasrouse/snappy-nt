@@ -1,6 +1,6 @@
 """
 Ideally this module will get incorporated into other at some point. It was written
-before ManifoldAP was, so we worked systematically with SnapPy's Manifold objects
+before ManifoldNT was, so we worked systematically with SnapPy's Manifold objects
 rather than a custom subclass.
 """
 

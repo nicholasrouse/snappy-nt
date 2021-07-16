@@ -2,11 +2,8 @@
 This is the module that contains the class for arbitrary precision Manifolds.
 
 Things to consider:
-    1. Building some kind of database that can be loaded to avoid repeating expensive
-    computations. I haven't decided how exactly to build and access such a database
-    yet.
 
-    2. Perhaps importing functions that actually compute the various invariants from
+    1. Perhaps importing functions that actually compute the various invariants from
     numerical input. I.e. make another module and put all the ugly implementation for
     computations there.
 """
@@ -52,7 +49,7 @@ def fix_names(name):
         return "invariant quaternion algebra"
 
 
-class ManifoldAP:
+class ManifoldNT:
     def __init__(
         self,
         spec=None,
@@ -160,18 +157,7 @@ class ManifoldAP:
         to attempt is. This might be an evolving function over time. As of Sept-24
         2020, it just takes the highest failed precision and degree pair and increases
         them by the default increment. It's returned as a named 2-tuple (prec, degree)
-        for fields a named 1-tuple (prec) for the algebras. An unattractive aspect of
-        the way this is currently written is that for fields, we use a named 2-tuple,
-        but just an integer for the algebras because the degree has no meaning there.
-        I think using a named 1-tuple is a little insane, but it makes the interfaces
-        different.
-
-        One day... I hope to know how long a particular precision, degree pair should
-        take and have this return the "lowest hanging fruit" subject to some lower
-        bound. But when that happens we can rewrite this method and it should be
-        reflected everywhere it's used. It's possible that knowledge about the trace
-        or invariant trace field could be used here for degree reasons, but right now,
-        this logic lives in the respective methods.
+        for fields a named 1-tuple (prec) for the algebras.
 
         An assumption I'm going to make is that we want to try to compute the algebras
         with at least as much pecision as we needed for the fields. We have to return
@@ -181,7 +167,7 @@ class ManifoldAP:
         methods that compute the algebras try to compute the fields if they're not
         known using whatever precision and degree is passed in.
 
-        The invariant needs to be passed in a string. The acceptable options are:
+        The invariant needs to be passed in as a string. The acceptable options are:
         "trace field", "invariant trace field", "quaternion algebra", "invariant
         quaternion algebra". The short versions "tf", "itf", "qa", "iqa" are also
         acceptable. See the fix_names function at the top level of the module for more
@@ -498,7 +484,7 @@ class ManifoldAP:
         great mathematical interest to the orbifolds in the way that the trace fields
         and quaternion algebras are.
 
-        For now though most everything is a ManifoldAP method.
+        For now though most everything is a ManifoldNT method.
         """
         if prec is None:
             prec = self.default_starting_prec
@@ -507,10 +493,9 @@ class ManifoldAP:
         if not self._trace_field:
             if verbosity:
                 failure_message = (
-                    "Trace field not known. It can be "
-                    "computed with the compute_trace_field method. It's "
-                    "possible that one needs high precision or degree to find the field, "
-                    "though."
+                    "Trace field not known. It can be computed with the"
+                    "compute_trace_field method. It's possible that one needs high"
+                    "precision or degree to find the field, though."
                 )
                 print(failure_message)
             return None
@@ -756,8 +741,8 @@ class ManifoldAP:
         fields and the two quaternion algebras.
 
         It will also try to compute the other invariants to fill out all the attributes
-        of the instance. Right now it's called upon creation of a ManifoldAP instance,
-        but this can be disabled with a keyword argument when a ManifoldAP object is
+        of the instance. Right now it's called upon creation of a ManifoldNT instance,
+        but this can be disabled with a keyword argument when a ManifoldNT object is
         initialized.
 
         Warning: if you pass _force_compute in as True, then this method will try to
@@ -782,18 +767,18 @@ class ManifoldAP:
             "verbosity": verbosity,
         }
         invariant_method_pairs = [
-            (self._trace_field, ManifoldAP.trace_field),
-            (self._quaternion_algebra, ManifoldAP.quaternion_algebra),
-            (self._invariant_trace_field, ManifoldAP.invariant_trace_field),
+            (self._trace_field, ManifoldNT.trace_field),
+            (self._quaternion_algebra, ManifoldNT.quaternion_algebra),
+            (self._invariant_trace_field, ManifoldNT.invariant_trace_field),
             (
                 self._invariant_quaternion_algebra,
-                ManifoldAP.invariant_quaternion_algebra,
+                ManifoldNT.invariant_quaternion_algebra,
             ),
         ]
         for (invariant, method) in invariant_method_pairs:
             method(self, **arguments)
         if self._trace_field_generators:
-            ManifoldAP.denominators(self, **arguments)
+            ManifoldNT.denominators(self, **arguments)
         if _return_flag:
             return bool(
                 self._trace_field
@@ -928,7 +913,7 @@ class ManifoldAP:
 
     def compare_arithmetic_invariants(self, other):
         """
-        This takes two ManifoldAP's and computes whether they have isomorphic trace
+        This takes two ManifoldNTs and computes whether they have isomorphic trace
         fields, invariant trace fields, quaternion algebras, invariant quaternion
         algebras, and denominators. It does check whether the numerical roots of fields
         agree. This function is primarily useful for testing various revisions of this

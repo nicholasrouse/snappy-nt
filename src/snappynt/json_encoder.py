@@ -1,9 +1,9 @@
 """
-This module gives custom JSON encoding and decoding for ManifoldAP objects. The purpose
+This module gives custom JSON encoding and decoding for ManifoldNT objects. The purpose
 is to eventually have a test bench that can be verified for accuracy then quickly loaded
 to compare future versions of this package against.
 
-The core invariants computed in the ManifoldAP module are the two trace fields, and the
+The core invariants computed in the ManifoldNT module are the two trace fields, and the
 two quaternion algebras. Another invariant are the denominators, though these are often
 computed alongside the (noninvariant) trace field. We want this encoding and decoding to
 be somewhat flexible to allow for later information to be added.
@@ -18,17 +18,17 @@ from collections import Counter
 from sage.all import CC, QQ, ZZ, NumberField, PolynomialRing, RealField, radical
 from sage.rings.number_field.number_field import is_NumberField
 
-from . import ManifoldAP, QuaternionAlgebraNF
+from . import ManifoldNT, QuaternionAlgebraNF
 
 
 def nested_decoder(func):
     """
     A decorator that tries to fix decoding of special objects inside containers. For
-    example, if I have a JSON array whose elements are encoded ManifoldAP objects, I'd
-    like to be able to call json.loads with cls=ManifoldAP_Decoder. As written without
-    this decorator, there will be an error because ManifoldAP_Decoder is coded to expect
+    example, if I have a JSON array whose elements are encoded ManifoldNT objects, I'd
+    like to be able to call json.loads with cls=ManifoldNT_Decoder. As written without
+    this decorator, there will be an error because ManifoldNT_Decoder is coded to expect
     a dictionary from the default JSON decoder, which is then pieces back into a
-    ManifoldAP object. There is maybe a better way to code my decoders that makes
+    ManifoldNT object. There is maybe a better way to code my decoders that makes
     this decorator unnecessary.
 
     The basic logic is to try to decode the object, if it's a nested object, then there
@@ -151,8 +151,8 @@ def dict_to_field(d):
     There can be other keys, but these must be present. The value for "defining
     polynomial" can possibly be a sage polynomial, but this is an "off label" use case.
     The point of having this be a separate function rather than just in the FieldDecoder
-    class is to better handle nested JSON objects. E.g. ManifoldAP objects have fields
-    associated to them, but when we decode ManifoldAP database objects, the field
+    class is to better handle nested JSON objects. E.g. ManifoldNT objects have fields
+    associated to them, but when we decode ManifoldNT database objects, the field
     information becomes a Python dictionary rather than encoded JSON.
     """
     d = {key.lower(): d[key] for key in d}
@@ -311,7 +311,7 @@ class QuaternionAlgebraDecoder(json.JSONDecoder):
         return algebra
 
 
-class ManifoldAP_Encoder(json.JSONEncoder):
+class ManifoldNT_Encoder(json.JSONEncoder):
     def default(self, mfld):
         d = {
             "name": str(mfld),
@@ -346,7 +346,7 @@ def dict_to_manifold(d):
     """
     For similar reason as the other dict_to functions, we have a standalone function
     that converts the Python dictionary returned by the default JSON encoding to a
-    ManifoldAP object. The necessary interface is
+    ManifoldNT object. The necessary interface is
     "name"
     "quaternion algebra"
     "invariant quaternion algebra"
@@ -358,7 +358,7 @@ def dict_to_manifold(d):
     break things if one day we decide that the residue characteristics don't belong in
     the JSON object.
     """
-    mfld = ManifoldAP.ManifoldAP(d["name"], delay_computations=True)
+    mfld = ManifoldNT.ManifoldNT(d["name"], delay_computations=True)
     quaternion_algebra = dict_to_quaternion_algebra(d["quaternion algebra"])
     invariant_quaternion_algebra = dict_to_quaternion_algebra(
         d["invariant quaternion algebra"]
@@ -380,9 +380,9 @@ def dict_to_manifold(d):
     return mfld
 
 
-class ManifoldAP_Decoder(json.JSONDecoder):
+class ManifoldNT_Decoder(json.JSONDecoder):
     """
-    Converts a serialized JSON object to a ManifoldAP object.
+    Converts a serialized JSON object to a ManifoldNT object.
     """
 
     @nested_decoder
@@ -398,31 +398,31 @@ def encode_list_of_manifolds(list_of_manifolds):
     a Python list of encoded manifolds. The returned object should be serializable with
     the default JSON encoder. This ends up being unnecessary and unused.
     """
-    return [json.dumps(mfld, cls=ManifoldAP_Encoder) for mfld in list_of_manifolds]
+    return [json.dumps(mfld, cls=ManifoldNT_Encoder) for mfld in list_of_manifolds]
 
 
 def decode_list_of_manifolds(list_of_manifolds):
     """
-    Given a Python list whose elements are encoded ManifoldAP objects, returns a list
-    with the decoded ManifoldAP objects.
+    Given a Python list whose elements are encoded ManifoldNT objects, returns a list
+    with the decoded ManifoldNT objects.
     """
-    return [json.loads(mfld, cls=ManifoldAP_Decoder) for mfld in list_of_manifolds]
+    return [json.loads(mfld, cls=ManifoldNT_Decoder) for mfld in list_of_manifolds]
 
 
-class ManifoldAP_List_Encoder(json.JSONEncoder):
+class ManifoldNT_List_Encoder(json.JSONEncoder):
     """
-    I think this class is basically unneccesary as if we pass a list of ManifoldAPs in
-    with the class stipulated as ManifoldAP_Encoder, the list will be encoded correctly.
-    However, the dual decode function will not work because of how the ManifoldAP
+    I think this class is basically unneccesary as if we pass a list of ManifoldNTs in
+    with the class stipulated as ManifoldNT_Encoder, the list will be encoded correctly.
+    However, the dual decode function will not work because of how the ManifoldNT
     encoder is written (which suggests I should rewrite it at some point). I leave this
-    for now so that we have ManifoldAP_List_Encoder and ManifoldAP_List_Decoder
+    for now so that we have ManifoldNT_List_Encoder and ManifoldNT_List_Decoder
     """
 
     def default(self, list_of_manifolds):
-        return [ManifoldAP_Encoder().default(mfld) for mfld in list_of_manifolds]
+        return [ManifoldNT_Encoder().default(mfld) for mfld in list_of_manifolds]
 
 
-class ManifoldAP_List_Decoder(json.JSONDecoder):
+class ManifoldNT_List_Decoder(json.JSONDecoder):
     def decode(self, text):
         text_list = json.JSONDecodeError().decode(text)
         return decode_list_of_manifolds(text_list)

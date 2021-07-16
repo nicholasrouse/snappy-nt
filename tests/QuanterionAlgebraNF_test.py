@@ -252,7 +252,7 @@ def test_error_raised_for_rationals():
 
 def test_bad_isomorphism(div_alg_third_cyclo_field):
     old_field = div_alg_third_cyclo_field.base_ring()
-    new_field = NumberField(x ** 2 + 3)
+    new_field = NumberField(x ** 2 + 3, str(old_field.gen()) + "new")
     iso = isomorphisms_between_number_fields(new_field, old_field)[0]
     with pytest.raises(ValueError):
         div_alg_third_cyclo_field.new_QA_via_field_isomorphism(iso)
@@ -307,7 +307,7 @@ def test_same_field_isomorphic_algs(div_alg_cubic_field, cubic_field):
 
 def test_bad_isomorphism_for_via_iso(div_alg_third_cyclo_field):
     old_field = div_alg_third_cyclo_field.base_ring()
-    new_field = NumberField(x ** 2 + 3)
+    new_field = NumberField(x ** 2 + 3, str(old_field.gen()) + "new")
     iso = isomorphisms_between_number_fields(new_field, old_field)[0]
     with pytest.raises(ValueError):
         div_alg_third_cyclo_field.same_ramification_via_isomorphism(iso)
@@ -316,7 +316,7 @@ def test_bad_isomorphism_for_via_iso(div_alg_third_cyclo_field):
 def test_different_field_different_real_ram(div_alg_cubic_field):
     # Real ramification should be the first thing checked.
     old_field = div_alg_cubic_field.base_ring()
-    new_field = NumberField(x ** 3 + x + 1, "t")
+    new_field = NumberField(x ** 3 + x + 1, str(old_field.gen()) + "new")
     isos = isomorphisms_between_number_fields(old_field, new_field)
     matrix_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(new_field, 1, 1)
     results = [matrix_alg.same_ramification_via_isomorphism(iso) for iso in isos]

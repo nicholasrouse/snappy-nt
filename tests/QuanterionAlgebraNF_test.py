@@ -30,7 +30,7 @@ def div_alg_third_cyclo_field(third_cyclo_field):
     # Ramified at places above 2 and 3.
     field = third_cyclo_field
     z = field.gen()
-    entries = field(z - 1), field(2)
+    entries = ((z - 1), 2)
     return QuaternionAlgebraNF.QuaternionAlgebraNF(field, *entries)
 
 
@@ -48,7 +48,7 @@ def mat_alg_third_cyclo_field(third_cyclo_field):
     # Neither -z or -1 are squares, but the algebra is split.
     field = third_cyclo_field
     z = field.gen()
-    entries = field(-z), field(-1)
+    entries = (-z, -1)
     return QuaternionAlgebraNF.QuaternionAlgebraNF(field, *entries)
 
 
@@ -57,7 +57,7 @@ def div_alg_cubic_field(cubic_field):
     # Ramified at a prime above 3 and at the real place.
     field = cubic_field
     z = field.gen()
-    entries = field(z - 1), field(z ** 2 + 2 * z - 1)
+    entries = (z - 1, z ** 2 + 2 * z - 1)
     return QuaternionAlgebraNF.QuaternionAlgebraNF(field, *entries)
 
 
@@ -74,7 +74,7 @@ def mat_alg_cubic_field(cubic_field):
     # z is not a square, but (z, 1-z) is always split when z != 0,1.
     field = cubic_field
     z = field.gen()
-    entries = field(z), field(1 - z)
+    entries = (z, 1 - z)
     return QuaternionAlgebraNF.QuaternionAlgebraNF(field, *entries)
 
 
@@ -300,6 +300,17 @@ def test_same_field_isomorphic_algs(div_alg_cubic_field, cubic_field):
     new_invariants = [z ** 2 * inv for inv in div_alg_cubic_field.invariants()]
     new_alg = QuaternionAlgebraNF.QuaternionAlgebraNF(cubic_field, *new_invariants)
     assert new_alg.is_isomorphic(div_alg_cubic_field)
+
+
+def test_different_field_raise_error(div_alg_cubic_field):
+    old_field = div_alg_cubic_field.base_ring()
+    new_field = NumberField(x ** 2 + 3, str(old_field.gen()) + "new")
+    w = new_field.gen()
+    new_QA = QuaternionAlgebraNF.QuaternionAlgebraNF(
+        new_field, w - 1, w ** 2 + 2 * w - 1
+    )
+    with pytest.raises(ValueError):
+        new_QA.is_isomorphic(div_alg_cubic_field)
 
 
 # Tests for same_ramification_via_isomorphism

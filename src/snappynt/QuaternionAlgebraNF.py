@@ -27,13 +27,11 @@ exists in Sage for quaternion algebras over the rationals.
 """
 from collections import Counter
 
-from sage.algebras.quatalg.quaternion_algebra import QuaternionAlgebra_ab
+from sage.algebras.quatalg.quaternion_algebra import QuaternionAlgebra_ab as _QA_ab
 from sage.all import QQ, radical
 
-from . import field_isomorphisms
 
-
-class QuaternionAlgebraNF(QuaternionAlgebra_ab):
+class QuaternionAlgebraNF(_QA_ab):
     def __init__(
         self,
         base_ring,
@@ -61,7 +59,7 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         self._ramified_dyadic_residue_chars = Counter()
         self._ramified_dyadic_places_known = False
         self._ramified_dyadic_places_dict = dict()
-        QuaternionAlgebra_ab.__init__(self, base_ring, a, b, names)
+        _QA_ab.__init__(self, base_ring, a, b, names)
 
     def is_ramified_at(self, place):
         """
@@ -234,77 +232,100 @@ class QuaternionAlgebraNF(QuaternionAlgebra_ab):
         """
         return not self.is_division_algebra()
 
+    def new_QA_via_field_isomorphism(self, isomorphism):
+        """
+        This will use the isomorphism and self to produce a new quaternion algebra over
+        isomorphism's codomain.
+
+        That is, if isomorphism is f: K->L and self is (a,b)_K, then this method returns
+        (f(a), f(b))_L.
+
+        The domain of isomorphism must be self.base_ring() and its codomain must be a
+        NumberField. In particular, this is not appropriate for changing to local
+        fields. This method will not recompute the ramification, but will transfer it
+        via the isomorphism, remembering whether it has been computed.
+        """
+        if self.base_ring() != isomorphism.domain():
+            raise ValueError("The isomorphism domain must be the base ring of self.")
+        a, b = [isomorphism(gen) for gen in self.invariants()]
+        new_QA = QuaternionAlgebraNF(isomorphism.codomain(), a, b)
+        new_QA._ramified_real_places_known = self._ramified_real_places_known
+        new_QA._ramified_nondyadic_places_known = self._ramified_nondyadic_places_known
+        new_QA._ramified_dyadic_places_known = self._ramified_dyadic_places_known
+        new_QA._ramified_nondyadic_residue_chars = (
+            self._ramified_nondyadic_residue_chars
+        )
+        new_QA._ramified_dyadic_residue_chars = self._ramified_nondyadic_residue_chars
+        new_QA._ramified_real_places = set(
+            isomorphism(place) for place in self._ramified_real_places
+        )
+        new_QA._ramified_nondyadic_places = set(
+            isomorphism(place) for place in self._ramified_nondyadic_places
+        )
+        new_QA._ramified_dyadic_places = set(
+            isomorphism(place) for place in self._ramified_dyadic_places
+        )
+        new_QA._ramified_dyadic_places_dict = {
+            isomorphism(place): self._ramified_dyadic_places_dict[place]
+            for place in self._ramified_dyadic_places_dict
+        }
+        return new_QA
+
     def is_isomorphic(self, other):
         """
-        Given two quaternion algebras over number fields, this function tests for
-        isomorphism. The first check is that their base fields are (abstractly) isomorphic. Assuming
-        that they are, the function uses the Albert-Brauer-Hasse-Noether theorem for
-        quaternion algebras. The net effect is to check whether the ramification sets
-        are the same. This can be a bit delicate in total generality, e.g. if self and
-        other have isomorphic base fields but they are given by different minimal
-        polynomials.
+        Takes in two QuaternionAlgebraNFs. If their base fields do not compare as equal,
+        using == in sage, then a ValueError is raised. See the method
+        same_ramification_via_isomorphism for ways to compare algebras defined over
+        different but isomorphic number fields. The method uses the
+        Albert-Brauer-Hasse-Noether theorem for quaternion algebras. The net effect is
+        to check whether the ramification sets are the same. The method tries to
+        distinguish the algebras via cheaper invariants before more expensive ones.
 
-        Fortunately for us, given an isomorphism of fields f: K -> L and an ideal I of
-        the ring of integers of K, Sage will correctly interpret f(I) as an ideal of
-        (the ring of integers) of L.
-
-        There are a lot of if statements to avoid the expensive computations as
-        much as possible. There is some choice about whether finding the nondyadic
-        ramification or finding whether there is an isomorphism of number fields is
-        faster, which basically boils down to factoring an integer versus factoring a
-        polynomial. We opt for the polynomial since often they'll be degree <100, but
-        we have no a priori control over how big the integer is.
+        Note that this method does not produce an isomorphism between the algebras.
         """
         if self == other:
             return True
         self_field = self.base_ring()
         other_field = other.base_ring()
-        if self_field == other_field:
-            if self.ramified_real_places() != other.ramified_real_places():
-                return False
-            if self.ramified_nondyadic_places() != other.ramified_nondyadic_places():
-                return False
-            if self.ramified_dyadic_places() != other.ramified_dyadic_places():
-                return False
-            return True
-        if len(self.ramified_real_places()) != len(other.ramified_real_places()):
+        if self_field != other_field:
+            raise ValueError(
+                "The quaternion algebras do not appear to be defined over a common number field. They must compare as equal (==) in sage."
+            )
+        if self.ramified_real_places() != other.ramified_real_places():
             return False
-        if (
-            self._ramified_nondyadic_places_known
-            and other._ramified_nondyadic_places_known
-        ):
-            if (
-                self.ramified_nondyadic_residue_characteristics()
-                != other.ramified_nondyadic_residue_characteristics()
-            ):
-                return False
-        if self._ramified_dyadic_places_known and other._ramified_dyadic_places_known:
-            if (
-                self.ramified_dyadic_residue_characteristics()
-                != other.ramified_dyadic_residue_characteristics()
-            ):
-                return False
-        isomorphisms = field_isomorphisms.isomorphisms_between_number_fields(
-            other_field, self_field
-        )
-        if len(isomorphisms) == 0:
+        if self.ramified_nondyadic_places() != other.ramified_nondyadic_places():
             return False
-        for isomorphism in isomorphisms:
-            a, b = [isomorphism(gen) for gen in other.invariants()]
-            if (
-                self.ramified_real_places()
-                != QuaternionAlgebraNF(self_field, a, b).ramified_real_places()
-            ):
-                continue
-            if self.ramified_nondyadic_places() != set(
-                isomorphism(place) for place in other.ramified_nondyadic_places()
-            ):
-                continue
-            if self.ramified_dyadic_places() != set(
-                isomorphism(place) for place in other.ramified_dyadic_places()
-            ):
-                continue
-            return True
+        if self.ramified_dyadic_places() != other.ramified_dyadic_places():
+            return False
+        return True
+
+    def same_ramification_via_isomorphism(self, other, isomorphism):
+        """
+        Given two QuaternionAlgebraNFs and an isomorphism between their base fields,
+        this function returns whether the two quaternion algebras are isomorphic once
+        they're thought of over a common field. That is, if A is a K-algebra and B is an
+        L-algebra, then an isomorphism K->L lets us think of A as an L-algebra and makes
+        isomorphism a well-posed question.
+
+        The isomorphism should go from self.base_ring() to other.base_ring().
+
+        The simplest approach is to just create a new quaternion algebra from the
+        isomorphism. This will work, but it will cause all the ramification to be
+        recomputed, including the potentially expensive dyadic places, so instead we
+        use the field isomorphism to move the ramification. We also check to see whether
+        there are any obvious obstructions to becoming isomorphic such as different
+        numbers of ramified places above some rational or infinite place.
+        """
+        self_field = self.base_ring()
+        other_field = other.base_ring()
+        if isomorphism.domain() != self_field or isomorphism.codomain() != other_field:
+            raise ValueError(
+                f"""The isomorphism does not appear to have correct domain and codomain.
+                Domain: expected {self.base_ring()} got {isomorphism.domain()}.
+                Codomain: expected {other.base_ring()} got {isomorphism.codomain()}."""
+            )
+        new_QA = self.new_QA_via_field_isomorphism(isomorphism)
+        return new_QA.is_isomorphic(other)
 
     def ramification_string(
         self,

@@ -13,6 +13,7 @@ import functools
 from collections import namedtuple
 
 import snappy
+from sage.all import log
 
 from . import (
     QuaternionAlgebraNF,
@@ -53,13 +54,6 @@ class ManifoldNT:
     def __init__(
         self,
         spec=None,
-        delay_computations=False,
-        default_starting_prec=1000,
-        default_starting_degree=10,
-        default_max_prec=5 * 10 ** 5,
-        default_max_degree=100,
-        default_prec_increment=5000,
-        default_degree_increment=5,
     ):
         """
         It's worth noting that we store a lot of attributes here. The reason is that a
@@ -78,12 +72,6 @@ class ManifoldNT:
         self._snappy_mfld = snappy.Manifold(spec)
         # The fields are sage NumberField objects with a *monic* generating polynomial.
         # Perhaps subclass Sage's NumberField to store all this info?
-        self.default_starting_prec = default_starting_prec
-        self.default_starting_degree = default_starting_degree
-        self.default_max_prec = default_max_prec
-        self.default_max_degree = default_max_degree
-        self.default_prec_increment = default_prec_increment
-        self.default_degree_increment = default_degree_increment
         self._trace_field = None
         self._trace_field_numerical_root = None
         self._trace_field_generators = None
@@ -110,6 +98,7 @@ class ManifoldNT:
         self._approx_invariant_trace_field_gens = (
             self._snappy_mfld.invariant_trace_field_gens()
         )
+        """
         if not delay_computations:
             func = functools.partial(
                 self.compute_arithmetic_invariants, _return_flag=True
@@ -118,6 +107,7 @@ class ManifoldNT:
                 func, self.make_prec_degree_generator(), fail_value=False
             )
             self.denominators()
+        """
 
     def __getattr__(self, attr):
         return getattr(self._snappy_mfld, attr)
@@ -151,7 +141,17 @@ class ManifoldNT:
             self._snappy_mfld.invariant_trace_field_gens()
         )
 
-    def next_prec_and_degree(self, invariant):
+    def defining_function(self, prec):
+        return snappy.snap.polished_holonomy(self, bits_prec=prec)
+
+    def next_prec_and_degree(
+        self,
+        invariant,
+        starting_prec=1000,
+        starting_degree=10,
+        prec_increment=5000,
+        degree_increment=5,
+    ):
         """
         This method allows us to move the logic of what the next degree and precision
         to attempt is. This might be an evolving function over time. As of Sept-24
@@ -177,9 +177,7 @@ class ManifoldNT:
         record = self._dict_of_prec_records[invariant]
         if invariant == "trace field" or invariant == "invariant trace field":
             if not record:
-                return PrecDegreeTuple(
-                    self.default_starting_prec, self.default_starting_degree
-                )
+                return PrecDegreeTuple(starting_prec, starting_degree)
             if True in record.values():
                 smallest_successful_prec = min(
                     [pair.prec for pair in record if record[pair]]
@@ -200,8 +198,8 @@ class ManifoldNT:
                     [pair.degree for pair in record if not record[pair]]
                 )
                 newpair = PrecDegreeTuple(
-                    largest_failed_prec + self.default_prec_increment,
-                    largest_failed_degree + self.default_degree_increment,
+                    largest_failed_prec + prec_increment,
+                    largest_failed_degree + degree_increment,
                 )
             return newpair
         if (
@@ -224,39 +222,27 @@ class ManifoldNT:
                     largest_failed_prec = max(
                         [prec for prec in record if not record[prec]]
                     )
-                    return max(
-                        largest_failed_prec + self.default_prec_increment, field_prec
-                    )
+                    return max(largest_failed_prec + prec_increment, field_prec)
 
-    def has_two_torsion_in_homology(self):
+    def homology_two_rank(self):
         """
-        Returns True if there is two-torsion in homology and False if not. This doesn't
-        really need arbitrary precision, but it hopefully makes some other code
-        cleaner.
-
-        Obviously this basically factors an integer to check if it's even, which is not
-        really optimal, so we should do something about this at some point.
+        Returns the number of Z/2Z factors in the first homology group.
         """
         homology = self.homology()
         elementary_divisors = homology.elementary_divisors()
-        elementary_divisors = [
-            divisor for divisor in elementary_divisors if divisor != 0
-        ]
-        for divisor in elementary_divisors:
-            if divisor % 2 == 0:
-                return True
-        return False
-
-    def defining_function(self, prec):
-        return snappy.snap.polished_holonomy(self, bits_prec=prec)
+        two_factor = [
+            divisor
+            for divisor in elementary_divisors
+            if divisor != 0 and divisor % 2 == 0
+        ][
+            0
+        ]  # Is there a slicker way?
+        return log(two_factor, 2)
 
     def trace_field(
         self,
         prec=None,
         degree=None,
-        be_smart=True,
-        verbosity=False,
-        _force_compute=False,
     ):
         """
         If be_smart is False, the function just tries to compute the trace field using
@@ -286,38 +272,12 @@ class ManifoldNT:
 
         Last updated: Sept-24 2020
         """
-        if prec is None:
-            prec = self.default_starting_prec
-        if degree is None:
-            degree = self.default_starting_degree
-        if self._trace_field and not _force_compute:
+        if self._trace_field and prec is None and degree is None:
             return self._trace_field
-        if be_smart:
-            prec, degree = self.next_prec_and_degree("trace field")
-            if self._invariant_trace_field:
-                itf_deg = self._invariant_trace_field.degree()
-                if not self.has_two_torsion_in_homology():
-                    self._trace_field_numerical_root = (
-                        self._invariant_trace_field_numerical_root
-                    )
-                    self._trace_field = self._invariant_trace_field
-                    self._trace_field_generators = (
-                        self._invariant_trace_field_generators
-                    )
-                    if verbosity:
-                        print(
-                            "Found invariant trace field and no 2-torsion in homology."
-                        )
-                    if not _force_compute:
-                        return self._trace_field
-                    degree = self._invariant_trace_field.degree()
-                else:
-                    if degree < 2 * itf_deg:
-                        degree = 2 * itf_deg
-        if verbosity:
-            print(
-                f"Trying to compute trace field with precision={prec} and degree={degree}."
-            )
+        if prec is None:
+            prec = self.next_prec_and_degree("trace field")["prec"]
+        if degree is None:
+            degree = self.next_prec_and_degree("trace field")["degree"]
         exact_field_data = self._approx_trace_field_gens.find_field(
             prec=prec, degree=degree, optimize=True
         )
@@ -327,23 +287,17 @@ class ManifoldNT:
             exact_field_data
         )
         if exact_field_data is not None:
-            if verbosity:
-                print("\tTrace field found.")
             self._trace_field = exact_field_data[0]
             self._trace_field_numerical_root = exact_field_data[1]  # An AAN
             self._trace_field_generators = exact_field_data[2]
         else:
-            if verbosity:
-                print("\tTrace field not found.")
+            return None
         return self._trace_field
 
     def invariant_trace_field(
         self,
         prec=None,
         degree=None,
-        be_smart=True,
-        verbosity=False,
-        _force_compute=False,
     ):
         """
         This now should work similarly to compute_trace_field method. There is of
@@ -352,41 +306,12 @@ class ManifoldNT:
         2-torsion in homology, then the fields are the same.
         Last updated: Aug-29 2020
         """
-        if prec is None:
-            prec = self.default_starting_prec
-        if degree is None:
-            degree = self.default_starting_degree
-        if self._invariant_trace_field and not _force_compute:
+        if self._invariant_trace_field and prec is None and degree is None:
             return self._invariant_trace_field
-        if be_smart:
-            prec, degree = self.next_prec_and_degree("invariant trace field")
-            if self._trace_field:
-                tf_deg = self._trace_field.degree()
-                if (
-                    not self.has_two_torsion_in_homology()
-                    or self._trace_field.degree() % 2 == 1
-                ):
-                    self._invariant_trace_field = self._trace_field
-                    self._invariant_trace_field_numerical_root = (
-                        self._trace_field_numerical_root
-                    )
-                    self._invariant_trace_field_generators = (
-                        self._trace_field_generators
-                    )
-                    if verbosity:
-                        print(
-                            "Found trace field, and it conincides with invariant trace field."
-                        )
-                    if not _force_compute:
-                        return self._invariant_trace_field
-                    degree = self._invariant_trace_field.degree()
-                else:
-                    if degree >= tf_deg:
-                        degree = tf_deg
-        if verbosity:
-            print(
-                f"Trying to compute invariant trace field with precision={prec} and degree={degree}."
-            )
+        if prec is None:
+            prec = self.next_prec_and_degree("invariant trace field")["prec"]
+        if degree is None:
+            degree = self.next_prec_and_degree("invariant trace field")["degree"]
         exact_field_data = self._approx_invariant_trace_field_gens.find_field(
             prec=prec, degree=degree, optimize=True
         )
@@ -394,14 +319,11 @@ class ManifoldNT:
             exact_field_data
         )
         if exact_field_data is not None:
-            if verbosity:
-                print("\tInvariant trace field found.")
             self._invariant_trace_field = exact_field_data[0]
             self._invariant_trace_field_numerical_root = exact_field_data[1]  # An AAN
             self._invariant_trace_field_generators = exact_field_data[2]
         else:
-            if verbosity:
-                print("\tInvariant trace field not found.")
+            return None
         return self._invariant_trace_field
 
     def approximate_trace(self, word):
@@ -455,10 +377,6 @@ class ManifoldNT:
     def quaternion_algebra(
         self,
         prec=None,
-        be_smart=True,
-        verbosity=False,
-        _force_compute=False,
-        **kwargs,
     ):
         """
         This method won't try to compute the trace field if it isn't known. The
@@ -486,21 +404,14 @@ class ManifoldNT:
 
         For now though most everything is a ManifoldNT method.
         """
-        if prec is None:
-            prec = self.default_starting_prec
-        if self._quaternion_algebra and not _force_compute:
+        if self._quaternion_algebra and prec is None:
             return self._quaternion_algebra
-        if not self._trace_field:
-            if verbosity:
-                failure_message = (
-                    "Trace field not known. It can be computed with the"
-                    "compute_trace_field method. It's possible that one needs high"
-                    "precision or degree to find the field, though."
-                )
-                print(failure_message)
-            return None
-        if be_smart:
+        if prec is None:
             prec = self.next_prec_and_degree("quaternion algebra")
+        if not self._trace_field:
+            self._trace_field = self.trace_field(prec=prec)
+            if self._trace_field is None:
+                return None
         primitive_element = self._trace_field_numerical_root  # An AAN
         epsilon_coefficient = 10
         while True:
@@ -519,12 +430,8 @@ class ManifoldNT:
                 break
         self._quaternion_algebra_prec_record[prec] = bool(first_entry and second_entry)
         if first_entry is None or second_entry is None:
-            if verbosity:
-                print("Failed to find quaternion algebra.")
             return None
         else:
-            if verbosity:
-                print("Found quaternion algebra.")
             first_entry, second_entry = first_entry(
                 self._trace_field.gen()
             ), second_entry(self._trace_field.gen())

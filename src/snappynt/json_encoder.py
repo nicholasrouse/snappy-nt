@@ -358,7 +358,7 @@ def dict_to_manifold(d):
     break things if one day we decide that the residue characteristics don't belong in
     the JSON object.
     """
-    mfld = ManifoldNT.ManifoldNT(d["name"], delay_computations=True)
+    mfld = ManifoldNT.ManifoldNT(d["name"])
     quaternion_algebra = dict_to_quaternion_algebra(d["quaternion algebra"])
     invariant_quaternion_algebra = dict_to_quaternion_algebra(
         d["invariant quaternion algebra"]

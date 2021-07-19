@@ -415,7 +415,7 @@ class ManifoldNT:
         Last updated: Aug-29 2020
         """
         (word1, word2) = irreducible_subgroups.find_hilbert_symbol_words(
-            self.defining_function(prec=self.default_starting_prec),
+            self.defining_function(prec=5000),
             power=power,
             epsilon_coefficient=epsilon_coefficient,
         )
@@ -656,7 +656,9 @@ class ManifoldNT:
             self.next_prec_and_degree("trace field").prec if prec is None else prec
         )
         tf_degree = (
-            self.next_prec_and_degree("degree").degree if degree is None else degree
+            self.next_prec_and_degree("trace field").degree
+            if degree is None
+            else degree
         )
         itf_prec = (
             self.next_prec_and_degree("invariant trace field").prec
@@ -824,7 +826,9 @@ class ManifoldNT:
         elif not self_field.is_isomorphic(other_field):
             return False
         else:
-            if len(self_qa.ramified_real_places() != other_qa.ramified_real_places()):
+            if len(self_qa.ramified_real_places()) != len(
+                other_qa.ramified_real_places()
+            ):
                 return False
             elif (
                 self_qa.ramified_residue_characteristics()
@@ -838,9 +842,9 @@ class ManifoldNT:
                     else self._invariant_trace_field_numerical_root
                 )
                 old_anchor = (
-                    other._trace_field_gens
+                    other._trace_field_generators
                     if not _invariant_qa
-                    else other._invariant_trace_field_gens
+                    else other._invariant_trace_field_generators
                 )
                 approx_gens = (
                     other._approx_trace_field_gens
@@ -883,7 +887,7 @@ class ManifoldNT:
             return False
         else:
             primitive_element = self._trace_field_numerical_root
-            old_anchor = other._trace_field_gens
+            old_anchor = other._trace_field_generators
             new_anchor = [
                 primitive_element.express(gen) for gen in other._approx_trace_field_gens
             ]

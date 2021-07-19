@@ -15,7 +15,16 @@ since JSON is human readable, we include some extra information for quick refere
 import json
 from collections import Counter
 
-from sage.all import CC, QQ, ZZ, NumberField, PolynomialRing, RealField, radical
+from sage.all import (
+    CC,
+    QQ,
+    ZZ,
+    ComplexField,
+    NumberField,
+    PolynomialRing,
+    RealField,
+    radical,
+)
 from sage.rings.number_field.number_field import is_NumberField
 from snappy.snap.find_field import ExactAlgebraicNumber
 
@@ -372,11 +381,11 @@ def dict_to_manifold(d):
     mfld._trace_field, mfld._invariant_trace_field = trace_field, invariant_trace_field
     if mfld._trace_field is not None:
         poly = mfld._trace_field.defining_polynomial()
-        root = mfld._trace_field.gen_embedding()
+        root = ComplexField(100)(mfld._trace_field.gen_embedding())
         mfld._trace_field_numerical_root = ExactAlgebraicNumber(poly, root)
     if mfld._invariant_trace_field is not None:
         poly = mfld._invariant_trace_field.defining_polynomial()
-        root = mfld._invariant_trace_field.gen_embedding()
+        root = ComplexField(100)(mfld._invariant_trace_field.gen_embedding())
         mfld._invariant_trace_field_numerical_root = ExactAlgebraicNumber(poly, root)
     mfld._quaternion_algebra, mfld._invariant_quaternion_algebra = (
         quaternion_algebra,

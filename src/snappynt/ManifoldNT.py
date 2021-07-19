@@ -841,16 +841,17 @@ class ManifoldNT:
                     if not _invariant_qa
                     else self._invariant_trace_field_numerical_root
                 )
-                old_anchor = (
-                    other._trace_field_generators
+                old_prim_elt = (
+                    other._trace_field_numerical_root
                     if not _invariant_qa
-                    else other._invariant_trace_field_generators
+                    else other._invariant_trace_field_numerical_root
                 )
                 approx_gens = (
                     other._approx_trace_field_gens
                     if not _invariant_qa
                     else other._approx_invariant_trace_field_gens
                 )
+                old_anchor = [old_prim_elt.express(gen) for gen in approx_gens]
                 new_anchor = [primitive_element.express(gen) for gen in approx_gens]
                 special_iso = field_isomorphisms.special_isomorphism(
                     self_field,
@@ -887,7 +888,10 @@ class ManifoldNT:
             return False
         else:
             primitive_element = self._trace_field_numerical_root
-            old_anchor = other._trace_field_generators
+            old_prim_elt = other._trace_field_numerical_root
+            old_anchor = [
+                old_prim_elt.express(gen) for gen in other._approx_trace_field_gens
+            ]
             new_anchor = [
                 primitive_element.express(gen) for gen in other._approx_trace_field_gens
             ]

@@ -17,6 +17,7 @@ from collections import Counter
 
 from sage.all import CC, QQ, ZZ, NumberField, PolynomialRing, RealField, radical
 from sage.rings.number_field.number_field import is_NumberField
+from snappy.snap.find_field import ExactAlgebraicNumber
 
 from . import ManifoldNT, QuaternionAlgebraNF
 
@@ -369,6 +370,14 @@ def dict_to_manifold(d):
         trace_field.ideal(fix_ideal_string(s)) for s in d["denominators"]["ideals"]
     }
     mfld._trace_field, mfld._invariant_trace_field = trace_field, invariant_trace_field
+    if mfld._trace_field is not None:
+        poly = mfld._trace_field.defining_polynomial()
+        root = mfld._trace_field.gen_embedding()
+        mfld._trace_field_numerical_root = ExactAlgebraicNumber(poly, root)
+    if mfld._invariant_trace_field is not None:
+        poly = mfld._invariant_trace_field.defining_polynomial()
+        root = mfld._invariant_trace_field.gen_embedding()
+        mfld._invariant_trace_field_numerical_root = ExactAlgebraicNumber(poly, root)
     mfld._quaternion_algebra, mfld._invariant_quaternion_algebra = (
         quaternion_algebra,
         invariant_quaternion_algebra,
@@ -387,7 +396,7 @@ class ManifoldNT_Decoder(json.JSONDecoder):
 
     @nested_decoder
     def decode(self, text):
-        decoded_text = json.JSONDecoder().decode(text)
+        decoded_text = json.JSONDecoder().decode(text)[0]
         mfld = dict_to_manifold(decoded_text)
         return mfld
 

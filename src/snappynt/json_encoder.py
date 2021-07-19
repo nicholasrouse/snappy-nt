@@ -396,7 +396,7 @@ class ManifoldNT_Decoder(json.JSONDecoder):
 
     @nested_decoder
     def decode(self, text):
-        decoded_text = json.JSONDecoder().decode(text)[0]
+        decoded_text = json.JSONDecoder().decode(text)
         mfld = dict_to_manifold(decoded_text)
         return mfld
 

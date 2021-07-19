@@ -2,22 +2,25 @@ from paths import convert_rel_to_abs
 from sage.all import NumberField, var
 
 import snappynt.database as database
-import snappynt.ManifoldAP as ManifoldAP
+import snappynt.ManifoldNT as ManifoldNT
 
 
 def compare_against_database(filename):
     """
-    Given a filename, we load a ManifoldAPDatabase using that filename, then compare its
+    Given a filename, we load a ManifoldNTDatabase using that filename, then compare its
     contents to those obtained by computing the invariants from scratch. The returned
     value is a dictionary whose keys are the manifolds and whose values booleans
     indicating whether the computed invariants are expected.
     """
     differences_dict = dict()
-    with database.ManifoldAPDatabase(filename) as db:
+    with database.ManifoldNTDatabase(filename) as db:
         for dbmfld_name in db:
             dbmfld = db[dbmfld_name]
-            new_mfld = ManifoldAP.ManifoldAP(str(dbmfld))
-            differences_dict[str(dbmfld)] = dbmfld.compare_arithmetic_invariants(
+            new_mfld = ManifoldNT.ManifoldNT(str(dbmfld))
+            for _ in range(4):
+                if not new_mfld._arithmetic_invariants_known():
+                    new_mfld.compute_arithmetic_invariants()
+            differences_dict[str(dbmfld)] = dbmfld.has_same_arithmetic_invariants(
                 new_mfld
             )
     return differences_dict
@@ -28,7 +31,7 @@ def agrees_with_database(filename):
 
 
 def test_fig8_field():
-    mfld = ManifoldAP.ManifoldAP("4_1")
+    mfld = ManifoldNT.ManifoldNT("4_1")
     tf = mfld.trace_field()
     x = var(tf.defining_polynomial().variable_name())
     field = NumberField(x ** 2 + 3, "z")

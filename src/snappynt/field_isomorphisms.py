@@ -65,6 +65,35 @@ def isomorphisms_between_number_fields(domain_field, codomain_field):
     return iso_list
 
 
+def special_isomorphism(domain_field, codomain_field, domain_anchors, codomain_anchors):
+    """
+    Given isomorphic NumberFields and an element of each one (the anchors), returns the
+    isomorphism that takes one anchor to the other, or returns set() if there is no such
+    isomorphism. The anchors can be iterables
+
+    There are some corner cases to be cautious of, particularly when the anchors are
+    Galois conjugates of each other.
+    """
+    try:
+        iter(domain_anchors)
+    except TypeError:
+        domain_anchors = [domain_anchors]
+    try:
+        iter(codomain_anchors)
+    except TypeError:
+        codomain_anchors = [codomain_anchors]
+    isos = isomorphisms_between_number_fields(domain_field, codomain_field)
+    special_isos = list()
+    for iso in isos:
+        if set(iso(elt) for elt in domain_anchors) == set(
+            iso(elt) for elt in codomain_anchors
+        ):
+            special_isos += iso
+    if len(special_isos) != 1:
+        raise RuntimeError("Did not find a unique isomorphism.")
+    return special_isos[0]
+
+
 def canonical_embedding(field_with_embedding):
     """
     It seems sage doesn't have a built-in way to get this map.

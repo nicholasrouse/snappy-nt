@@ -9,11 +9,10 @@ Things to consider:
 """
 
 
-import functools
 from collections import namedtuple
 
 import snappy
-from sage.all import log
+from sage.all import ZZ, log
 
 from . import (
     QuaternionAlgebraNF,
@@ -95,9 +94,12 @@ class ManifoldNT:
         self._denominator_residue_characteristics = None
         # This sometimes raises exceptions, but it happens in SnapPy itself.
         self._approx_trace_field_gens = self._snappy_mfld.trace_field_gens()
-        self._approx_invariant_trace_field_gens = (
-            self._snappy_mfld.invariant_trace_field_gens()
-        )
+        if self.homology_two_rank() == 0:
+            self._approx_invariant_trace_field_gens = self._approx_trace_field_gens
+        else:
+            self._approx_invariant_trace_field_gens = (
+                self._snappy_mfld.invariant_trace_field_gens()
+            )
         """
         if not delay_computations:
             func = functools.partial(
@@ -141,6 +143,20 @@ class ManifoldNT:
             self._snappy_mfld.invariant_trace_field_gens()
         )
 
+    def _arithmetic_invariants_known(self):
+        basic_invariants_known = all(
+            [
+                self._trace_field,
+                self._invariant_trace_field,
+                self._quaternion_algebra,
+                self._invariant_quaternion_algebra,
+            ]
+        )
+        denominators_known = (
+            self._denominators is not None
+        )  # Denominators are allowed to be set(), and bool(set()) == False.
+        return basic_invariants_known and denominators_known
+
     def defining_function(self, prec):
         return snappy.snap.polished_holonomy(self, bits_prec=prec)
 
@@ -148,7 +164,7 @@ class ManifoldNT:
         self,
         invariant,
         starting_prec=1000,
-        starting_degree=10,
+        starting_degree=20,
         prec_increment=5000,
         degree_increment=5,
     ):
@@ -157,7 +173,7 @@ class ManifoldNT:
         to attempt is. This might be an evolving function over time. As of Sept-24
         2020, it just takes the highest failed precision and degree pair and increases
         them by the default increment. It's returned as a named 2-tuple (prec, degree)
-        for fields a named 1-tuple (prec) for the algebras.
+        for fields an integer (i.e. not a namedtuple) for the algebras.
 
         An assumption I'm going to make is that we want to try to compute the algebras
         with at least as much pecision as we needed for the fields. We have to return
@@ -176,7 +192,7 @@ class ManifoldNT:
         invariant = fix_names(invariant)
         record = self._dict_of_prec_records[invariant]
         if invariant == "trace field" or invariant == "invariant trace field":
-            if not record:
+            if record == dict():
                 return PrecDegreeTuple(starting_prec, starting_degree)
             if True in record.values():
                 smallest_successful_prec = min(
@@ -189,8 +205,6 @@ class ManifoldNT:
                     smallest_successful_prec, smallest_successful_degree
                 )
             else:
-                # Given the logic so far, checking if not record[pair] is superfluous here, but
-                # I think it's better to leave it as is in case things change later.
                 largest_failed_prec = max(
                     [pair.prec for pair in record if not record[pair]]
                 )
@@ -201,6 +215,34 @@ class ManifoldNT:
                     largest_failed_prec + prec_increment,
                     largest_failed_degree + degree_increment,
                 )
+                if (
+                    invariant == "trace field"
+                    and self._invariant_trace_field is not None
+                ):
+                    v = ZZ.valuation(2)
+                    biggest_valuation = min(
+                        v(self.homology_two_rank()),
+                        v(self._invariant_trace_field.degree()),
+                    )
+                    possible_degrees = [
+                        self._invariant_trace_field.degree() / k
+                        for k in (2 ** j for j in range(biggest_valuation + 1))
+                    ]
+                    newpair.degree = max(
+                        deg for deg in possible_degrees if deg < newpair.degree
+                    )
+                if (
+                    invariant == "invariant trace field"
+                    and self._trace_field is not None
+                ):
+                    v = ZZ.valuation(2)
+                    possible_degrees = [
+                        self._trace_field.degree() * k
+                        for k in (2 ** j for j in range(self.homology_two_rank() + 1))
+                    ]
+                    newpair.degree = max(
+                        deg for deg in possible_degrees if deg < newpair.degree
+                    )
             return newpair
         if (
             invariant == "quaternion algebra"
@@ -211,8 +253,7 @@ class ManifoldNT:
                 if invariant == "quaternion algebra"
                 else "invariant trace field"
             )
-            field_prec_deg = self.next_prec_and_degree(field)
-            field_prec = field_prec_deg.prec
+            field_prec = self.next_prec_and_degree(field).prec
             if not record:
                 return field_prec
             else:
@@ -234,9 +275,7 @@ class ManifoldNT:
             divisor
             for divisor in elementary_divisors
             if divisor != 0 and divisor % 2 == 0
-        ][
-            0
-        ]  # Is there a slicker way?
+        ].pop()
         return log(two_factor, 2)
 
     def trace_field(
@@ -275,9 +314,9 @@ class ManifoldNT:
         if self._trace_field and prec is None and degree is None:
             return self._trace_field
         if prec is None:
-            prec = self.next_prec_and_degree("trace field")["prec"]
+            prec = self.next_prec_and_degree("trace field").prec
         if degree is None:
-            degree = self.next_prec_and_degree("trace field")["degree"]
+            degree = self.next_prec_and_degree("trace field").degree
         exact_field_data = self._approx_trace_field_gens.find_field(
             prec=prec, degree=degree, optimize=True
         )
@@ -290,6 +329,13 @@ class ManifoldNT:
             self._trace_field = exact_field_data[0]
             self._trace_field_numerical_root = exact_field_data[1]  # An AAN
             self._trace_field_generators = exact_field_data[2]
+            if self._invariant_trace_field is None and self.homology_two_rank() == 0:
+                self._invariant_trace_field_prec_record[
+                    PrecDegreeTuple(prec, degree)
+                ] = True
+                self._invariant_trace_field = exact_field_data[0]
+                self._invariant_trace_field_numerical_root = exact_field_data[1]
+                self._invariant_trace_field_generators = exact_field_data[2]
         else:
             return None
         return self._trace_field
@@ -309,9 +355,9 @@ class ManifoldNT:
         if self._invariant_trace_field and prec is None and degree is None:
             return self._invariant_trace_field
         if prec is None:
-            prec = self.next_prec_and_degree("invariant trace field")["prec"]
+            prec = self.next_prec_and_degree("invariant trace field").prec
         if degree is None:
-            degree = self.next_prec_and_degree("invariant trace field")["degree"]
+            degree = self.next_prec_and_degree("invariant trace field").degree
         exact_field_data = self._approx_invariant_trace_field_gens.find_field(
             prec=prec, degree=degree, optimize=True
         )
@@ -322,6 +368,11 @@ class ManifoldNT:
             self._invariant_trace_field = exact_field_data[0]
             self._invariant_trace_field_numerical_root = exact_field_data[1]  # An AAN
             self._invariant_trace_field_generators = exact_field_data[2]
+            if self._trace_field is None and self.homology_two_rank() == 0:
+                self._trace_field_prec_record[PrecDegreeTuple(prec, degree)] = True
+                self._trace_field = exact_field_data[0]
+                self._trace_field_numerical_root = exact_field_data[1]
+                self._trace_field_generators = exact_field_data[2]
         else:
             return None
         return self._invariant_trace_field
@@ -415,7 +466,6 @@ class ManifoldNT:
         primitive_element = self._trace_field_numerical_root  # An AAN
         epsilon_coefficient = 10
         while True:
-
             (
                 approx_first_entry,
                 approx_second_entry,
@@ -442,37 +492,21 @@ class ManifoldNT:
             )
         return self._quaternion_algebra
 
-    def invariant_quaternion_algebra(
-        self,
-        prec=None,
-        be_smart=True,
-        verbosity=False,
-        _force_compute=False,
-        **kwargs,
-    ):
+    def invariant_quaternion_algebra(self, prec=None):
         """
         See docstring for compute_quaterion_algebra_fixed_prec. Should try to refactor this
         somehow since it's so similar to the one for the noninvariant quaternion algebra.
 
         Last updated: Aug-29 2020
         """
-        if prec is None:
-            prec = self.default_starting_prec
-        if self._invariant_quaternion_algebra and not _force_compute:
+        if self._invariant_quaternion_algebra and prec is None:
             return self._invariant_quaternion_algebra
-        if not self._invariant_trace_field:
-            if verbosity:
-                failure_message = (
-                    "Invariant trace field not known. It can be "
-                    "computed with the compute_invariant_trace_field method. It's "
-                    "possible that one needs high precision or degree to find the field, "
-                    "though."
-                )
-                print(failure_message)
-            return None
-        if be_smart:
+        if prec is None:
             prec = self.next_prec_and_degree("invariant quaternion algebra")
-        # degree = self._invariant_trace_field.degree()
+        if not self._invariant_trace_field:
+            self._invariant_trace_field = self.invariant_trace_field(prec=prec)
+            if self._invariant_trace_field is None:
+                return None
         primitive_element = self._invariant_trace_field_numerical_root  # An AAN
         epsilon_coefficient = 10
         while True:
@@ -484,16 +518,6 @@ class ManifoldNT:
             )
             first_entry = primitive_element.express(approx_first_entry, prec=prec)
             second_entry = primitive_element.express(approx_second_entry, prec=prec)
-            if verbosity:
-                print(
-                    "epsilon_coefficient=",
-                    epsilon_coefficient,
-                    "\nfirst_entry=",
-                    first_entry,
-                    "\nsecond_entry=",
-                    second_entry,
-                )
-                print(first_entry == self.invariant_trace_field(0))
             if first_entry == 0 or second_entry == 0:
                 epsilon_coefficient *= 10
             else:
@@ -502,12 +526,8 @@ class ManifoldNT:
             first_entry and second_entry
         )
         if first_entry is None or second_entry is None:
-            if verbosity:
-                print("Failed to find invariant quaternion algebra.")
             return None
         else:
-            if verbosity:
-                print("Found invariant quaternion algebra.")
             first_entry, second_entry = first_entry(
                 self._invariant_trace_field.gen()
             ), second_entry(self._invariant_trace_field.gen())
@@ -518,8 +538,9 @@ class ManifoldNT:
                     second_entry,
                 )
             )
+        return self._invariant_quaternion_algebra
 
-    def denominators(self, verbosity=False, **kwargs):
+    def denominators(self):
         """
         This function incidentally computes the residue characteristics of the
         denominators for easy access later.
@@ -534,15 +555,7 @@ class ManifoldNT:
         """
         if self._denominators or self._denominators == set():
             return self._denominators
-        if not self._trace_field_generators:
-            if verbosity:
-                failure_message = (
-                    "Generators for the (noninvariant) trace field are not known. "
-                    "They can be computed using the trace_field method, but "
-                    "make sure to use _force_compute=True to make sure the generators "
-                    "are found."
-                )
-                print(failure_message)
+        if self.trace_field() is None:
             return None
         denominator_ideals = {
             element.denominator_ideal() for element in self._trace_field_generators
@@ -559,7 +572,7 @@ class ManifoldNT:
         )
         return prime_ideals
 
-    def denominator_residue_characteristics(self, verbosity=False, **kwargs):
+    def denominator_residue_characteristics(self):
         if self._denominators is None:
             self.denominators()
         if self._denominator_residue_characteristics is None:
@@ -578,9 +591,6 @@ class ManifoldNT:
         degree_increment=None,
         max_prec=None,
         max_degree=None,
-        be_smart=True,
-        verbosity=False,
-        _force_compute=False,
     ):
         """
         This makes a generator the output of which can be passed into some functions to
@@ -614,9 +624,6 @@ class ManifoldNT:
             yield {
                 "prec": prec,
                 "degree": degree,
-                "be_smart": be_smart,
-                "verbosity": verbosity,
-                "_force_compute": _force_compute,
             }
             while prec < max_prec and degree <= max_degree:
                 prec = min(prec + prec_increment, max_prec)
@@ -624,9 +631,6 @@ class ManifoldNT:
                 yield {
                     "prec": prec,
                     "degree": degree,
-                    "be_smart": be_smart,
-                    "verbosity": verbosity,
-                    "_force_compute": _force_compute,
                 }
                 if prec == max_prec and degree == max_degree:
                     break
@@ -637,11 +641,6 @@ class ManifoldNT:
         self,
         prec=None,
         degree=None,
-        be_smart=True,
-        verbosity=False,
-        _force_compute=False,
-        _return_flag=False,
-        print_results=False,
     ):
         """
         This tries to compute the four basic arithmetic invariants: the two trace
@@ -651,50 +650,37 @@ class ManifoldNT:
         of the instance. Right now it's called upon creation of a ManifoldNT instance,
         but this can be disabled with a keyword argument when a ManifoldNT object is
         initialized.
-
-        Warning: if you pass _force_compute in as True, then this method will try to
-        recompute the arithmetic invariants. If you combine this with vary_precision,
-        there is a good chance the computation will spend a long time recomputing known
-        invariants.
-
-        This function returns True if all four of the main arithmetic invariants are
-        found and False if not. The reason for this is to use with try_various_precision.
-        This might be overcoupled though, so we should think about ways to deal with
-        this. This dodges the need for needing to create some partial functions, but
-        maybe that's just the answer.
         """
-        if prec is None:
-            prec = self.default_starting_prec
-        if degree is None:
-            degree = self.default_starting_degree
-        arguments = {
-            "prec": prec,
-            "degree": degree,
-            "be_smart": be_smart,
-            "verbosity": verbosity,
-        }
-        invariant_method_pairs = [
-            (self._trace_field, ManifoldNT.trace_field),
-            (self._quaternion_algebra, ManifoldNT.quaternion_algebra),
-            (self._invariant_trace_field, ManifoldNT.invariant_trace_field),
-            (
-                self._invariant_quaternion_algebra,
-                ManifoldNT.invariant_quaternion_algebra,
-            ),
-        ]
-        for (invariant, method) in invariant_method_pairs:
-            method(self, **arguments)
+        tf_prec = (
+            self.next_prec_and_degree("trace field").prec if prec is None else prec
+        )
+        tf_degree = (
+            self.next_prec_and_degree("degree").degree if degree is None else degree
+        )
+        itf_prec = (
+            self.next_prec_and_degree("invariant trace field").prec
+            if prec is None
+            else prec
+        )
+        itf_degree = (
+            self.next_prec_and_degree("invariant trace field").degree
+            if degree is None
+            else degree
+        )
+        qa_prec = (
+            self.next_prec_and_degree("quaternion algebra") if prec is None else prec
+        )
+        iqa_prec = (
+            self.next_prec_and_degree("invariant quaternion algebra")
+            if prec is None
+            else prec
+        )
+        self.trace_field(prec=tf_prec, degree=tf_degree)
+        self.invariant_trace_field(prec=itf_prec, degree=itf_degree)
+        self.quaternion_algebra(prec=qa_prec)
+        self.invariant_quaternion_algebra(prec=iqa_prec)
         if self._trace_field_generators:
-            ManifoldNT.denominators(self, **arguments)
-        if _return_flag:
-            return bool(
-                self._trace_field
-                and self._quaternion_algebra
-                and self._invariant_trace_field
-                and self._invariant_quaternion_algebra
-            )
-        if print_results:
-            self.p_arith()
+            self.denominators()
 
     def is_arithmetic(self):
         """
@@ -801,7 +787,7 @@ class ManifoldNT:
             self._snappy_mfld.invariant_trace_field_gens()
         )
 
-    def dehn_fill(self, filling_data, which_cusp=None, delay_computations=False):
+    def dehn_fill(self, filling_data, which_cusp=None):
         """
         This performs dehn surgery "in place," i.e. it doesn't return a new manifold
         but rather changes self. This, of course, necessitates recomputing all the
@@ -810,13 +796,104 @@ class ManifoldNT:
         """
         self._snappy_mfld.dehn_fill(filling_data, which_cusp=which_cusp)
         self.delete_arithmetic_invariants()
-        if not delay_computations:
-            func = functools.partial(
-                self.compute_arithmetic_invariants, _return_flag=True
+
+    def _isomorphic_quaternion_algebras(self, other, _invariant_qa=False):
+        self_field = (
+            self.trace_field() if not _invariant_qa else self.invariant_trace_field()
+        )
+        other_field = (
+            other.trace_field() if not _invariant_qa else other.invariant_trace_field()
+        )
+        self_qa = (
+            self.quaternion_algebra()
+            if not _invariant_qa
+            else self.invariant_quaternion_algebra()
+        )
+        other_qa = (
+            other.quaternion_algebra()
+            if not _invariant_qa
+            else other.invariant_quaternion_algebra()
+        )
+        if not all((self_field, other_field, self_qa, other_qa)):
+            raise RuntimeError("Trace fields or quaternion algebras not known.")
+        self_tf_wo_embedding = self_field.absolute_field(str(self_field.gen()))
+        other_tf_wo_embedding = other_field.absolute_field(str(other_field.gen()))
+        if self_tf_wo_embedding == other_tf_wo_embedding:
+            return self._quaternion_algebra.is_isomorphic(other._quaternion_algebra)
+        elif not self_field.is_isomorphic(other_field):
+            return False
+        else:
+            if len(self_qa.ramified_real_places() != other_qa.ramified_real_places()):
+                return False
+            elif (
+                self_qa.ramified_residue_characteristics()
+                != other_qa.ramified_residue_characteristics()
+            ):
+                return False
+            else:
+                primitive_element = (
+                    self._trace_field_numerical_root
+                    if not _invariant_qa
+                    else self._invariant_trace_field_numerical_root
+                )
+                old_anchor = (
+                    other._trace_field_gens
+                    if not _invariant_qa
+                    else other._invariant_trace_field_gens
+                )
+                approx_gens = (
+                    other._approx_trace_field_gens
+                    if not _invariant_qa
+                    else other._approx_invariant_trace_field_gens
+                )
+                new_anchor = [primitive_element.express(gen) for gen in approx_gens]
+                special_iso = field_isomorphisms.special_isomorphism(
+                    self_field,
+                    other_field,
+                    old_anchor,
+                    new_anchor,
+                )
+                new_QA = other_qa.new_QA_via_field_isomorphism(special_iso)
+                return self_qa.is_isomorphic(new_QA)
+
+    def _same_denominators(self, other):
+        """
+        Returns whether self and other have the same non-integral primes in their trace
+        fields. If the trace fields are isomorphic, it first has to force them into a
+        common field.
+        """
+        if not all(
+            (
+                self.denominators(),
+                other.denominators(),
+                self.trace_field(),
+                other.trace_field(),
             )
-            try_various_precision(
-                func, self.make_prec_degree_generator(), fail_value=False
+        ):
+            raise RuntimeError("Denominators not known.")
+        if (
+            self._denominator_residue_characteristics
+            != other._denominator_residue_characteristics
+        ):
+            return False
+        if self._trace_field == other._trace_field:
+            return self._denominators == other._denominators
+        elif not self._trace_field.is_isomorphic(other._trace_field):
+            return False
+        else:
+            primitive_element = self._trace_field_numerical_root
+            old_anchor = other._trace_field_gens
+            new_anchor = [
+                primitive_element.express(gen) for gen in other._approx_trace_field_gens
+            ]
+            special_iso = field_isomorphisms.special_isomorphism(
+                self._trace_field,
+                other._trace_field,
+                old_anchor,
+                new_anchor,
             )
+            new_denoms = {special_iso(ideal) for ideal in other._denominators}
+            return self._denominators == new_denoms
 
     def compare_arithmetic_invariants(self, other):
         """
@@ -834,8 +911,12 @@ class ManifoldNT:
         number fields are isomorphic and that their distinguished complex places
         conincide.
 
-        One day other might be able to be a normal Manifold from SnapPy whence we
-        compute its arithmetic invariants and compare them to self.
+        Implementation detail: This function somewhat depends on what trace field
+        generators are given because it distinguishes an between number fields by
+        checking which one takes one set of generators to another, so it depends on the
+        set of generators not e.g. containing an entire Galois orbit. In the
+        future there should probably be a more robust way of making sure the generating
+        set is not going to mess things up.
         """
         arith_dict = dict()
         arith_dict["trace field"] = field_isomorphisms.same_subfield_of_CC(
@@ -844,33 +925,13 @@ class ManifoldNT:
         arith_dict["invariant trace field"] = field_isomorphisms.same_subfield_of_CC(
             self._invariant_trace_field, other._invariant_trace_field
         )
-        if arith_dict["trace field"]:
-            arith_dict["quaternion algebra"] = self._quaternion_algebra.is_isomorphic(
-                other._quaternion_algebra
-            )
-            # This should be computed and saved when we find whether the fields are isomorphic in the first place.
-            iso = field_isomorphisms.isomorphisms_between_number_fields(
-                self._trace_field, other._trace_field
-            )[0]
-            other_denominators = {iso(ideal) for ideal in other._denominators}
-            arith_dict["denominators"] = self._denominators == other_denominators
-        else:
-            arith_dict["quaternion algebra"] = False
-            # When the trace fields differ, the convention we take is that the
-            # denominators are the same if and only both orbifolds have integral traces.
-            arith_dict["denominators"] = (
-                True
-                if (self._denominators == set() and other._denominators == set())
-                else False
-            )
-        if arith_dict["invariant trace field"]:
-            arith_dict[
-                "invariant quaternion algebra"
-            ] = self._invariant_quaternion_algebra.is_isomorphic(
-                other._invariant_quaternion_algebra
-            )
-        else:
-            arith_dict["invariant quaternion algebra"] = False
+        # We take the convention that quaternion algebras can be the same when the trace
+        # trace fields are isomorphic even if the fields come with different embeddings.
+        arith_dict["quaternion algebra"] = self._isomorphic_quaternion_algebras(other)
+        arith_dict[
+            "invariant quaternion algebra"
+        ] = self._isomorphic_quaternion_algebras(other, _invariant_qa=True)
+        arith_dict["denominators"] = self._same_denominators(other)
         return arith_dict
 
     def has_same_arithmetic_invariants(self, other):

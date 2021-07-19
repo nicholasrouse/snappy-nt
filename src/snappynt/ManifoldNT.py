@@ -275,8 +275,11 @@ class ManifoldNT:
             divisor
             for divisor in elementary_divisors
             if divisor != 0 and divisor % 2 == 0
-        ].pop()
-        return log(two_factor, 2)
+        ]
+        if len(two_factor) == 0:
+            return 0
+        else:
+            return log(two_factor[0], 2)
 
     def trace_field(
         self,
@@ -604,22 +607,20 @@ class ManifoldNT:
         initialization time unless delay_computations=True.
         """
         if starting_prec is None:
-            starting_prec = self.default_starting_prec
+            starting_prec = 10000
         if starting_degree is None:
-            starting_degree = self.default_starting_degree
+            starting_degree = 10
         if prec_increment is None:
-            prec_increment = self.default_prec_increment
+            prec_increment = 5000
         if degree_increment is None:
-            degree_increment = self.default_degree_increment
+            degree_increment = 5
         if max_prec is None:
-            max_prec = self.default_max_prec
+            max_prec = 100000
         if max_degree is None:
-            max_degree = self.default_max_degree
+            max_degree = 100
 
         def gen():
-            """
-            This can be neater perhaps?
-            """
+            # This can be neater perhaps?
             prec, degree = starting_prec, starting_degree
             yield {
                 "prec": prec,
@@ -925,8 +926,6 @@ class ManifoldNT:
         arith_dict["invariant trace field"] = field_isomorphisms.same_subfield_of_CC(
             self._invariant_trace_field, other._invariant_trace_field
         )
-        # We take the convention that quaternion algebras can be the same when the trace
-        # trace fields are isomorphic even if the fields come with different embeddings.
         arith_dict["quaternion algebra"] = self._isomorphic_quaternion_algebras(other)
         arith_dict[
             "invariant quaternion algebra"

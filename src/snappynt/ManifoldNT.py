@@ -884,15 +884,10 @@ class ManifoldNT:
         fields. If the trace fields are isomorphic, it first has to force them into a
         common field.
         """
-        if not all(
-            (
-                self.denominators(),
-                other.denominators(),
-                self.trace_field(),
-                other.trace_field(),
-            )
-        ):
-            raise RuntimeError("Denominators not known.")
+        if not all((self.trace_field(), other.trace_field())):
+            raise RuntimeError("Trace field not known.")
+        if self.denominators() is None or other.denominators() is None:
+            raise RuntimeError("Denomiantors not known.")
         if (
             self._denominator_residue_characteristics
             != other._denominator_residue_characteristics

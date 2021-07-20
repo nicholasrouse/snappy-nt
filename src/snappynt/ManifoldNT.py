@@ -298,9 +298,9 @@ class ManifoldNT:
         if self._trace_field and prec is None and degree is None:
             return self._trace_field
         if prec is None:
-            prec = self.next_prec_and_degree("trace field").prec
+            prec = self.next_prec_and_degree("tf").prec
         if degree is None:
-            degree = self.next_prec_and_degree("trace field").degree
+            degree = self.next_prec_and_degree("tf").degree
         exact_field_data = self._approx_trace_field_gens.find_field(
             prec=prec, degree=degree, optimize=True
         )
@@ -339,9 +339,9 @@ class ManifoldNT:
         if self._invariant_trace_field and prec is None and degree is None:
             return self._invariant_trace_field
         if prec is None:
-            prec = self.next_prec_and_degree("invariant trace field").prec
+            prec = self.next_prec_and_degree("itf").prec
         if degree is None:
-            degree = self.next_prec_and_degree("invariant trace field").degree
+            degree = self.next_prec_and_degree("itf").degree
         exact_field_data = self._approx_invariant_trace_field_gens.find_field(
             prec=prec, degree=degree, optimize=True
         )
@@ -442,7 +442,7 @@ class ManifoldNT:
         if self._quaternion_algebra and prec is None:
             return self._quaternion_algebra
         if prec is None:
-            prec = self.next_prec_and_degree("quaternion algebra")
+            prec = self.next_prec_and_degree("qa")
         if not self._trace_field:
             self._trace_field = self.trace_field(prec=prec)
             if self._trace_field is None:
@@ -486,7 +486,7 @@ class ManifoldNT:
         if self._invariant_quaternion_algebra and prec is None:
             return self._invariant_quaternion_algebra
         if prec is None:
-            prec = self.next_prec_and_degree("invariant quaternion algebra")
+            prec = self.next_prec_and_degree("iqa")
         if not self._invariant_trace_field:
             self._invariant_trace_field = self.invariant_trace_field(prec=prec)
             if self._invariant_trace_field is None:
@@ -633,32 +633,14 @@ class ManifoldNT:
         but this can be disabled with a keyword argument when a ManifoldNT object is
         initialized.
         """
-        tf_prec = (
-            self.next_prec_and_degree("trace field").prec if prec is None else prec
-        )
-        tf_degree = (
-            self.next_prec_and_degree("trace field").degree
-            if degree is None
-            else degree
-        )
-        itf_prec = (
-            self.next_prec_and_degree("invariant trace field").prec
-            if prec is None
-            else prec
-        )
+        tf_prec = self.next_prec_and_degree("tf").prec if prec is None else prec
+        tf_degree = self.next_prec_and_degree("tf").degree if degree is None else degree
+        itf_prec = self.next_prec_and_degree("itf").prec if prec is None else prec
         itf_degree = (
-            self.next_prec_and_degree("invariant trace field").degree
-            if degree is None
-            else degree
+            self.next_prec_and_degree("itf").degree if degree is None else degree
         )
-        qa_prec = (
-            self.next_prec_and_degree("quaternion algebra") if prec is None else prec
-        )
-        iqa_prec = (
-            self.next_prec_and_degree("invariant quaternion algebra")
-            if prec is None
-            else prec
-        )
+        qa_prec = self.next_prec_and_degree("qa") if prec is None else prec
+        iqa_prec = self.next_prec_and_degree("iqa") if prec is None else prec
         self.trace_field(prec=tf_prec, degree=tf_degree)
         self.invariant_trace_field(prec=itf_prec, degree=itf_degree)
         self.quaternion_algebra(prec=qa_prec)
@@ -810,13 +792,13 @@ class ManifoldNT:
         else:
             prec = (
                 max(
-                    self.next_prec_and_degree("quaternion algebra"),
-                    other.next_prec_and_degree("quaternion algebra"),
+                    self.next_prec_and_degree("qa"),
+                    other.next_prec_and_degree("qa"),
                 )
                 if not _invariant_qa
                 else max(
-                    self.next_prec_and_degree("invariant quaternion algebra"),
-                    other.next_prec_and_degree("invariant quaternion algebra"),
+                    self.next_prec_and_degree("iqa"),
+                    other.next_prec_and_degree("iqa"),
                 )
             )
             if len(self_qa.ramified_real_places()) != len(
@@ -880,8 +862,8 @@ class ManifoldNT:
             return False
         else:
             prec = max(
-                self.next_prec_and_degree("trace field"),
-                other.next_prec_and_degree("trace field"),
+                self.next_prec_and_degree("tf"),
+                other.next_prec_and_degree("tf"),
             )
             primitive_element = self._trace_field_numerical_root
             old_prim_elt = other._trace_field_numerical_root

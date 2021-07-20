@@ -26,7 +26,7 @@ from sage.all import (
     radical,
 )
 from sage.rings.number_field.number_field import is_NumberField
-from snappy.snap.find_field import ExactAlgebraicNumber
+from snappy.snap.find_field import ApproximateAlgebraicNumber, optimize_field_generator
 
 from . import ManifoldNT, QuaternionAlgebraNF
 
@@ -352,6 +352,25 @@ class ManifoldNT_Encoder(json.JSONEncoder):
         return d
 
 
+def _make_aan(poly, root):
+    name = str(poly.variables()[0])
+    field = NumberField(poly, name, embedding=root)
+    elt = field.gen_embedding()
+
+    def defining_func(prec):
+        return ComplexField(prec)(elt)
+
+    aan = ApproximateAlgebraicNumber(defining_func)
+    aan._min_poly = PolynomialRing(ZZ, name)(poly)
+    return aan
+
+
+def _make_ean(poly, root):
+    aan = _make_aan(poly, root)
+    ean = optimize_field_generator(aan)
+    return ean
+
+
 def dict_to_manifold(d):
     """
     For similar reason as the other dict_to functions, we have a standalone function
@@ -381,12 +400,12 @@ def dict_to_manifold(d):
     mfld._trace_field, mfld._invariant_trace_field = trace_field, invariant_trace_field
     if mfld._trace_field is not None:
         poly = mfld._trace_field.defining_polynomial()
-        root = ComplexField(100)(mfld._trace_field.gen_embedding())
-        mfld._trace_field_numerical_root = ExactAlgebraicNumber(poly, root)
+        root = mfld._trace_field.gen_embedding()
+        mfld._trace_field_numerical_root = _make_ean(poly, root)
     if mfld._invariant_trace_field is not None:
         poly = mfld._invariant_trace_field.defining_polynomial()
-        root = ComplexField(100)(mfld._invariant_trace_field.gen_embedding())
-        mfld._invariant_trace_field_numerical_root = ExactAlgebraicNumber(poly, root)
+        root = mfld._invariant_trace_field.gen_embedding()
+        mfld._invariant_trace_field_numerical_root = _make_ean(poly, root)
     mfld._quaternion_algebra, mfld._invariant_quaternion_algebra = (
         quaternion_algebra,
         invariant_quaternion_algebra,

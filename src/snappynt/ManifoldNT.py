@@ -819,6 +819,7 @@ class ManifoldNT:
         )
         if not all((self_field, other_field, self_qa, other_qa)):
             raise RuntimeError("Trace fields or quaternion algebras not known.")
+
         self_tf_wo_embedding = self_field.absolute_field(str(self_field.gen()))
         other_tf_wo_embedding = other_field.absolute_field(str(other_field.gen()))
         if self_tf_wo_embedding == other_tf_wo_embedding:
@@ -826,6 +827,17 @@ class ManifoldNT:
         elif not self_field.is_isomorphic(other_field):
             return False
         else:
+            prec = (
+                max(
+                    self.next_prec_and_degree("quaternion algebra"),
+                    other.next_prec_and_degree("quaternion algebra"),
+                )
+                if not _invariant_qa
+                else max(
+                    self.next_prec_and_degree("invariant quaternion algebra"),
+                    other.next_prec_and_degree("invariant quaternion algebra"),
+                )
+            )
             if len(self_qa.ramified_real_places()) != len(
                 other_qa.ramified_real_places()
             ):
@@ -851,8 +863,12 @@ class ManifoldNT:
                     if not _invariant_qa
                     else other._approx_invariant_trace_field_gens
                 )
-                old_anchor = [old_prim_elt.express(gen) for gen in approx_gens]
-                new_anchor = [primitive_element.express(gen) for gen in approx_gens]
+                old_anchor = [
+                    old_prim_elt.express(gen, prec=prec) for gen in approx_gens
+                ]
+                new_anchor = [
+                    primitive_element.express(gen, prec=prec) for gen in approx_gens
+                ]
                 special_iso = field_isomorphisms.special_isomorphism(
                     self_field,
                     other_field,
@@ -887,13 +903,19 @@ class ManifoldNT:
         elif not self._trace_field.is_isomorphic(other._trace_field):
             return False
         else:
+            prec = max(
+                self.next_prec_and_degree("trace field"),
+                other.next_prec_and_degree("trace field"),
+            )
             primitive_element = self._trace_field_numerical_root
             old_prim_elt = other._trace_field_numerical_root
             old_anchor = [
-                old_prim_elt.express(gen) for gen in other._approx_trace_field_gens
+                old_prim_elt.express(gen, prec=prec)
+                for gen in other._approx_trace_field_gens
             ]
             new_anchor = [
-                primitive_element.express(gen) for gen in other._approx_trace_field_gens
+                primitive_element.express(gen, prec=prec)
+                for gen in other._approx_trace_field_gens
             ]
             special_iso = field_isomorphisms.special_isomorphism(
                 self._trace_field,

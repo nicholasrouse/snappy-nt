@@ -26,13 +26,13 @@ def test_fix_names_error():
 
 def test_fig_eight_homology(fig_eight_computed):
     mfld = fig_eight_computed
-    assert mfld.homology_two_rank() == 0
+    assert not mfld._has_two_torsion_in_homology()
 
 
 def test_m010minusOneTwo_homology(m010minusOneTwo_computed):
     # Its trace field and invariant trace field are different.
     mfld = m010minusOneTwo_computed
-    assert mfld.homology_two_rank() == 1
+    assert mfld._has_two_torsion_in_homology()
 
 
 def test_str_magic_method(fig_eight_computed):

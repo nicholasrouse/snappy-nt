@@ -9,11 +9,10 @@ Things to consider:
 """
 
 
-import math
 from collections import namedtuple
 
 import snappy
-from sage.all import ZZ
+from sage.all import floor, log
 
 from . import (
     QuaternionAlgebraNF,
@@ -85,7 +84,7 @@ class ManifoldNT:
         self._denominator_residue_characteristics = None
         # This sometimes raises exceptions, but it happens in SnapPy itself.
         self._approx_trace_field_gens = self._snappy_mfld.trace_field_gens()
-        if self.homology_two_rank() == 0:
+        if not self._has_two_torsion_in_homology():
             self._approx_invariant_trace_field_gens = self._approx_trace_field_gens
         else:
             self._approx_invariant_trace_field_gens = (
@@ -180,6 +179,7 @@ class ManifoldNT:
         acceptable. See the fix_names function at the top level of the module for more
         information.
         """
+        asymptotic_ratio = prec_increment / degree_increment
         invariant = fix_names(invariant)
         record = self._dict_of_prec_records[invariant]
         if invariant == "trace field" or invariant == "invariant trace field":
@@ -210,30 +210,25 @@ class ManifoldNT:
                     invariant == "trace field"
                     and self._invariant_trace_field is not None
                 ):
-                    v = ZZ.valuation(2)
-                    biggest_valuation = min(
-                        v(self.homology_two_rank()),
-                        v(self._invariant_trace_field.degree()),
-                    )
-                    possible_degrees = [
-                        self._invariant_trace_field.degree() / k
-                        for k in (2 ** j for j in range(biggest_valuation + 1))
-                    ]
-                    newpair.degree = max(
-                        deg for deg in possible_degrees if deg < newpair.degree
-                    )
+                    if not self._has_two_torsion_in_homology():
+                        newpair.degree = self._invariant_trace_field.degree()
+                    else:
+                        implied_deg = newpair.prec * asymptotic_ratio
+                        newpair.degree = (
+                            floor(
+                                log(
+                                    implied_deg / self._invariant_trace_field.degree(),
+                                    2,
+                                )
+                            )
+                            + 1
+                        ) * self._invariant_trace_field.degree()
                 if (
                     invariant == "invariant trace field"
                     and self._trace_field is not None
                 ):
-                    v = ZZ.valuation(2)
-                    possible_degrees = [
-                        self._trace_field.degree() * k
-                        for k in (2 ** j for j in range(self.homology_two_rank() + 1))
-                    ]
-                    newpair.degree = max(
-                        deg for deg in possible_degrees if deg < newpair.degree
-                    )
+                    # This is not entirely optimal.
+                    newpair.degree = self._trace_field.degree()
             return newpair
         if (
             invariant == "quaternion algebra"
@@ -256,13 +251,13 @@ class ManifoldNT:
                     )
                     return max(largest_failed_prec + prec_increment, field_prec)
 
-    def homology_two_rank(self):
-        """
-        Returns the number of Z/2Z factors in the first homology group.
-        """
-        v = ZZ.valuation(2)
-        homology = self.homology()
-        return v(math.prod(homology.coefficients))
+    def _has_two_torsion_in_homology(self):
+        factors = [
+            divisor
+            for divisor in self.homology().coefficients
+            if divisor != 0 and divisor % 2 == 0
+        ]
+        return len(factors) >= 1
 
     def trace_field(
         self,
@@ -315,7 +310,10 @@ class ManifoldNT:
             self._trace_field = exact_field_data[0]
             self._trace_field_numerical_root = exact_field_data[1]  # An AAN
             self._trace_field_generators = exact_field_data[2]
-            if self._invariant_trace_field is None and self.homology_two_rank() == 0:
+            if (
+                self._invariant_trace_field is None
+                and not self._has_two_torsion_in_homology()
+            ):
                 self._invariant_trace_field_prec_record[
                     PrecDegreeTuple(prec, degree)
                 ] = True
@@ -354,7 +352,7 @@ class ManifoldNT:
             self._invariant_trace_field = exact_field_data[0]
             self._invariant_trace_field_numerical_root = exact_field_data[1]  # An AAN
             self._invariant_trace_field_generators = exact_field_data[2]
-            if self._trace_field is None and self.homology_two_rank() == 0:
+            if self._trace_field is None and not self._has_two_torsion_in_homology():
                 self._trace_field_prec_record[PrecDegreeTuple(prec, degree)] = True
                 self._trace_field = exact_field_data[0]
                 self._trace_field_numerical_root = exact_field_data[1]

@@ -43,11 +43,26 @@ def test_repr_magic_method(fig_eight_computed):
     assert fig_eight_computed.__repr__() == "4_1(0,0)"
 
 
+def test_eight_seventeen_trace_field():
+    mfld = ManifoldNT.ManifoldNT("8_17")
+    while mfld._trace_field is None:
+        mfld.trace_field()
+    assert mfld._trace_field.degree() == 18
+
+
 def test_eight_seventeen_computation():
     mfld = ManifoldNT.ManifoldNT("8_17")
     while not mfld._arithmetic_invariants_known():
         mfld.compute_arithmetic_invariants()
     mfld.next_prec_and_degree("trace field")
+    assert mfld._arithmetic_invariants_known()
+
+
+def test_nine_fourteen_computation():
+    # This trace field is large enough to be outside the defaults.
+    mfld = ManifoldNT.ManifoldNT("9_14")
+    while not mfld._arithmetic_invariants_known():
+        mfld.compute_arithmetic_invariants()
     assert mfld._arithmetic_invariants_known()
 
 

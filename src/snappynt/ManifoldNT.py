@@ -169,7 +169,7 @@ class ManifoldNT:
         acceptable. See the fix_names function at the top level of the module for more
         information.
         """
-        asymptotic_ratio = prec_increment / degree_increment
+        asymptotic_ratio = degree_increment / prec_increment
         invariant = fix_names(invariant)
         record = self._dict_of_prec_records[invariant]
         if invariant == "trace field" or invariant == "invariant trace field":
@@ -200,25 +200,20 @@ class ManifoldNT:
                     invariant == "trace field"
                     and self._invariant_trace_field is not None
                 ):
+                    itf_deg = self._invariant_trace_field.degree()
                     if not self._has_two_torsion_in_homology():
-                        newpair.degree = self._invariant_trace_field.degree()
+                        newpair = PrecDegreeTuple(newpair.prec, itf_deg)
                     else:
                         implied_deg = newpair.prec * asymptotic_ratio
-                        newpair.degree = (
-                            floor(
-                                log(
-                                    implied_deg / self._invariant_trace_field.degree(),
-                                    2,
-                                )
-                            )
-                            + 1
-                        ) * self._invariant_trace_field.degree()
+                        new_deg = (floor(log(implied_deg / itf_deg, 2)) + 1) * itf_deg
+                        newpair = PrecDegreeTuple(newpair.prec, new_deg)
                 if (
                     invariant == "invariant trace field"
                     and self._trace_field is not None
                 ):
                     # This is not entirely optimal.
-                    newpair.degree = self._trace_field.degree()
+                    new_deg = self._trace_field.degree()
+                    newpair = PrecDegreeTuple(newpair.prec, new_deg)
             return newpair
         if (
             invariant == "quaternion algebra"

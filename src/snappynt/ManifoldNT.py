@@ -9,10 +9,11 @@ Things to consider:
 """
 
 
+import math
 from collections import namedtuple
 
 import snappy
-from sage.all import ZZ, log
+from sage.all import ZZ
 
 from . import (
     QuaternionAlgebraNF,
@@ -257,17 +258,9 @@ class ManifoldNT:
         """
         Returns the number of Z/2Z factors in the first homology group.
         """
+        v = ZZ.valuation(2)
         homology = self.homology()
-        elementary_divisors = homology.elementary_divisors()
-        two_factor = [
-            divisor
-            for divisor in elementary_divisors
-            if divisor != 0 and divisor % 2 == 0
-        ]
-        if len(two_factor) == 0:
-            return 0
-        else:
-            return log(two_factor[0], 2)
+        return v(math.prod(homology.coefficients))
 
     def trace_field(
         self,

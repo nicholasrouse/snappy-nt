@@ -38,13 +38,13 @@ def test_fig8_field():
     assert field.is_isomorphic(tf)
 
 
-def test_knots():
+def ztest_knots():
     assert agrees_with_database(convert_rel_to_abs("data/MRKnots.json"))
 
 
-def test_cusped():
+def ztest_cusped():
     assert agrees_with_database(convert_rel_to_abs("data/MRCusped.json"))
 
 
-def test_closed():
+def ztest_closed():
     assert agrees_with_database(convert_rel_to_abs("data/MRClosed.json"))

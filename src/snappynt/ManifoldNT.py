@@ -22,18 +22,6 @@ from . import (
     misc_functions,
 )
 
-
-def try_various_precision(func, iterable, fail_value=None):
-    """
-    This should maybe be in a separate module.
-    """
-    for item in iterable:
-        return_value = func(item)
-        if return_value != fail_value:
-            break
-    return return_value
-
-
 PrecDegreeTuple = namedtuple("PrecDegreeTuple", ["prec", "degree"])
 
 

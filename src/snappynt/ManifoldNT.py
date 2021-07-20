@@ -27,7 +27,7 @@ PrecDegreeTuple = namedtuple("PrecDegreeTuple", ["prec", "degree"])
 
 
 def fix_names(name):
-    name = name.lower()
+    name = name.lower().strip()
     if name == "tf" or name == "trace field":
         return "trace field"
     elif name == "itf" or name == "invariant trace field":
@@ -36,6 +36,8 @@ def fix_names(name):
         return "quaternion algebra"
     elif name == "iqa" or name == "invariant quaternion algebra":
         return "invariant quaternion algebra"
+    else:
+        raise ValueError("Name not recognized")
 
 
 class ManifoldNT:

@@ -90,16 +90,6 @@ class ManifoldNT:
             self._approx_invariant_trace_field_gens = (
                 self._snappy_mfld.invariant_trace_field_gens()
             )
-        """
-        if not delay_computations:
-            func = functools.partial(
-                self.compute_arithmetic_invariants, _return_flag=True
-            )
-            try_various_precision(
-                func, self.make_prec_degree_generator(), fail_value=False
-            )
-            self.denominators()
-        """
 
     def __getattr__(self, attr):
         return getattr(self._snappy_mfld, attr)
@@ -566,58 +556,6 @@ class ManifoldNT:
                 denominatorsforsnappy.find_prime_factors_in_a_set(norms)
             )
         return self._denominator_residue_characteristics
-
-    def make_prec_degree_generator(
-        self,
-        starting_prec=None,
-        starting_degree=None,
-        prec_increment=None,
-        degree_increment=None,
-        max_prec=None,
-        max_degree=None,
-    ):
-        """
-        This makes a generator the output of which can be passed into some functions to
-        compute invariants. Most importantly, the generator itself can
-        be passed into the try_various_precision top level function to try several to
-        compute the invariants using different precision and degree parameters.
-        Everything should be robust enough that even passing in degrees to methods that
-        don't need them (e.g. to computing quaternion algbras) shouldn't break anything.
-
-        This function is also used together with try_various_precision at object
-        initialization time unless delay_computations=True.
-        """
-        if starting_prec is None:
-            starting_prec = 10000
-        if starting_degree is None:
-            starting_degree = 10
-        if prec_increment is None:
-            prec_increment = 5000
-        if degree_increment is None:
-            degree_increment = 5
-        if max_prec is None:
-            max_prec = 100000
-        if max_degree is None:
-            max_degree = 100
-
-        def gen():
-            # This can be neater perhaps?
-            prec, degree = starting_prec, starting_degree
-            yield {
-                "prec": prec,
-                "degree": degree,
-            }
-            while prec < max_prec and degree <= max_degree:
-                prec = min(prec + prec_increment, max_prec)
-                degree = min(degree + degree_increment, max_degree)
-                yield {
-                    "prec": prec,
-                    "degree": degree,
-                }
-                if prec == max_prec and degree == max_degree:
-                    break
-
-        return gen()
 
     def compute_arithmetic_invariants(
         self,

@@ -61,6 +61,14 @@ def test_eight_seventeen_computation():
 def test_nine_fourteen_computation():
     # This trace field is large enough to be outside the defaults.
     mfld = ManifoldNT.ManifoldNT("9_14")
+    mfld.compute_arithmetic_invariants(prec=100, degree=5)
+    while not mfld._arithmetic_invariants_known():
+        mfld.compute_arithmetic_invariants()
+    assert mfld._arithmetic_invariants_known()
+
+
+def test_m141twoThree_computation():
+    mfld = ManifoldNT.ManifoldNT("m141(2,3)")
     while not mfld._arithmetic_invariants_known():
         mfld.compute_arithmetic_invariants()
     assert mfld._arithmetic_invariants_known()
@@ -68,6 +76,7 @@ def test_nine_fourteen_computation():
 
 def test_m010minusOneTwo_computation():
     mfld = ManifoldNT.ManifoldNT("m010(-1,2)")
+    mfld.invariant_trace_field()
     while not mfld._arithmetic_invariants_known():
         mfld.compute_arithmetic_invariants()
     mfld.next_prec_and_degree("trace field")

@@ -215,10 +215,8 @@ class ManifoldNT:
                     new_deg = self._trace_field.degree()
                     newpair = PrecDegreeTuple(newpair.prec, new_deg)
             return newpair
-        if (
-            invariant == "quaternion algebra"
-            or invariant == "invariant quaternion algebra"
-        ):
+        # else, invariant is one of the quaternion algebras.
+        else:
             field = (
                 "trace field"
                 if invariant == "quaternion algebra"

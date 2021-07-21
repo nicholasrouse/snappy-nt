@@ -542,7 +542,10 @@ class ManifoldNT:
     def denominator_residue_characteristics(self):
         if self._denominators is None:
             self.denominators()
-        if self._denominator_residue_characteristics is None:
+        if (
+            self._denominators is not None
+            and self._denominator_residue_characteristics is None
+        ):
             prime_ideals = self._denominators
             norms = {ideal.absolute_norm() for ideal in prime_ideals}
             self._denominator_residue_characteristics = (
@@ -587,6 +590,14 @@ class ManifoldNT:
         For why this works, see MR Theorem 8.3.2 pp.261-262.
         This could be a one-liner, but I think it's clearer this way.
         """
+        if not all(
+            (
+                self._invariant_trace_field,
+                self._invariant_quaternion_algebra,
+                self._denominators is not None,
+            )
+        ):
+            return None
         (
             number_of_real_places,
             number_of_complex_places,

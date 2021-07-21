@@ -204,3 +204,13 @@ def test_m137_denominator_residue_chars():
         mfld.denominator_residue_characteristics()
     mfld.denominator_residue_characteristics()
     assert 2 in mfld._denominator_residue_characteristics
+
+
+def test_p_arith():
+    # There's not so much important to test here, but I don't want coverage to bug me
+    # about it.
+    mfld = ManifoldNT.ManifoldNT("4_1")
+    mfld.p_arith()
+    while not mfld._arithmetic_invariants_known():
+        mfld.compute_arithmetic_invariants()
+    mfld.p_arith()

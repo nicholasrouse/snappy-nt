@@ -444,7 +444,7 @@ class ManifoldNT:
             if first_entry == 0 or second_entry == 0:
                 epsilon_coefficient *= 10
             else:
-                break
+                break  # pragma: no cover
         self._quaternion_algebra_prec_record[prec] = bool(first_entry and second_entry)
         if first_entry is None or second_entry is None:
             return None
@@ -488,7 +488,7 @@ class ManifoldNT:
             if first_entry == 0 or second_entry == 0:
                 epsilon_coefficient *= 10
             else:
-                break
+                break  # pragma: no cover
         self._invariant_quaternion_algebra_prec_record[prec] = bool(
             first_entry and second_entry
         )

@@ -65,6 +65,13 @@ def test_fig_eight_arithmetic():
     assert mfld.is_arithmetic()
 
 
+def test_fig_eight_arithmetic2():
+    mfld = ManifoldNT.ManifoldNT("4_1")
+    # is_arithmetic() doesn't compute anything on its own.
+    # We should perhaps change this behavior though.
+    assert mfld.is_arithmetic() is None
+
+
 def test_m010minusOneTwo_homology(m010minusOneTwo_computed):
     # Its trace field and invariant trace field are different.
     mfld = m010minusOneTwo_computed
@@ -206,11 +213,20 @@ def test_m137_denominator_residue_chars():
     assert 2 in mfld._denominator_residue_characteristics
 
 
-def test_p_arith():
-    # There's not so much important to test here, but I don't want coverage to bug me
-    # about it.
-    mfld = ManifoldNT.ManifoldNT("4_1")
-    mfld.p_arith()
+def test_m137_denominator_residue_chars2():
+    # This one simulates computing the residue characteristics from the ideals. Usually
+    # the residue characteristics are computed in denominators().
+    mfld = ManifoldNT.ManifoldNT("m137")
+    while mfld._denominators is None:
+        mfld.denominators()
+    mfld._denominator_residue_characteristics = None
+    mfld.denominator_residue_characteristics()
+    assert 2 in mfld._denominator_residue_characteristics
+
+
+def test_dehn_fill():
+    mfld = ManifoldNT.ManifoldNT("7_4")
     while not mfld._arithmetic_invariants_known():
         mfld.compute_arithmetic_invariants()
-    mfld.p_arith()
+    mfld.dehn_fill(())
+    assert not mfld._arithmetic_invariants_known()

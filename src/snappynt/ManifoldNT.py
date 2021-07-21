@@ -611,7 +611,7 @@ class ManifoldNT:
             and self._denominators == set()
         )
 
-    def p_arith(self):
+    def p_arith(self):  # pragma: no cover
         """
         This is so named for the common use case of typing p arith in snap to get the
         arithmetic invariants.

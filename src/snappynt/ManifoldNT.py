@@ -724,15 +724,13 @@ class ManifoldNT:
         )
         if not all((self_field, other_field, self_qa, other_qa)):
             raise RuntimeError("Trace fields or quaternion algebras not known.")
-
-        self_tf_wo_embedding = self_field.absolute_field(str(self_field.gen()))
-        other_tf_wo_embedding = other_field.absolute_field(str(other_field.gen()))
-        if self_tf_wo_embedding == other_tf_wo_embedding:
+        if self_field == other_field:
             return self._quaternion_algebra.is_isomorphic(other._quaternion_algebra)
-        elif not self_field.is_isomorphic(other_field):
+        elif not field_isomorphisms.same_subfield_of_CC(self_field, other_field):
             return False
         else:
-            # else the fields are merely abstractly isomorphic, and we have to be careful.
+            # else the fields are the same inside CC, but they may come to us via
+            # different minimal polynomials.
             prec = (
                 max(
                     self.next_prec_and_degree("qa"),

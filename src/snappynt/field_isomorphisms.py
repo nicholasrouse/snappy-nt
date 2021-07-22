@@ -11,7 +11,16 @@ polynomials over number fields correctly, and those factorizations can be used t
 compute the isomorphisms.
 """
 
-from sage.all import CC, I, NumberField, NumberFieldElement, PolynomialRing, factor, var
+from sage.all import (
+    CC,
+    I,
+    NumberField,
+    NumberFieldElement,
+    PolynomialRing,
+    conjugate,
+    factor,
+    var,
+)
 from sage.libs.pari.convert_sage import gen_to_sage
 
 
@@ -106,7 +115,7 @@ def canonical_embedding(field_with_embedding):
     )
 
 
-def same_subfield_of_CC(field1, field2):
+def same_subfield_of_CC(field1, field2, up_to_conjugation=False):
     try:
         iso = isomorphisms_between_number_fields(field1, field2)[0]
     except IndexError:
@@ -126,7 +135,19 @@ def same_subfield_of_CC(field1, field2):
         all_im_gens, key=lambda x: abs(CC(x) - CC(field1.gen_embedding()))
     )
     if coerced_elt in leftovers:
-        return False
+        if up_to_conjugation:
+            coerced_elt_conjugate = min(
+                all_im_gens,
+                key=lambda x: abs(CC(x) - conjugate(CC(field1.gen_embedding()))),
+            )
+            if coerced_elt_conjugate in leftovers:
+                return False
+            elif coerced_elt_conjugate in found_elts:
+                return True
+            else:
+                raise
+        else:
+            return False
     elif coerced_elt in found_elts:
         return True
     else:

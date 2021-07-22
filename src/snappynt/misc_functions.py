@@ -33,3 +33,13 @@ def ramified_real_places(quaternion_algebra):
     real_places = field.real_places()
     ramified_places = [place for place in real_places if place(a) < 0 and place(b) < 0]
     return ramified_places
+
+
+def aan_iterator(list_of_aans):
+    """
+    There's an issue with iterating over a ListOfApproximateAlgebraicNumbers.
+    """
+    for i, item in enumerate(list_of_aans):
+        yield item
+        if i >= len(list_of_aans) - 1:
+            break

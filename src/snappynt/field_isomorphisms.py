@@ -86,9 +86,9 @@ def special_isomorphism(domain_field, codomain_field, domain_anchors, codomain_a
     special_isos = list()
     for iso in isos:
         if set(iso(elt) for elt in domain_anchors) == set(
-            iso(elt) for elt in codomain_anchors
+            elt for elt in codomain_anchors
         ):
-            special_isos += iso
+            special_isos.append(iso)
     if len(special_isos) != 1:
         raise RuntimeError("Did not find a unique isomorphism.")
     return special_isos[0]

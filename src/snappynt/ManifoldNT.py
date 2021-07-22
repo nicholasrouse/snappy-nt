@@ -732,6 +732,7 @@ class ManifoldNT:
         elif not self_field.is_isomorphic(other_field):
             return False
         else:
+            # else the fields are merely abstractly isomorphic, and we have to be careful.
             prec = (
                 max(
                     self.next_prec_and_degree("qa"),

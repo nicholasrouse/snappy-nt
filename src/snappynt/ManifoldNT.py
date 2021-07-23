@@ -603,7 +603,7 @@ class ManifoldNT:
             number_of_complex_places,
         ) = self._invariant_trace_field.signature()
         number_of_ramified_real_places = len(
-            misc_functions.ramified_real_places(self._invariant_quaternion_algebra)
+            self._invariant_quaternion_algebra.ramified_real_places()
         )
         return (
             number_of_ramified_real_places == number_of_real_places

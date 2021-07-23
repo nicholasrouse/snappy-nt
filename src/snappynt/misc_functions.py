@@ -1,7 +1,7 @@
 """
 Module for odds and ends functions that thematically didn't fit into another module.
 """
-from sage.all import CC, ZZ, ComplexField, NumberField, PolynomialRing
+from sage.all import CC, ZZ, ComplexField, NumberField, PolynomialRing, factor
 from snappy.snap.find_field import (
     ApproximateAlgebraicNumber,
     ExactAlgebraicNumber,
@@ -30,7 +30,7 @@ def aan_iterator(list_of_aans):
     There's an issue with iterating over a ListOfApproximateAlgebraicNumbers.
     Can use their list() method as well.
     """
-    for i, item in enumerate(list_of_aans):
+    for i, item in enumerate(list_of_aans):  # pragma: no branch
         yield item
         if i >= len(list_of_aans) - 1:
             break
@@ -94,3 +94,12 @@ def make_aan_conjugate(aan):
                 exact_expressions = [new_field(str(elt)) for elt in aan._field[key][2]]
                 new_aan._field[key] = (new_field, new_aan_elt, exact_expressions)
         return new_aan
+
+
+def find_prime_factors_in_a_set(aSet):  # aSet should be (positive) integers
+    primes = set()
+    for element in aSet:
+        factorization = list(factor(element))
+        for (prime, power) in factorization:
+            primes.add(prime)
+    return primes

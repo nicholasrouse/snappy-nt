@@ -16,7 +16,6 @@ from sage.all import floor, log
 
 from . import (
     QuaternionAlgebraNF,
-    denominatorsforsnappy,
     field_isomorphisms,
     irreducible_subgroups,
     misc_functions,
@@ -513,9 +512,7 @@ class ManifoldNT:
         denominators for easy access later.
 
         It's also worth pointing out that the denominators are returned as a set of
-        ideals of a number field. This is different from the behavior in the
-        denominatorsforsnappy module that just returns the residue characteristics. We
-        could add this as an optional argument at some point though.
+        ideals of a number field.
 
         Recall the convention that self._denominators is None if they haven't been
         computed but set() if they have been to computed to be the empty set.
@@ -535,7 +532,7 @@ class ManifoldNT:
         self._denominators = prime_ideals
         norms = {ideal.absolute_norm() for ideal in prime_ideals}
         self._denominator_residue_characteristics = (
-            denominatorsforsnappy.find_prime_factors_in_a_set(norms)
+            misc_functions.find_prime_factors_in_a_set(norms)
         )
         return prime_ideals
 
@@ -549,7 +546,7 @@ class ManifoldNT:
             prime_ideals = self._denominators
             norms = {ideal.absolute_norm() for ideal in prime_ideals}
             self._denominator_residue_characteristics = (
-                denominatorsforsnappy.find_prime_factors_in_a_set(norms)
+                misc_functions.find_prime_factors_in_a_set(norms)
             )
         return self._denominator_residue_characteristics
 
@@ -726,37 +723,43 @@ class ManifoldNT:
             raise RuntimeError("Trace fields or quaternion algebras not known.")
         if self_field == other_field:
             return self._quaternion_algebra.is_isomorphic(other._quaternion_algebra)
-        elif not field_isomorphisms.same_subfield_of_CC(self_field, other_field):
+        if not field_isomorphisms.same_subfield_of_CC(
+            self_field, other_field, up_to_conjugation=True
+        ):
+            return False
+        # else the fields are the same inside CC, but they may come to us via
+        # different minimal polynomials. First, we have to be careful when the
+        # fields come to us as complex conjugates of each other.
+        prec = (
+            max(
+                self.next_prec_and_degree("qa"),
+                other.next_prec_and_degree("qa"),
+            )
+            if not _invariant_qa
+            else max(
+                self.next_prec_and_degree("iqa"),
+                other.next_prec_and_degree("iqa"),
+            )
+        )
+        if len(self_qa.ramified_real_places()) != len(other_qa.ramified_real_places()):
+            return False
+        elif (
+            self_qa.ramified_residue_characteristics()
+            != other_qa.ramified_residue_characteristics()
+        ):
             return False
         else:
-            # else the fields are the same inside CC, but they may come to us via
-            # different minimal polynomials.
-            prec = (
-                max(
-                    self.next_prec_and_degree("qa"),
-                    other.next_prec_and_degree("qa"),
-                )
+            primitive_element = (
+                self._trace_field_numerical_root
                 if not _invariant_qa
-                else max(
-                    self.next_prec_and_degree("iqa"),
-                    other.next_prec_and_degree("iqa"),
-                )
+                else self._invariant_trace_field_numerical_root
             )
-            if len(self_qa.ramified_real_places()) != len(
-                other_qa.ramified_real_places()
-            ):
-                return False
-            elif (
-                self_qa.ramified_residue_characteristics()
-                != other_qa.ramified_residue_characteristics()
-            ):
-                return False
+            if not field_isomorphisms.same_subfield_of_CC(self_field, other_field):
+                conjugate_invariants = other._conjugate_invariants()
+                field = "trace field" if not _invariant_qa else "invariant trace field"
+                old_prim_elt = conjugate_invariants[field]["numerical root"]
+                approx_gens = conjugate_invariants[field]["approx_gens"]
             else:
-                primitive_element = (
-                    self._trace_field_numerical_root
-                    if not _invariant_qa
-                    else self._invariant_trace_field_numerical_root
-                )
                 old_prim_elt = (
                     other._trace_field_numerical_root
                     if not _invariant_qa
@@ -767,20 +770,18 @@ class ManifoldNT:
                     if not _invariant_qa
                     else other._approx_invariant_trace_field_gens
                 )
-                old_anchor = [
-                    old_prim_elt.express(gen, prec=prec) for gen in approx_gens
-                ]
-                new_anchor = [
-                    primitive_element.express(gen, prec=prec) for gen in approx_gens
-                ]
-                special_iso = field_isomorphisms.special_isomorphism(
-                    self_field,
-                    other_field,
-                    old_anchor,
-                    new_anchor,
-                )
-                new_QA = other_qa.new_QA_via_field_isomorphism(special_iso)
-                return self_qa.is_isomorphic(new_QA)
+            old_anchor = [old_prim_elt.express(gen, prec=prec) for gen in approx_gens]
+            new_anchor = [
+                primitive_element.express(gen, prec=prec) for gen in approx_gens
+            ]
+            special_iso = field_isomorphisms.special_isomorphism(
+                self_field,
+                other_field,
+                old_anchor,
+                new_anchor,
+            )
+            new_QA = other_qa.new_QA_via_field_isomorphism(special_iso)
+            return self_qa.is_isomorphic(new_QA)
 
     def _same_denominators(self, other):
         """
@@ -865,3 +866,58 @@ class ManifoldNT:
     def has_same_arithmetic_invariants(self, other):
         arith_dict = self.compare_arithmetic_invariants(other)
         return not (False in arith_dict.values())
+
+    def _conjugate_invariants(self):
+        """
+        Returns the invariants obtained by taking the complex conjugate representation.
+        This corresponds to the same hyperbolic manifold with the opposite orientation.
+        Note that this doesn't change anything in self. This method is chiefly useful
+        for comparing whether two manifolds have the same arithmetic invariants after
+        changing the orientation on one of them.
+        """
+        d = {
+            "trace field": None,
+            "quaternion algebra": None,
+            "invariant trace field": None,
+            "invariant quaternion algebra": None,
+            "denominators": None,
+        }
+        for field in (self._trace_field, self._invariant_trace_field):
+            if field is not None:
+                # Despite the name, the approx_gens contain the exact field information if field is not None.
+                old_approx_gens = (
+                    self._approx_trace_field_gens
+                    if field is self._trace_field
+                    else self._approx_invariant_trace_field_gens
+                )
+                new_approx_gens = misc_functions.conjugate_field(old_approx_gens)
+                d2 = new_approx_gens._field[True]
+                s = (
+                    "trace field"
+                    if field is self._trace_field
+                    else "invariant trace field"
+                )
+                d[s] = {
+                    "approx gens": new_approx_gens,
+                    "field": d2[0],
+                    "numerical root": d2[1],
+                    "exact gens": d2[2],
+                }
+        for algebra in (self._quaternion_algebra, self._invariant_quaternion_algebra):
+            if algebra is not None:
+                field = (
+                    self._trace_field
+                    if algebra is self._quaternion_algebra
+                    else self._invariant_trace_field
+                )
+                new_entries = [field(str(inv)) for inv in algebra.invariants()]
+                s = (
+                    "quaternion algebra"
+                    if algebra is self._quaterion_algebra
+                    else "invariant quaternion algebra"
+                )
+                d[s] = QuaternionAlgebraNF.QuaternionAlgebraNF(field, *new_entries)
+        for ideal in self._denominators:
+            field = d["trace field"]["field"]
+            d["denominators"] = set(field.ideal((str(elt))) for elt in ideal.gens())
+        return d

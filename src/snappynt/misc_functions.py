@@ -49,6 +49,16 @@ def make_aan(poly, root):
     return aan
 
 
+def conjugate_field(field):
+    """
+    field should be a NumberField with an embedding.
+    """
+    poly = field.defining_polynomial()
+    root = field.gen_embedding()
+    name = str(field.gen())
+    return NumberField(poly, name, CC(root.conjugate()))
+
+
 def make_aan_conjugate(aan):
     if isinstance(aan, ExactAlgebraicNumber):
         poly = aan._min_poly
@@ -76,15 +86,11 @@ def make_aan_conjugate(aan):
         for key in aan._field:
             if aan._field[key] is not None:
                 old_field = aan._field[key][0]
-                poly = old_field.defining_polynomial()
-                root = old_field.gen_embedding()
-                gen_name = str(old_field.gen())
-                new_field = NumberField(poly, gen_name, embedding=CC(root).conjugate())
+                new_field = conjugate_field(old_field)
                 # new_aan_elt should be an ExactAlgebraicNumber.
                 new_aan_elt = make_aan_conjugate(aan._field[key][1])
-                # The expressions (the last entry) should be the same.
-                # I.e. if z is the primitive element, and f(z) is the expression for
-                # some algebraic number in terms of z. Then conjugate(z) =
-                # f(conjugate(z)). I.e. f itself doesn't change.
-                new_aan._field[key] = (new_field, new_aan_elt, aan._field[key][2])
+                # The expressions (the last entry) should be the same, but the parent
+                # ring will be different.
+                exact_expressions = [new_field(str(elt)) for elt in aan._field[key][2]]
+                new_aan._field[key] = (new_field, new_aan_elt, exact_expressions)
         return new_aan

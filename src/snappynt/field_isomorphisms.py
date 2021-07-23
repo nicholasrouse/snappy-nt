@@ -11,45 +11,7 @@ polynomials over number fields correctly, and those factorizations can be used t
 compute the isomorphisms.
 """
 
-from sage.all import (
-    CC,
-    I,
-    NumberField,
-    NumberFieldElement,
-    PolynomialRing,
-    conjugate,
-    factor,
-    var,
-)
-from sage.libs.pari.convert_sage import gen_to_sage
-
-
-def convert_polmod(polmod, name=None, mod_variable="x"):
-    """
-    Only implemented for univariate polmods for now. If a variable is passed to the
-    name parameter, it needs tohave been initialized as a variable in sage. This
-    conforms to the usage of other functions in sage.
-
-    It takes a PARI polmod Mod(f,g) and converts it to the image inside the number
-    field defined by g.
-
-    In particular, it doesn't implement any general quotient ring reduction maps and
-    will fail if the modulus factors. So it's ill-suited to etale algebra type stuff.
-
-    This could be useful if we need to work with PARI more closely later, but we ended
-    up not using it in the functions we really care about.
-    Aug-8-2020
-    """
-    mod_variable = var(mod_variable)
-    pari_lift = polmod.lift()
-    pari_mod = polmod.mod()
-    pari_var = polmod.variable()
-    lift_var = pari_var if name is None else name
-    sage_mod = gen_to_sage(pari_mod, {str(pari_var): mod_variable})
-    sage_lift = gen_to_sage(pari_lift, {str(pari_var): lift_var})
-    sage_nf = NumberField(sage_mod, lift_var)
-    sage_nf_elt = NumberFieldElement(sage_nf, sage_lift)
-    return sage_nf_elt
+from sage.all import CC, I, NumberField, PolynomialRing, conjugate, factor, var
 
 
 def isomorphisms_between_number_fields(domain_field, codomain_field):
@@ -152,93 +114,6 @@ def same_subfield_of_CC(field1, field2, up_to_conjugation=False):
         return True
     else:
         raise
-    """
-    difference_between_embeddings = min(a-b for a in all_im_gens for b in all_im_gens if a != b)
-    if min(embedding1(gen1)-elt for elt in embedded_orbit) < difference_between_embeddings/2:
-        return True
-    else:
-        return False
-    """
-
-
-def transfer_embedding(isomorphism):
-    """
-    This function takes an isomorphism whose domain is a number field with a specified
-    embedding and codomain is a number field (with or without an embedding). It returns
-    a complex number corresponding to an embedding of the generator for the codomain.
-    Under this embedding, the image of the generator of the domain field will map
-    to the same complex number as it did under the specified embedding of the domain.
-
-    The basic logic here is to take a generator for the domain with a specified
-    embedding into CC. This amounts to some numerical value for this generator. Then we
-    compare the image of the generator under the various embeddings of the codomain to
-    see which one gets closest to the original numerical value. In terms of the
-    variables this means we compare domain_numerical_root and
-    embedding(domain_generator_image) under the various embeddings of the codomain.
-    """
-    domain = isomorphism.domain()
-    codomain = isomorphism.codomain()
-    domain_numerical_root = domain.gen_embedding()
-    domain_generator_image = isomorphism(domain.gen())
-    if domain_numerical_root is None:
-        raise AttributeError("There is no specified embedding for the number field.")
-    # Sage's complex_embeddings() gives the real ones as well.
-    codomain_embeddings = [embedding for embedding in codomain.complex_embeddings()]
-    special_embedding = min(
-        codomain_embeddings,
-        key=lambda embedding: abs(
-            CC(domain_numerical_root) - CC(embedding(domain_generator_image))
-        ),
-    )
-    return CC(special_embedding(codomain.gen()))
-
-
-"""
-def compare_embeddings(field, first_numerical_root, second_numerical_root=None):
-
-    Tests whether the two numerical roots define the same embedding. This is to sidestep
-    issues of numerical precision. Sage might also have a way to do this, but I couldn't
-    find it. Basically the two numerical roots passed should live in some kind of real
-    or complex field in sage, but there are many of those (RIFs, ones with specified
-    precision, lazy fields, etc.), and the numerical root may come to us in various
-    ways.
-
-    One can pass in only a field and one numerical root if the field comes with an
-    embedding already attached to it.
-
-    generator = field.gen()  # Assumes field is given by a single generator I guess.
-    second_numerical_root = (
-        field.gen_embedding()
-        if second_numerical_root is None
-        else second_numerical_root
-    )
-    if second_numerical_root is None:
-        raise AttributeError("Got too few embeddings.")
-    embeddings = [embedding for embedding in field.complex_embeddings()]
-    first_embedding = numerical_root_to_embedding(field, first_numerical_root)
-    second_embedding = numerical_root_to_embedding(field, second_numerical_root)
-    second_embedding_conjugate = numerical_root_to_embedding(field, second_numerical_root, conjugate_embedding=True)
-    return (first_embedding == second_embedding or first_embedding == second_embedding_conjugate)
-"""
-
-"""
-def isomorphic_respecting_embeddings(first_field, second_field):
-
-    This compares two number fields with distinguished places and checks whether they're
-    isomorphic and that there is an isomorphism such that composing the isomorphism with
-    the embedding (or its conjugate) of the second field gives the specified embedding
-    of the first field. This is equivalent to checking whether the two embedded fields
-    are the same subfield of the complex numbers (or conjugates of one another).
-
-    This is a little too implicit. Needs some more documentation eventually.
-
-    iso_list = isomorphisms_between_number_fields(first_field, second_field)
-    for isomorphism in iso_list:
-        transfered_root = transfer_embedding(isomorphism)
-        if compare_embeddings(second_field, transfered_root):
-            return True
-    return False
-"""
 
 
 def run_tests():

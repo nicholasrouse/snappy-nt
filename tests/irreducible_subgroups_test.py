@@ -35,3 +35,22 @@ def test_within_epsilon6():
     a = RR(1)
     b = RR(1) + RR(10 ** (-53) / 2)
     assert irreducible_subgroups.within_epsilon(a, b)
+
+
+def test_is_parabolic(fig8_group):
+    # peripheral_curves() returns a list of tuples, one for each cusp.
+    mer, long = (fig8_group(elt) for elt in fig8_group.peripheral_curves()[0])
+    assert irreducible_subgroups.is_parabolic(
+        mer, epsilon_coefficient=100
+    ) and irreducible_subgroups.is_parabolic(long, epsilon_coefficient=100)
+
+
+def test_is_parabolic2(fig8_group):
+    a, b = (fig8_group(elt) for elt in fig8_group.generators())
+    assert not (
+        irreducible_subgroups.is_parabolic(a) or irreducible_subgroups.is_parabolic(b)
+    )
+
+
+def test_generate_reducible_subgroup(fig8_group):
+    pass

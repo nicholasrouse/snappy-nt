@@ -52,7 +52,9 @@ def is_parabolic(element, epsilon_coefficient=10):
     way that I know of to exclude the possibility that the trace differs from 2 by an amout
     smaller than what can be detected by for a given fixed precision.
     """
-    if within_epsilon(element.trace(), ZZ(2), epsilon_coefficient):
+    if within_epsilon(element.trace(), ZZ(2), epsilon_coefficient) or within_epsilon(
+        element.trace(), ZZ(-2), epsilon_coefficient
+    ):
         return True
     else:
         return False
@@ -78,7 +80,8 @@ def generate_reducible_subgroup(g, h, epsilon_coefficient=10):
 
     Comment last updated: Aug-13 2020
     """
-    if within_epsilon(g.commutator(h).trace(), ZZ(2), epsilon_coefficient):
+    commutator = g * h * (g.inverse()) * (h.inverse())
+    if within_epsilon(commutator, ZZ(2), epsilon_coefficient=epsilon_coefficient):
         return True
     else:
         return False

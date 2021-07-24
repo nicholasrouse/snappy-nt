@@ -107,3 +107,27 @@ def test_conjugate_LAAN(fig8):
         abs(elt[0](1000) - elt[1](1000).conjugate()) <= 10 ** (-1000) for elt in pairs
     ]
     assert answers == [True] * len(laan_conjugate)
+
+
+def test_conjugate_LAAN2():
+    mfld = ManifoldNT.ManifoldNT("7_7")
+    laan = mfld._approx_trace_field_gens
+    laan_conjugate = misc_functions.make_aan_conjugate(laan)
+    pairs = zip(
+        misc_functions.aan_iterator(laan), misc_functions.aan_iterator(laan_conjugate)
+    )
+    answers = [
+        abs(elt[0](1000) - elt[1](1000).conjugate()) <= 10 ** (-1000) for elt in pairs
+    ]
+    assert answers == [True] * len(laan_conjugate)
+
+
+def test_conjugate_LAAN3():
+    with pytest.raises(ValueError):
+        misc_functions.make_aan_conjugate("nonsense")
+
+
+def test_prime_factors_in_a_set():
+    ints = {4, 19, 84, 239}
+    primes = misc_functions.find_prime_factors_in_a_set(ints)
+    assert primes == {2, 19, 3, 7, 239}

@@ -65,7 +65,7 @@ def make_aan_conjugate(aan):
         root = aan._approx_root
         new_aan = ExactAlgebraicNumber(poly, root.conjugate())
         return new_aan
-    if isinstance(aan, ApproximateAlgebraicNumber):
+    elif isinstance(aan, ApproximateAlgebraicNumber):
 
         def new_defining_function(prec):
             return aan.f(prec).conjugate()
@@ -77,7 +77,7 @@ def make_aan_conjugate(aan):
         if hasattr(aan, "_approx_root"):
             new_aan._approx_root = aan._approx_root.conjugate()
         return new_aan
-    if isinstance(aan, ListOfApproximateAlgebraicNumbers):
+    elif isinstance(aan, ListOfApproximateAlgebraicNumbers):
 
         def new_defining_function(prec):
             return [elt.conjugate() for elt in aan.f(prec)]
@@ -94,6 +94,11 @@ def make_aan_conjugate(aan):
                 exact_expressions = [new_field(str(elt)) for elt in aan._field[key][2]]
                 new_aan._field[key] = (new_field, new_aan_elt, exact_expressions)
         return new_aan
+    else:
+        raise ValueError(
+            "Input not recognized as an ApproximateAlgebraicNumber, \
+            ListOfApproximateAlgebraicNumbers, or ExactAlgebraicNumber."
+        )
 
 
 def find_prime_factors_in_a_set(aSet):  # aSet should be (positive) integers

@@ -56,7 +56,7 @@ def conjugate_field(field):
     poly = field.defining_polynomial()
     root = field.gen_embedding()
     name = str(field.gen())
-    return NumberField(poly, name, CC(root.conjugate()))
+    return NumberField(poly, name, embedding=CC(root).conjugate())
 
 
 def make_aan_conjugate(aan):

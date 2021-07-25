@@ -75,7 +75,18 @@ def test_enumerate_words(rank2_free_group_words):
         elts.append(next(rank2_free_group_words))
     assert (
         len(elts) == len(set(tuple(elt) for elt in elts))  # No duplicates
-        and False
-        not in (len(item) <= 3 for item in elts)  # Nothing more than length 3.
-        and len(next(rank2_free_group_words)) == 4  # Not missing any length 3 items.
+        and False not in (len(item) <= 3 for item in elts)
+        and len(next(rank2_free_group_words)) == 4
+    )
+
+
+def test_enumerate_group_elements(fig8_group):
+    generator = irreducible_subgroups.enumerate_group_elements(fig8_group, as_word=True)
+    elts = list()
+    for _ in range(52):
+        elts.append(next(generator))
+    assert (
+        len(elts) == len(set(elts))
+        and False not in (len(item) <= 3 for item in elts)
+        and len(next(generator)) == 4
     )

@@ -161,7 +161,7 @@ def enumerate_group_elements(group, as_word=False, power=1):
     def tietze_conversion(integer):
         if integer > 0:
             return gens[integer - 1]
-        elif integer < 0:
+        else:
             return inverses[-integer - 1]
 
     tietze_words_generator = enumerate_words(rank, power=power)

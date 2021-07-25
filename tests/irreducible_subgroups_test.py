@@ -53,4 +53,10 @@ def test_is_parabolic2(fig8_group):
 
 
 def test_generate_reducible_subgroup(fig8_group):
-    pass
+    a = fig8_group(fig8_group.generators()[0])
+    assert irreducible_subgroups.generate_reducible_subgroup(a, a * a)
+
+
+def test_generate_reducible_subgroup2(fig8_group):
+    gens = (fig8_group(elt) for elt in fig8_group.generators())
+    assert not irreducible_subgroups.generate_reducible_subgroup(*gens)

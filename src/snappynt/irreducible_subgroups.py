@@ -105,18 +105,18 @@ def enumerate_words(rank, power=1):
             return integer + 1
         elif integer == rank:
             return -1
-        elif integer < 0:
+        else:
             return integer - 1
 
     def next_element(element):
+        # First two lines just find the last entry that's not equal to -rank.
         index_list = [(integer == -rank) for integer in element][::-1]
         index_to_change = len(element) - index_list.index(False) - 1
         new_element = element[:]
-        new_element[index_to_change] = next_integer(new_element[index_to_change])
-        if index_to_change != len(new_element):
-            new_element[index_to_change + 1 :] = (
-                len(new_element) - index_to_change - 1
-            ) * [1]
+        new_element[index_to_change] = next_integer(element[index_to_change])
+        new_element[index_to_change + 1 :] = (
+            len(new_element) - index_to_change - 1
+        ) * [1]
         return new_element
 
     def has_simplification(element):
@@ -137,7 +137,7 @@ def enumerate_words(rank, power=1):
                 yield previous_element * power
 
 
-def enumerate_group_elements(group, as_word=False, power=1, verbosity=False):
+def enumerate_group_elements(group, as_word=False, power=1):
     """
     This is not especially robust at the moment. It basically only works with groups
     coming from polished_holonomy in SnapPy. In particul.ar it makes use of a __call__
@@ -169,8 +169,6 @@ def enumerate_group_elements(group, as_word=False, power=1, verbosity=False):
         tietze_word = next(tietze_words_generator)
         list_word = [tietze_conversion(integer) for integer in tietze_word]
         word = "".join(list_word)
-        if verbosity:
-            print(word)
         if as_word:
             yield word
         else:

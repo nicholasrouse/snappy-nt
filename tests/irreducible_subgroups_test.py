@@ -11,6 +11,12 @@ def fig8_group():
     return G
 
 
+@pytest.fixture
+def rank2_free_group_words():
+    G = irreducible_subgroups.enumerate_words(2)
+    return G
+
+
 def test_within_epsilon():
     assert not irreducible_subgroups.within_epsilon(1, 2)
 
@@ -60,3 +66,16 @@ def test_generate_reducible_subgroup(fig8_group):
 def test_generate_reducible_subgroup2(fig8_group):
     gens = (fig8_group(elt) for elt in fig8_group.generators())
     assert not irreducible_subgroups.generate_reducible_subgroup(*gens)
+
+
+def test_enumerate_words(rank2_free_group_words):
+    # There are 52 words in Tietze notation with length less than 3.
+    elts = list()
+    for _ in range(52):
+        elts.append(next(rank2_free_group_words))
+    assert (
+        len(elts) == len(set(tuple(elt) for elt in elts))  # No duplicates
+        and False
+        not in (len(item) <= 3 for item in elts)  # Nothing more than length 3.
+        and len(next(rank2_free_group_words)) == 4  # Not missing any length 3 items.
+    )

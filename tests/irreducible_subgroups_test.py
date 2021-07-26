@@ -90,3 +90,43 @@ def test_enumerate_group_elements(fig8_group):
         and False not in (len(item) <= 3 for item in elts)
         and len(next(generator)) == 4
     )
+
+
+def test_enumerate_group_elements2(fig8_group):
+    words_gen = irreducible_subgroups.enumerate_group_elements(fig8_group, as_word=True)
+    mats_gen = irreducible_subgroups.enumerate_group_elements(fig8_group, as_word=False)
+    words = list()
+    mats = list()
+    for _ in range(52):
+        words.append(next(words_gen))
+        mats.append(next(mats_gen))
+    assert len(set(words)) == len(
+        mats
+    ) and False not in (  # mutable matrices are unhashable
+        fig8_group(word) == mat for word, mat in zip(words, mats)
+    )
+
+
+def test_find_hilbert_symbol_words(fig8_group):
+    words = irreducible_subgroups.find_hilbert_symbol_words(fig8_group)
+    assert 0 not in words
+
+
+def test_find_hilbert_symbol_words2(fig8_group):
+    def fake_gens():
+        return ["a" * i for i in range(1, 10)] + ["b"]
+
+    fig8_group.generators = fake_gens
+    words = irreducible_subgroups.find_hilbert_symbol_words(fig8_group)
+    assert 0 not in words
+
+
+def test_find_hilbert_symbol_words3(fig8_group):
+    mer, _ = fig8_group.peripheral_curves()[0]
+
+    def fake_gens():
+        return [mer, "a"]
+
+    fig8_group.generators = fake_gens
+    words = irreducible_subgroups.find_hilbert_symbol_words(fig8_group)
+    assert 0 not in words

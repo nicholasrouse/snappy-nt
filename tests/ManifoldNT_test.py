@@ -235,7 +235,6 @@ def test_dehn_fill():
 # Testing _isomorphic_quaternion_algebras
 
 
-@pytest.mark.skip(reason="Broken right now")
 def test_fields_missing_qa():
     mfld1 = ManifoldNT.ManifoldNT("9_14")
     mfld2 = ManifoldNT.ManifoldNT("7_4")
@@ -243,7 +242,6 @@ def test_fields_missing_qa():
         mfld1._isomorphic_quaternion_algebras(mfld2)
 
 
-@pytest.mark.skip(reason="Broken right now")
 def test_fields_missing_iqa():
     mfld1 = ManifoldNT.ManifoldNT("9_14")
     mfld2 = ManifoldNT.ManifoldNT("7_4")
@@ -251,19 +249,19 @@ def test_fields_missing_iqa():
         mfld1._isomorphic_quaternion_algebras(mfld2, _invariant_qa=True)
 
 
-@pytest.mark.skip(reason="Broken right now")
 def test_isomorphic_fields_matrix_algebras():
-    # The fields are abstractly isomorphic and the algebras are both matrix.
+    # The fields are abstractly isomorphic and the algebras are both matrix. However,
+    # the concrete images of the fields inside the complex numbers are different, so
+    # we regard them as nonisomorphic.
     mfld1 = ManifoldNT.ManifoldNT("6_1")
     mfld2 = ManifoldNT.ManifoldNT("7_7")
     while not mfld1._arithmetic_invariants_known():
         mfld1.compute_arithmetic_invariants()
     while not mfld2._arithmetic_invariants_known():
         mfld2.compute_arithmetic_invariants()
-    assert mfld1._isomorphic_quaternion_algebras(mfld2)
+    assert not mfld1._isomorphic_quaternion_algebras(mfld2)
 
 
-@pytest.mark.skip(reason="Broken right now")
 def test_nonisomorphic_fields_iqas():
     # The fields are different
     mfld1 = ManifoldNT.ManifoldNT("m003(-2,3)")
@@ -273,3 +271,39 @@ def test_nonisomorphic_fields_iqas():
     while not mfld2._arithmetic_invariants_known():
         mfld2.compute_arithmetic_invariants()
     assert not mfld1._isomorphic_quaternion_algebras(mfld2, _invariant_qa=True)
+
+
+def test_same_qas():
+    mfld1 = ManifoldNT.ManifoldNT("m003(-2,3)")
+    mfld2 = ManifoldNT.ManifoldNT("m003(-2,3)")
+    while not mfld1._arithmetic_invariants_known():
+        mfld1.compute_arithmetic_invariants()
+    while not mfld2._arithmetic_invariants_known():
+        mfld2.compute_arithmetic_invariants()
+    assert mfld1._isomorphic_quaternion_algebras(
+        mfld2
+    ) and mfld1._isomorphic_quaternion_algebras(mfld2, _invariant_qa=True)
+
+
+def test_nonisomorphic_qas(fig8_computed):
+    # m010(-1,2) has the same trace field as the figure 8 knot complement.
+    mfld = ManifoldNT.ManifoldNT("m010(-1,2)")
+    while not mfld._arithmetic_invariants_known():
+        mfld.compute_arithmetic_invariants()
+    assert not mfld._isomorphic_quaternion_algebras(fig8_computed)
+
+
+# _same_denominators test
+def test_same_denominators_missing_fields():
+    mfld1 = ManifoldNT.ManifoldNT("9_14")
+    mfld2 = ManifoldNT.ManifoldNT("4_1")
+    with pytest.raises(RuntimeError):
+        mfld1._same_denominators(mfld2)
+
+
+def test_same_denominators_missing_denoms(nine_fourteen_trace_field):
+    mfld1 = ManifoldNT.ManifoldNT("9_14")
+    mfld1._trace_field = nine_fourteen_trace_field
+    mfld2 = ManifoldNT.ManifoldNT("4_1")
+    with pytest.raises(RuntimeError):
+        mfld1._same_denominators(mfld2)

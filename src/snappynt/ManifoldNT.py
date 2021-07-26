@@ -519,7 +519,7 @@ class ManifoldNT:
         """
         if self._denominators or self._denominators == set():
             return self._denominators
-        if self.trace_field() is None:
+        if self._trace_field_generators is None:
             return None
         denominator_ideals = {
             element.denominator_ideal() for element in self._trace_field_generators

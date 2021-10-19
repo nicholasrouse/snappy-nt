@@ -154,6 +154,7 @@ def test_nine_fourteen_denoms_without_tf():
     mfld.denominators()
     while mfld._trace_field is None:
         mfld.trace_field()
+        mfld.denominators()
     assert mfld._denominators is not None
 
 
@@ -208,6 +209,7 @@ def test_m137_computation():
 def test_m137_denominator_residue_chars():
     mfld = ManifoldNT.ManifoldNT("m137")
     while mfld._denominator_residue_characteristics is None:
+        mfld.trace_field()
         mfld.denominator_residue_characteristics()
     mfld.denominator_residue_characteristics()
     assert 2 in mfld._denominator_residue_characteristics
@@ -218,6 +220,7 @@ def test_m137_denominator_residue_chars2():
     # the residue characteristics are computed in denominators().
     mfld = ManifoldNT.ManifoldNT("m137")
     while mfld._denominators is None:
+        mfld.trace_field()
         mfld.denominators()
     mfld._denominator_residue_characteristics = None
     mfld.denominator_residue_characteristics()
@@ -285,12 +288,12 @@ def test_same_qas():
     ) and mfld1._isomorphic_quaternion_algebras(mfld2, _invariant_qa=True)
 
 
-def test_nonisomorphic_qas(fig8_computed):
+def test_nonisomorphic_qas(fig_eight_computed):
     # m010(-1,2) has the same trace field as the figure 8 knot complement.
     mfld = ManifoldNT.ManifoldNT("m010(-1,2)")
     while not mfld._arithmetic_invariants_known():
         mfld.compute_arithmetic_invariants()
-    assert not mfld._isomorphic_quaternion_algebras(fig8_computed)
+    assert not mfld._isomorphic_quaternion_algebras(fig_eight_computed)
 
 
 # _same_denominators test

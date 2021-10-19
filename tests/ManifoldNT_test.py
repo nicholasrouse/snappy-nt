@@ -152,8 +152,8 @@ def test_nine_fourteen_tf_first(nine_fourteen_trace_field):
 def test_nine_fourteen_denoms_without_tf():
     mfld = ManifoldNT.ManifoldNT("9_14")
     mfld.denominators()
-    while mfld._denominators is None:
-        mfld.denominators()
+    while mfld._trace_field is None:
+        mfld.trace_field()
     assert mfld._denominators is not None
 
 

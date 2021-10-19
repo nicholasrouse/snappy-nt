@@ -1,0 +1,8 @@
+[run]
+branch = True
+command_line = -m pytest
+include = */src/*
+omit = */__init__.py
+
+[report]
+show_missing = True

@@ -22,10 +22,3 @@ repos:
           - "--max-line-length=88"
           - "--extend-ignore=E203,E501"
         exclude: "src/snappynt/__init__.py"
-  #- repo: local
-  #  hooks:
-  #    - id: pytest
-  #      name: pytest
-  #      entry: /home/nicholas/sage-9.3/sage --python -m pytest snappynt/
-  #      language: python
-  #     pass_filenames: false

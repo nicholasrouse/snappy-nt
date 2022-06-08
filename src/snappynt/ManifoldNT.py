@@ -83,7 +83,7 @@ class ManifoldNT:
         self._denominator_residue_characteristics = None
         # This sometimes raises exceptions, but it happens in SnapPy itself.
         self._approx_trace_field_gens = self._snappy_mfld.trace_field_gens()
-        if not self._has_two_torsion_in_homology():
+        if self.is_modtwo_homology_sphere():
             self._approx_invariant_trace_field_gens = self._approx_trace_field_gens
         else:
             self._approx_invariant_trace_field_gens = (
@@ -200,7 +200,7 @@ class ManifoldNT:
                     and self._invariant_trace_field is not None
                 ):
                     itf_deg = self._invariant_trace_field.degree()
-                    if not self._has_two_torsion_in_homology():
+                    if self.is_modtwo_homology_sphere():
                         newpair = PrecDegreeTuple(newpair.prec, itf_deg)
                     else:
                         implied_deg = newpair.prec * asymptotic_ratio
@@ -233,13 +233,14 @@ class ManifoldNT:
                     )
                     return max(largest_failed_prec + prec_increment, field_prec)
 
-    def _has_two_torsion_in_homology(self):
+#the following function will check whether the manifold is a mod2 homology sphere. returns true if manifold is and false otherwise
+    def is_modtwo_homology_sphere(self):
         factors = [
             divisor
-            for divisor in self.homology().coefficients
-            if divisor != 0 and divisor % 2 == 0
+            for divisor in self.homology().elementary_divisors()
+            if divisor == 0 or divisor % 2 == 0
         ]
-        return len(factors) >= 1
+        return len(factors) == 0
 
     def trace_field(
         self,
@@ -256,7 +257,7 @@ class ManifoldNT:
         are ignored. The degree might change based on the next paragraph though.
 
         When be_smart is True and the invariant trace field is known and the orbifold
-        has no 2-torsion in homology, then the trace field is equal to the invariant
+        has no mod 2 homology, then the trace field is equal to the invariant
         trace field. However, in this case, exact generators for the trace field will
         not be computed, and these generators are necessary (as far as I know) to
         compute the primes at which the Kleinian group has nonintegral trace. When
@@ -294,7 +295,7 @@ class ManifoldNT:
             self._trace_field_generators = exact_field_data[2]
             if (
                 self._invariant_trace_field is None
-                and not self._has_two_torsion_in_homology()
+                and self.is_modtwo_homology_sphere()
             ):
                 self._invariant_trace_field_prec_record[
                     PrecDegreeTuple(prec, degree)
@@ -315,7 +316,7 @@ class ManifoldNT:
         This now should work similarly to compute_trace_field method. There is of
         course slightly different logic for using knowledge of 2-torsion in homology.
         In particular, if the (noninvariant) trace field is known and there is no
-        2-torsion in homology, then the fields are the same.
+        mod2  homology, then the fields are the same.
         Last updated: Aug-29 2020
         """
         if self._invariant_trace_field and prec is None and degree is None:
@@ -334,7 +335,7 @@ class ManifoldNT:
             self._invariant_trace_field = exact_field_data[0]
             self._invariant_trace_field_numerical_root = exact_field_data[1]  # An AAN
             self._invariant_trace_field_generators = exact_field_data[2]
-            if self._trace_field is None and not self._has_two_torsion_in_homology():
+            if self._trace_field is None and self.is_modtwo_homology_sphere():
                 self._trace_field_prec_record[PrecDegreeTuple(prec, degree)] = True
                 self._trace_field = exact_field_data[0]
                 self._trace_field_numerical_root = exact_field_data[1]
@@ -921,3 +922,4 @@ class ManifoldNT:
             field = d["trace field"]["field"]
             d["denominators"] = set(field.ideal((str(elt))) for elt in ideal.gens())
         return d
+    
